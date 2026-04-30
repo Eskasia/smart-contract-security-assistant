@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>智能合約安全分析助理 · Huashu Redesign</title>
+<script>
+window.DECK_WIDTH = 1280;
+window.DECK_HEIGHT = 720;
+window.DECK_MANIFEST = [
+  {
+    "file": "slides/01-cover.html",
+    "label": "封面"
+  },
+  {
+    "file": "slides/02-one-line.html",
+    "label": "一句話"
+  },
+  {
+    "file": "slides/03-scenario.html",
+    "label": "場景"
+  },
+  {
+    "file": "slides/04-flow.html",
+    "label": "流程"
+  },
+  {
+    "file": "slides/05-architecture.html",
+    "label": "架構"
+  },
+  {
+    "file": "slides/06-static-core.html",
+    "label": "靜態核心"
+  },
+  {
+    "file": "slides/07-rag.html",
+    "label": "RAG"
+  },
+  {
+    "file": "slides/08-mlx.html",
+    "label": "MLX"
+  },
+  {
+    "file": "slides/09-trace.html",
+    "label": "Trace"
+  },
+  {
+    "file": "slides/10-case.html",
+    "label": "案例"
+  },
+  {
+    "file": "slides/11-validation.html",
+    "label": "驗收"
+  },
+  {
+    "file": "slides/12-applications.html",
+    "label": "應用"
+  },
+  {
+    "file": "slides/13-huashu.html",
+    "label": "Huashu"
+  }
+];
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width:100%; height:100%; overflow:hidden; background:#050707; font-family:-apple-system, "PingFang TC", sans-serif; }
+#stage { position:fixed; top:0; left:0; width:1280px; height:720px; transform-origin:top left; background:#0B0D0E; box-shadow:0 24px 90px rgba(0,0,0,.55); }
+iframe { width:100%; height:100%; border:0; display:block; background:#0B0D0E; }
+.counter { position:fixed; right:18px; bottom:18px; z-index:10; color:#F7F2DF; background:rgba(0,0,0,.58); border:1px solid rgba(57,255,136,.28); border-radius:999px; padding:7px 12px; font-size:12px; }
+.zone { position:fixed; top:0; bottom:0; width:18%; z-index:8; }
+.left { left:0; } .right { right:0; }
+@media print { @page { size: 1280px 720px; margin:0; } .counter,.zone{display:none} #stage{position:static;transform:none!important;box-shadow:none} }
+</style>
+</head>
+<body>
+<div id="stage"><iframe id="frame"></iframe></div>
+<div class="zone left" id="prev"></div><div class="zone right" id="next"></div>
+<div class="counter" id="counter"></div>
+<script>
+const W=window.DECK_WIDTH,H=window.DECK_HEIGHT,deck=window.DECK_MANIFEST;
+const stage=document.getElementById("stage"),frame=document.getElementById("frame"),counter=document.getElementById("counter");
+let i=0;
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);stage.style.transform="translate("+((innerWidth-W*s)/2)+"px,"+((innerHeight-H*s)/2)+"px) scale("+s+")";}
+function show(n){i=Math.max(0,Math.min(deck.length-1,n));frame.src=deck[i].file;counter.textContent=(i+1)+" / "+deck.length+" · "+deck[i].label;history.replaceState(null,"","#"+(i+1));}
+addEventListener("resize",fit);
+addEventListener("keydown",e=>{if(["ArrowRight"," ","PageDown"].includes(e.key)){e.preventDefault();show(i+1)} if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();show(i-1)} if(e.key==="Home"){show(0)} if(e.key==="End"){show(deck.length-1)}});
+document.getElementById("prev").onclick=()=>show(i-1);document.getElementById("next").onclick=()=>show(i+1);
+const h=location.hash.match(/^#(\d+)$/); if(h) i=Number(h[1])-1; fit(); show(i);
+</script>
+</body>
+</html>

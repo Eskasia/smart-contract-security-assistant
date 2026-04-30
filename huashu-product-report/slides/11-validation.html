@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>驗收儀表板</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="grid-v" style="left:290pt;"></div><div class="grid-v" style="left:530pt;"></div><div class="grid-v" style="left:770pt;"></div><div class="grid-h" style="top:178pt;"></div><div class="grid-h" style="top:316pt;"></div><div class="grid-h" style="top:454pt;"></div><div class="title" style=""><div class="label" style=""><p>VALIDATION DASHBOARD</p></div><h1>自動化測試覆蓋核心產品路徑</h1><p>驗收管線包含單元測試、靜態串接、RAG recall、AI judge 與端到端資源觀測。</p></div><div class="metric abs" style="left:68pt;top:220pt;width:150pt;"><h2><span style="color:var(--green)">10 passed</span></h2><p>pytest full regression</p></div><div class="metric abs" style="left:278pt;top:220pt;width:150pt;"><h2><span style="color:var(--blue)">All passed</span></h2><p>ruff check</p></div><div class="metric abs" style="left:505pt;top:220pt;width:150pt;"><h2><span style="color:var(--green)">2 passed</span></h2><p>E2E tests</p></div><div class="metric abs" style="left:715pt;top:220pt;width:150pt;"><h2><span style="color:var(--amber)">54,083,584</span></h2><p>max RSS bytes</p></div><div class="panel" style="left:68pt;top:370pt;width:795pt;height:52pt;"><div class="code" style="position:absolute;left:18pt;top:15pt;width:750pt;height:22pt;"><p class="mono">uv run pytest · uv run ruff check . · uv run python eval/run_eval.py · uv run python eval/run_judge.py</p></div></div><div class="foot" style=""><p>judge API key not set; local-rule-judge path produced average_judge_score = 5.0</p></div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>模組地圖</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="grid-v" style="left:290pt;"></div><div class="grid-v" style="left:530pt;"></div><div class="grid-v" style="left:770pt;"></div><div class="grid-h" style="top:178pt;"></div><div class="grid-h" style="top:316pt;"></div><div class="grid-h" style="top:454pt;"></div><div class="title" style=""><div class="label" style=""><p>MODULE MAP</p></div><h1>程式碼邊界跟隨分析生命週期</h1><p>CLI-first 結構讓工具可在終端、CI 與未來 Web UI 之間重用。</p></div><div class="panel" style="left:60pt;top:205pt;width:260pt;height:230pt;"><div class="code" style="position:absolute;left:16pt;top:16pt;width:220pt;height:190pt;"><p class="mono">src/smart_contract_audit/<br>├─ cli.py<br>├─ analyzer.py<br>├─ slither_runner.py<br>├─ finding_adapter.py<br>├─ rag/<br>├─ llm/<br>├─ validation/<br>└─ trace/</p></div></div><div class="rowline" style="left:385pt;top:215pt;width:430pt;height:38pt;"><h3>slither_runner</h3><p>準備 solc、呼叫 Slither、解析 JSON。</p></div><div class="rowline" style="left:385pt;top:270pt;width:430pt;height:38pt;"><h3>finding_adapter</h3><p>detector 映射成 vulnerability_type 與 severity。</p></div><div class="rowline" style="left:385pt;top:325pt;width:430pt;height:38pt;"><h3>rag</h3><p>萃取、chunk、JSONL、BM25 fallback。</p></div><div class="rowline" style="left:385pt;top:380pt;width:430pt;height:38pt;"><h3>trace</h3><p>analysis_trace 與 trace_findings 支援回放。</p></div><div class="foot" style=""><p>module map: analyzer orchestrates tools, adapters normalize output, reports stay traceable</p></div>
+</body>
+</html>

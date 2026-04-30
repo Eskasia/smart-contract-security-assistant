@@ -1,0 +1,46 @@
+{
+  "overall_status": "finding",
+  "contract_id": "10679f2de6b7",
+  "requires_human_review": true,
+  "business_logic_review_required": false,
+  "review_reason": "Slither-based MVP findings still require human security review.",
+  "findings": [
+    {
+      "finding_id": "f_001",
+      "vulnerability_type": "reentrancy",
+      "severity": 3,
+      "location": {
+        "file": "tests/contracts/VulnerableVault.sol",
+        "function": "withdraw",
+        "line_start": 11,
+        "line_end": 16
+      },
+      "evidence": "Reentrancy in VulnerableVault.withdraw() (tests/contracts/VulnerableVault.sol#11-16):\n\tExternal calls:\n\t- (success,None) = msg.sender.call{value: amount}() (tests/contracts/VulnerableVault.sol#13)\n\tState variables written after the call(s):\n\t- balances[msg.sender] = 0 (tests/contracts/VulnerableVault.sol#15)\n\tVulnerableVault.balances (tests/contracts/VulnerableVault.sol#5) can be used in cross function reentrancies:\n\t- VulnerableVault.balances (tests/contracts/VulnerableVault.sol#5)\n\t- VulnerableVault.deposit() (tests/contracts/VulnerableVault.sol#7-9)\n\t- VulnerableVault.withdraw() (tests/contracts/VulnerableVault.sol#11-16)\n",
+      "reference": [
+        "SWC-107"
+      ],
+      "finding_confidence": 1.0,
+      "explanation_confidence": 0.8999999999999999,
+      "explanation": "Slither reported `reentrancy-eth` at tests/contracts/VulnerableVault.sol line 11, mapped to `reentrancy` with severity 3. Related chunks: web50_046, web50_046, web50_046.",
+      "attack_path": "1. An attacker reaches the affected function. 2. The vulnerable control flow or external call condition is triggered. 3. The contract state or asset flow is affected according to the Slither evidence.",
+      "fix_suggestion": "Apply checks-effects-interactions and add a nonReentrant modifier around the affected function.",
+      "static_tool_source": "slither",
+      "detector_name": "reentrancy-eth",
+      "partial": false
+    }
+  ],
+  "analysis_metadata": {
+    "dataset_version": "dataset_v1.0",
+    "model_version": "mlx-8b-4bit",
+    "solc_version": "0.8.34",
+    "slither_version": "0.11.5",
+    "partial_analysis": false,
+    "analysis_trace_id": "trace_09392a23d40e",
+    "context_tokens_used": 41,
+    "rag_mode": "balanced",
+    "total_duration_ms": 1310,
+    "errors": [
+      "Using system solc 0.8.34 for pragma-compatible 0.8.19."
+    ]
+  }
+}

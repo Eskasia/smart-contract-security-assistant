@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+REPORT_SCHEMA: dict = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": [
+        "overall_status",
+        "contract_id",
+        "requires_human_review",
+        "business_logic_review_required",
+        "review_reason",
+        "findings",
+        "analysis_metadata",
+    ],
+    "properties": {
+        "overall_status": {"enum": ["finding", "no_finding", "partial_analysis", "error"]},
+        "contract_id": {"type": "string"},
+        "requires_human_review": {"type": "boolean"},
+        "business_logic_review_required": {"type": "boolean"},
+        "review_reason": {"type": "string"},
+        "findings": {
+            "type": "array",
+            "items": {"$ref": "#/$defs/finding"},
+        },
+        "analysis_metadata": {
+            "type": "object",
+            "required": [
+                "dataset_version",
+                "model_version",
+                "solc_version",
+                "slither_version",
+                "partial_analysis",
+                "analysis_trace_id",
+                "context_tokens_used",
+                "rag_mode",
+                "total_duration_ms",
+                "errors",
+            ],
+        },
+    },
+    "$defs": {
+        "finding": {
+            "type": "object",
+            "required": [
+                "finding_id",
+                "vulnerability_type",
+                "severity",
+                "location",
+                "evidence",
+                "reference",
+                "finding_confidence",
+                "explanation_confidence",
+                "explanation",
+                "attack_path",
+                "fix_suggestion",
+                "static_tool_source",
+                "detector_name",
+                "partial",
+            ],
+            "properties": {
+                "finding_id": {"type": "string"},
+                "vulnerability_type": {"type": "string"},
+                "severity": {"type": "integer", "minimum": 1, "maximum": 3},
+                "location": {
+                    "type": "object",
+                    "required": ["file", "function", "line_start", "line_end"],
+                },
+                "evidence": {"type": "string"},
+                "reference": {"type": "array", "items": {"type": "string"}},
+                "finding_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "explanation_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "explanation": {"type": "string"},
+                "attack_path": {"type": "string"},
+                "fix_suggestion": {"type": "string"},
+                "static_tool_source": {"type": "string"},
+                "detector_name": {"type": "string"},
+                "partial": {"type": "boolean"},
+            },
+        }
+    },
+}

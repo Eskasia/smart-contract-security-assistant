@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>智能合約安全分析助理 Skill Graph</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f7f7f4; color: #1f2933; }
+    main { max-width: 1160px; margin: 0 auto; padding: 32px 24px; }
+    h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: 0; }
+    .meta { color: #52606d; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    section { background: #fff; border: 1px solid #d9e2ec; border-radius: 8px; padding: 16px; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin: 6px 0; line-height: 1.35; }
+    li span { display: inline-block; min-width: 86px; color: #52606d; }
+    pre { overflow: auto; background: #102a43; color: #d9e2ec; border-radius: 8px; padding: 16px; font-size: 12px; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>智能合約安全分析助理 Skill Graph</h1>
+    <div class="meta">Nodes: 25 · Edges: 22 · Core files: 52 · Generated: 2026-04-30T05:34:57+00:00</div>
+    <div class="grid">
+      <section><h2>Nodes</h2><ul><li><span>goal</span>Local-first Solidity security triage</li>
+<li><span>capability</span>CLI entrypoint</li>
+<li><span>capability</span>Slither static analysis</li>
+<li><span>capability</span>Finding normalization</li>
+<li><span>capability</span>JSON schema validation</li>
+<li><span>capability</span>Local RAG retrieval</li>
+<li><span>capability</span>MLX-ready generation</li>
+<li><span>capability</span>SQLite traceability</li>
+<li><span>capability</span>Markdown and JSON reports</li>
+<li><span>capability</span>CI validation</li>
+<li><span>agent</span>Orchestrator</li>
+<li><span>agent</span>Solidity Security Agent</li>
+<li><span>agent</span>RAG Data Agent</li>
+<li><span>agent</span>LLM Eval Agent</li>
+<li><span>agent</span>Python Quality Agent</li>
+<li><span>agent</span>Product Doc Agent</li>
+<li><span>evidence</span>uv run pytest: 15 passed</li>
+<li><span>evidence</span>uv run ruff check .: passed</li>
+<li><span>evidence</span>RAG recall eval: recall_at_k=1.0</li>
+<li><span>evidence</span>Judge eval: average_judge_score=5.0</li>
+<li><span>evidence</span>MLX 4bit model load probe succeeded</li>
+<li><span>artifact</span>reports-mlx/mlx_probe.json</li>
+<li><span>artifact</span>graphify-out/graph.json</li>
+<li><span>artifact</span>graphify-out/GRAPH_REPORT.md</li>
+<li><span>artifact</span>graphify-out/graph.html</li></ul></section>
+      <section><h2>Edges</h2><ul><li>goal.local_first_audit <b>REQUIRES</b> capability.cli</li>
+<li>capability.cli <b>TRIGGERS</b> capability.slither</li>
+<li>capability.slither <b>PRODUCES</b> capability.adapter</li>
+<li>capability.adapter <b>VALIDATES</b> capability.schema</li>
+<li>capability.schema <b>UNLOCKS</b> capability.rag</li>
+<li>capability.rag <b>SUPPLIES_CONTEXT</b> capability.llm</li>
+<li>capability.llm <b>PRODUCES</b> capability.report</li>
+<li>capability.report <b>RECORDS</b> capability.trace</li>
+<li>agent.security <b>OWNS</b> capability.slither</li>
+<li>agent.rag <b>OWNS</b> capability.rag</li>
+<li>agent.llm_eval <b>OWNS</b> capability.llm</li>
+<li>agent.quality <b>OWNS</b> capability.schema</li>
+<li>agent.docs <b>OWNS</b> capability.report</li>
+<li>evidence.pytest <b>VALIDATES</b> capability.ci</li>
+<li>evidence.ruff <b>VALIDATES</b> capability.ci</li>
+<li>evidence.rag_eval <b>VALIDATES</b> capability.rag</li>
+<li>evidence.judge_eval <b>VALIDATES</b> capability.llm</li>
+<li>evidence.mlx_probe <b>PRODUCES</b> artifact.mlx_probe</li>
+<li>agent.orchestrator <b>PRODUCES</b> artifact.graph_json</li>
+<li>artifact.graph_json <b>PRODUCES</b> artifact.graph_report</li>
+<li>artifact.graph_json <b>PRODUCES</b> artifact.graph_html</li>
+<li>artifact.graph_report <b>UPDATES</b> agent.orchestrator</li></ul></section>
+    </div>
+    <section style="margin-top:16px"><h2>Raw JSON</h2><pre>{
+  &quot;schema_version&quot;: &quot;skill-graph.v1&quot;,
+  &quot;generated_at&quot;: &quot;2026-04-30T05:34:57+00:00&quot;,
+  &quot;generated_by&quot;: &quot;scripts/build_skill_graph.py&quot;,
+  &quot;project_root&quot;: &quot;/Users/william/智能合約安全分析助理 &quot;,
+  &quot;nodes&quot;: [
+    {
+      &quot;id&quot;: &quot;goal.local_first_audit&quot;,
+      &quot;label&quot;: &quot;Local-first Solidity security triage&quot;,
+      &quot;type&quot;: &quot;goal&quot;,
+      &quot;owner&quot;: &quot;Orchestrator&quot;,
+      &quot;evidence&quot;: [
+        &quot;README.md&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.cli&quot;,
+      &quot;label&quot;: &quot;CLI entrypoint&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/cli.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.slither&quot;,
+      &quot;label&quot;: &quot;Slither static analysis&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Solidity Security Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/slither_runner.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.adapter&quot;,
+      &quot;label&quot;: &quot;Finding normalization&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Solidity Security Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/finding_adapter.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.schema&quot;,
+      &quot;label&quot;: &quot;JSON schema validation&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;schemas/finding_schema.json&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.rag&quot;,
+      &quot;label&quot;: &quot;Local RAG retrieval&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;RAG Data Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/rag/retriever.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.llm&quot;,
+      &quot;label&quot;: &quot;MLX-ready generation&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/llm/mlx_runtime.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.trace&quot;,
+      &quot;label&quot;: &quot;SQLite traceability&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/trace/store.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.report&quot;,
+      &quot;label&quot;: &quot;Markdown and JSON reports&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Product Doc Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/report.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;capability.ci&quot;,
+      &quot;label&quot;: &quot;CI validation&quot;,
+      &quot;type&quot;: &quot;capability&quot;,
+      &quot;owner&quot;: &quot;Release Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;.github/workflows/ci.yml&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.orchestrator&quot;,
+      &quot;label&quot;: &quot;Orchestrator&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;Orchestrator&quot;,
+      &quot;evidence&quot;: [
+        &quot;docs/skill-graph.md&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.security&quot;,
+      &quot;label&quot;: &quot;Solidity Security Agent&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;Solidity Security Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;tests/test_slither.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.rag&quot;,
+      &quot;label&quot;: &quot;RAG Data Agent&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;RAG Data Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;eval/run_eval.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.llm_eval&quot;,
+      &quot;label&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;eval/run_judge.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.quality&quot;,
+      &quot;label&quot;: &quot;Python Quality Agent&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;pyproject.toml&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;agent.docs&quot;,
+      &quot;label&quot;: &quot;Product Doc Agent&quot;,
+      &quot;type&quot;: &quot;agent&quot;,
+      &quot;owner&quot;: &quot;Product Doc Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;README.md&quot;,
+        &quot;docs/handoff.md&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;evidence.pytest&quot;,
+      &quot;label&quot;: &quot;uv run pytest: 15 passed&quot;,
+      &quot;type&quot;: &quot;evidence&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;tests&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;evidence.ruff&quot;,
+      &quot;label&quot;: &quot;uv run ruff check .: passed&quot;,
+      &quot;type&quot;: &quot;evidence&quot;,
+      &quot;owner&quot;: &quot;Python Quality Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;pyproject.toml&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;evidence.rag_eval&quot;,
+      &quot;label&quot;: &quot;RAG recall eval: recall_at_k=1.0&quot;,
+      &quot;type&quot;: &quot;evidence&quot;,
+      &quot;owner&quot;: &quot;RAG Data Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;eval/run_eval.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;evidence.judge_eval&quot;,
+      &quot;label&quot;: &quot;Judge eval: average_judge_score=5.0&quot;,
+      &quot;type&quot;: &quot;evidence&quot;,
+      &quot;owner&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;eval/run_judge.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;evidence.mlx_probe&quot;,
+      &quot;label&quot;: &quot;MLX 4bit model load probe succeeded&quot;,
+      &quot;type&quot;: &quot;evidence&quot;,
+      &quot;owner&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;src/smart_contract_audit/llm/mlx_runtime.py&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact.mlx_probe&quot;,
+      &quot;label&quot;: &quot;reports-mlx/mlx_probe.json&quot;,
+      &quot;type&quot;: &quot;artifact&quot;,
+      &quot;owner&quot;: &quot;LLM Eval Agent&quot;,
+      &quot;evidence&quot;: [
+        &quot;reports-mlx/mlx_probe.json&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact.graph_json&quot;,
+      &quot;label&quot;: &quot;graphify-out/graph.json&quot;,
+      &quot;type&quot;: &quot;artifact&quot;,
+      &quot;owner&quot;: &quot;Orchestrator&quot;,
+      &quot;evidence&quot;: [
+        &quot;graphify-out/graph.json&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact.graph_report&quot;,
+      &quot;label&quot;: &quot;graphify-out/GRAPH_REPORT.md&quot;,
+      &quot;type&quot;: &quot;artifact&quot;,
+      &quot;owner&quot;: &quot;Orchestrator&quot;,
+      &quot;evidence&quot;: [
+        &quot;graphify-out/GRAPH_REPORT.md&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;artifact.graph_html&quot;,
+      &quot;label&quot;: &quot;graphify-out/graph.html&quot;,
+      &quot;type&quot;: &quot;artifact&quot;,
+      &quot;owner&quot;: &quot;Orchestrator&quot;,
+      &quot;evidence&quot;: [
+        &quot;graphify-out/graph.html&quot;
+      ]
+    }
+  ],
+  &quot;edges&quot;: [
+    {
+      &quot;source&quot;: &quot;goal.local_first_audit&quot;,
+      &quot;target&quot;: &quot;capability.cli&quot;,
+      &quot;type&quot;: &quot;REQUIRES&quot;,
+      &quot;evidence&quot;: &quot;README.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.cli&quot;,
+      &quot;target&quot;: &quot;capability.slither&quot;,
+      &quot;type&quot;: &quot;TRIGGERS&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/cli.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.slither&quot;,
+      &quot;target&quot;: &quot;capability.adapter&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/analyzer.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.adapter&quot;,
+      &quot;target&quot;: &quot;capability.schema&quot;,
+      &quot;type&quot;: &quot;VALIDATES&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/validation/validator.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.schema&quot;,
+      &quot;target&quot;: &quot;capability.rag&quot;,
+      &quot;type&quot;: &quot;UNLOCKS&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/analyzer.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.rag&quot;,
+      &quot;target&quot;: &quot;capability.llm&quot;,
+      &quot;type&quot;: &quot;SUPPLIES_CONTEXT&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/llm/prompt_template.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.llm&quot;,
+      &quot;target&quot;: &quot;capability.report&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/report.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;capability.report&quot;,
+      &quot;target&quot;: &quot;capability.trace&quot;,
+      &quot;type&quot;: &quot;RECORDS&quot;,
+      &quot;evidence&quot;: &quot;src/smart_contract_audit/trace/store.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.security&quot;,
+      &quot;target&quot;: &quot;capability.slither&quot;,
+      &quot;type&quot;: &quot;OWNS&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.rag&quot;,
+      &quot;target&quot;: &quot;capability.rag&quot;,
+      &quot;type&quot;: &quot;OWNS&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.llm_eval&quot;,
+      &quot;target&quot;: &quot;capability.llm&quot;,
+      &quot;type&quot;: &quot;OWNS&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.quality&quot;,
+      &quot;target&quot;: &quot;capability.schema&quot;,
+      &quot;type&quot;: &quot;OWNS&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.docs&quot;,
+      &quot;target&quot;: &quot;capability.report&quot;,
+      &quot;type&quot;: &quot;OWNS&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    },
+    {
+      &quot;source&quot;: &quot;evidence.pytest&quot;,
+      &quot;target&quot;: &quot;capability.ci&quot;,
+      &quot;type&quot;: &quot;VALIDATES&quot;,
+      &quot;evidence&quot;: &quot;.github/workflows/ci.yml&quot;
+    },
+    {
+      &quot;source&quot;: &quot;evidence.ruff&quot;,
+      &quot;target&quot;: &quot;capability.ci&quot;,
+      &quot;type&quot;: &quot;VALIDATES&quot;,
+      &quot;evidence&quot;: &quot;.github/workflows/ci.yml&quot;
+    },
+    {
+      &quot;source&quot;: &quot;evidence.rag_eval&quot;,
+      &quot;target&quot;: &quot;capability.rag&quot;,
+      &quot;type&quot;: &quot;VALIDATES&quot;,
+      &quot;evidence&quot;: &quot;eval/rag_recall_test.json&quot;
+    },
+    {
+      &quot;source&quot;: &quot;evidence.judge_eval&quot;,
+      &quot;target&quot;: &quot;capability.llm&quot;,
+      &quot;type&quot;: &quot;VALIDATES&quot;,
+      &quot;evidence&quot;: &quot;eval/judge_eval_set.json&quot;
+    },
+    {
+      &quot;source&quot;: &quot;evidence.mlx_probe&quot;,
+      &quot;target&quot;: &quot;artifact.mlx_probe&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;reports-mlx/mlx_probe.json&quot;
+    },
+    {
+      &quot;source&quot;: &quot;agent.orchestrator&quot;,
+      &quot;target&quot;: &quot;artifact.graph_json&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;scripts/build_skill_graph.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;artifact.graph_json&quot;,
+      &quot;target&quot;: &quot;artifact.graph_report&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;scripts/build_skill_graph.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;artifact.graph_json&quot;,
+      &quot;target&quot;: &quot;artifact.graph_html&quot;,
+      &quot;type&quot;: &quot;PRODUCES&quot;,
+      &quot;evidence&quot;: &quot;scripts/build_skill_graph.py&quot;
+    },
+    {
+      &quot;source&quot;: &quot;artifact.graph_report&quot;,
+      &quot;target&quot;: &quot;agent.orchestrator&quot;,
+      &quot;type&quot;: &quot;UPDATES&quot;,
+      &quot;evidence&quot;: &quot;docs/skill-graph.md&quot;
+    }
+  ],
+  &quot;summary&quot;: {
+    &quot;nodes&quot;: 25,
+    &quot;edges&quot;: 22,
+    &quot;core_files&quot;: 52,
+    &quot;remaining_gaps&quot;: []
+  }
+}</pre></section>
+  </main>
+</body>
+</html>

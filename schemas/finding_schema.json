@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "overall_status",
+    "contract_id",
+    "requires_human_review",
+    "business_logic_review_required",
+    "review_reason",
+    "findings",
+    "analysis_metadata"
+  ]
+}

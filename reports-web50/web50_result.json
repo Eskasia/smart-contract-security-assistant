@@ -1,0 +1,607 @@
+{
+  "generated_at": "2026-04-30",
+  "source_repository": "https://github.com/Quillhash/QuillAudit_smart_contract_audit_Reports",
+  "source_count": 50,
+  "downloaded_pdf_bytes": 142590106,
+  "chunks_path": "data/web50/chunks.jsonl",
+  "chunk_count": 798,
+  "reports_with_chunks": 50,
+  "eligible_chunks": 151,
+  "vuln_type_counts": {
+    "access_control": 29,
+    "array_length_manipulation": 4,
+    "dangerous_delegatecall": 23,
+    "reentrancy": 33,
+    "unchecked_external_call": 62,
+    "unknown": 647
+  },
+  "severity_counts": {
+    "1": 440,
+    "2": 53,
+    "3": 305
+  },
+  "analysis_command": "uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-web50 --dataset-chunks data/web50/chunks.jsonl --rag-mode balanced",
+  "analysis_report": "reports-web50/10679f2de6b7.json",
+  "analysis_markdown": "reports-web50/10679f2de6b7.md",
+  "trace_db": "reports-web50/analysis_trace.sqlite",
+  "analysis_summary": {
+    "overall_status": "finding",
+    "contract_id": "10679f2de6b7",
+    "trace_id": "trace_09392a23d40e",
+    "finding_count": 1,
+    "first_finding": {
+      "finding_id": "f_001",
+      "vulnerability_type": "reentrancy",
+      "severity": 3,
+      "location": {
+        "file": "tests/contracts/VulnerableVault.sol",
+        "function": "withdraw",
+        "line_start": 11,
+        "line_end": 16
+      },
+      "evidence": "Reentrancy in VulnerableVault.withdraw() (tests/contracts/VulnerableVault.sol#11-16):\n\tExternal calls:\n\t- (success,None) = msg.sender.call{value: amount}() (tests/contracts/VulnerableVault.sol#13)\n\tState variables written after the call(s):\n\t- balances[msg.sender] = 0 (tests/contracts/VulnerableVault.sol#15)\n\tVulnerableVault.balances (tests/contracts/VulnerableVault.sol#5) can be used in cross function reentrancies:\n\t- VulnerableVault.balances (tests/contracts/VulnerableVault.sol#5)\n\t- VulnerableVault.deposit() (tests/contracts/VulnerableVault.sol#7-9)\n\t- VulnerableVault.withdraw() (tests/contracts/VulnerableVault.sol#11-16)\n",
+      "reference": [
+        "SWC-107"
+      ],
+      "finding_confidence": 1.0,
+      "explanation_confidence": 0.8999999999999999,
+      "explanation": "Slither reported `reentrancy-eth` at tests/contracts/VulnerableVault.sol line 11, mapped to `reentrancy` with severity 3. Related chunks: web50_046, web50_046, web50_046.",
+      "attack_path": "1. An attacker reaches the affected function. 2. The vulnerable control flow or external call condition is triggered. 3. The contract state or asset flow is affected according to the Slither evidence.",
+      "fix_suggestion": "Apply checks-effects-interactions and add a nonReentrant modifier around the affected function.",
+      "static_tool_source": "slither",
+      "detector_name": "reentrancy-eth",
+      "partial": false
+    },
+    "total_duration_ms": 1310,
+    "rag_mode": "balanced",
+    "errors": [
+      "Using system solc 0.8.34 for pragma-compatible 0.8.19."
+    ]
+  },
+  "trace_rows": [
+    {
+      "finding_id": "f_001",
+      "detector_name": "reentrancy-eth",
+      "rag_mode": "balanced",
+      "retrieval_duration_ms": 69,
+      "llm_duration_ms": 0,
+      "chunks_used": 3,
+      "rag_chunk_ids": "[\"web50_046_0034\", \"web50_046_0022\", \"web50_046_0016\"]",
+      "partial": 0
+    }
+  ],
+  "used_sources": [
+    {
+      "chunk_id": "web50_046_0016",
+      "source_id": "web50_046",
+      "source_path": "Amplify Smart Contract Audit Report(vesting) - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Smart%20Contract%20Audit%20Report%28vesting%29%20-%20QuillAudits.pdf",
+      "vuln_type": "reentrancy",
+      "severity": 1,
+      "token_count": 620,
+      "snippet": "PASS withdraw PASS PASS PASS claim PASS PASS PASS _claim PASS PASS PASS 13audits.quillhash.com Automated Tests Slither Reentrancy in Vesting._createEntry(Vesting.EntryVars) (Vesting.sol#206-242): External calls: - assert(bool)(token.transfer(recipient,entry.unlocked)) (Vesting.sol#219) State variables written after the call(s): - entries[currentEntryId] = En"
+    },
+    {
+      "chunk_id": "web50_046_0022",
+      "source_id": "web50_046",
+      "source_path": "Amplify Smart Contract Audit Report(vesting) - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Smart%20Contract%20Audit%20Report%28vesting%29%20-%20QuillAudits.pdf",
+      "vuln_type": "reentrancy",
+      "severity": 1,
+      "token_count": 654,
+      "snippet": "Reentrancy in VestingFactory.createVestingContract(IERC20) (VestingFactory.sol#505-512): External calls: - Vesting(_contract).initialize(msg.sender,_token) (VestingFactory.sol#508) State variables written after the call(s): - instances.push(Instance(_contract,msg.sender,address(_token))) (VestingFactory.sol#509) Reference: https://github.com/crytic/slither/w"
+    },
+    {
+      "chunk_id": "web50_046_0034",
+      "source_id": "web50_046",
+      "source_path": "Amplify Smart Contract Audit Report(vesting) - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Smart%20Contract%20Audit%20Report%28vesting%29%20-%20QuillAudits.pdf",
+      "vuln_type": "reentrancy",
+      "severity": 1,
+      "token_count": 837,
+      "snippet": "Dangerous comparisons: - amountToClaim > 0 (Vesting.sol#263) - require(bool,string)(entry.amount >= entry.claimed,claim exceed vested amount) (Vesting.sol#270) Vesting._fireEntry(uint256) (Vesting.sol#285-295) uses timestamp for comparisons Dangerous comparisons: - require(bool,string)(entry.amount > 0,entry not exists) (Vesting.sol#287) - require(bool,strin"
+    }
+  ],
+  "source_manifest": [
+    {
+      "id": "web50_001",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "2D3T Smart Contract Audit Report - Quill Audits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/2D3T%20Smart%20Contract%20Audit%20Report%20-%20Quill%20Audits.pdf",
+      "sha": "12498b7c625af3c7eabd2e6f4956a891c4e91346",
+      "size": 6568169,
+      "local_pdf": "data/web50/raw/web50_001.pdf",
+      "downloaded_bytes": 6568169
+    },
+    {
+      "id": "web50_002",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "5tars Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/5tars%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "a676749f162233575ffd45170a70dd44e142ff0a",
+      "size": 2086183,
+      "local_pdf": "data/web50/raw/web50_002.pdf",
+      "downloaded_bytes": 2086183
+    },
+    {
+      "id": "web50_003",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "99Starz Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/99Starz%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "d72b1d24b368222213d384128edade0db602fd78",
+      "size": 5088059,
+      "local_pdf": "data/web50/raw/web50_003.pdf",
+      "downloaded_bytes": 5088059
+    },
+    {
+      "id": "web50_004",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "ACYC Token Smart Contracts Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/ACYC%20Token%20Smart%20Contracts%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "a940a8a248507070aaf58d653e91498559adea19",
+      "size": 5119635,
+      "local_pdf": "data/web50/raw/web50_004.pdf",
+      "downloaded_bytes": 5119635
+    },
+    {
+      "id": "web50_005",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AHT Smart Contract Audit report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AHT%20Smart%20Contract%20Audit%20report%20-%20QuillAudits.pdf",
+      "sha": "d452e622f8fa19f3be567e365c01a1f600337d5b",
+      "size": 1684869,
+      "local_pdf": "data/web50/raw/web50_005.pdf",
+      "downloaded_bytes": 1684869
+    },
+    {
+      "id": "web50_006",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AIDUS Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AIDUS%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "558e5124265bf178148cb7809fca12dc65160a47",
+      "size": 2172131,
+      "local_pdf": "data/web50/raw/web50_006.pdf",
+      "downloaded_bytes": 2172131
+    },
+    {
+      "id": "web50_007",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AL Mabrook Financials Inc Smart Contracts Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AL%20Mabrook%20Financials%20Inc%20Smart%20Contracts%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "41b7df514dda5de8179ed53d8c8019d6c97b10f5",
+      "size": 4423012,
+      "local_pdf": "data/web50/raw/web50_007.pdf",
+      "downloaded_bytes": 4423012
+    },
+    {
+      "id": "web50_008",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AQEX Token Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AQEX%20Token%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "3b683a25477bf5b5bee1b5f8ecae61a5bc70444d",
+      "size": 1791744,
+      "local_pdf": "data/web50/raw/web50_008.pdf",
+      "downloaded_bytes": 1791744
+    },
+    {
+      "id": "web50_009",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "ASVA Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/ASVA%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "09c0c451092759b32ec279fed11ce3085c3a945d",
+      "size": 2889807,
+      "local_pdf": "data/web50/raw/web50_009.pdf",
+      "downloaded_bytes": 2889807
+    },
+    {
+      "id": "web50_010",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "ASVA Token Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/ASVA%20Token%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "503f8bf3062a246dc1bb8157cf90ba4d8dca8c42",
+      "size": 2706218,
+      "local_pdf": "data/web50/raw/web50_010.pdf",
+      "downloaded_bytes": 2706218
+    },
+    {
+      "id": "web50_011",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "ATM Smart Contract Audit Report- QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/ATM%20Smart%20Contract%20Audit%20Report-%20QuillAudits.pdf",
+      "sha": "697fd66a0e529a38d64db11b600355fb6b940728",
+      "size": 1572027,
+      "local_pdf": "data/web50/raw/web50_011.pdf",
+      "downloaded_bytes": 1572027
+    },
+    {
+      "id": "web50_012",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AVNBridge Smart Contract Audit report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AVNBridge%20Smart%20Contract%20Audit%20report%20-%20QuillAudits.pdf",
+      "sha": "0f2aca96e2f537672a8f01896bfc91b97d8c66cc",
+      "size": 1567837,
+      "local_pdf": "data/web50/raw/web50_012.pdf",
+      "downloaded_bytes": 1567837
+    },
+    {
+      "id": "web50_013",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AVX Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AVX%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "0d14c2b3f59fdb387abf3627282ccd9b9dafee31",
+      "size": 2462990,
+      "local_pdf": "data/web50/raw/web50_013.pdf",
+      "downloaded_bytes": 2462990
+    },
+    {
+      "id": "web50_014",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AcknoLedger Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AcknoLedger%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "51507f57db6e758958eb15268b67c94acc22671d",
+      "size": 1845175,
+      "local_pdf": "data/web50/raw/web50_014.pdf",
+      "downloaded_bytes": 1845175
+    },
+    {
+      "id": "web50_015",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Acknoledger Smart Contract Audit Report_2 - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Acknoledger%20Smart%20Contract%20Audit%20Report_2%20-%20QuillAudits.pdf",
+      "sha": "da26f963977bf3f65ee4c315c7f91df06f494b8b",
+      "size": 2228086,
+      "local_pdf": "data/web50/raw/web50_015.pdf",
+      "downloaded_bytes": 2228086
+    },
+    {
+      "id": "web50_016",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Aconomy (StakingYield) Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Aconomy%20%28StakingYield%29%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "fa17b280077fe1b423bd13aef0f4c2aa094ebef1",
+      "size": 1977361,
+      "local_pdf": "data/web50/raw/web50_016.pdf",
+      "downloaded_bytes": 1977361
+    },
+    {
+      "id": "web50_017",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Aconomy Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Aconomy%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "03ed29f2a93efe5236dc7dd6a1f505b79343722a",
+      "size": 2758624,
+      "local_pdf": "data/web50/raw/web50_017.pdf",
+      "downloaded_bytes": 2758624
+    },
+    {
+      "id": "web50_018",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Acria Token Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Acria%20Token%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "c990df7f5521feb06053e975b0afe555d4e8b7c1",
+      "size": 1669266,
+      "local_pdf": "data/web50/raw/web50_018.pdf",
+      "downloaded_bytes": 1669266
+    },
+    {
+      "id": "web50_019",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Advon Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Advon%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "6f63cd62e4f9c42912c3fc964ef3625365f79fe0",
+      "size": 3118058,
+      "local_pdf": "data/web50/raw/web50_019.pdf",
+      "downloaded_bytes": 3118058
+    },
+    {
+      "id": "web50_020",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Agiratech Hyperledger Fabric Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Agiratech%20Hyperledger%20Fabric%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "1477af46e14a0f6a13d734a5d2c9b1be1fae24f9",
+      "size": 2313835,
+      "local_pdf": "data/web50/raw/web50_020.pdf",
+      "downloaded_bytes": 2313835
+    },
+    {
+      "id": "web50_021",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AgriUT Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AgriUT%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "0674c4e6f4029adc7be3808f6fe668807a8057a3",
+      "size": 1469682,
+      "local_pdf": "data/web50/raw/web50_021.pdf",
+      "downloaded_bytes": 1469682
+    },
+    {
+      "id": "web50_022",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Ai Fun Token Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Ai%20Fun%20Token%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "dad62f590052348f00840e034ce8f6dd59639cf8",
+      "size": 1862111,
+      "local_pdf": "data/web50/raw/web50_022.pdf",
+      "downloaded_bytes": 1862111
+    },
+    {
+      "id": "web50_023",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AiPepe Smart Contract Audit Report-QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AiPepe%20Smart%20Contract%20Audit%20Report-QuillAudits.pdf",
+      "sha": "1071e491aaf3ec14741f1c271cdb7d8f5d921c51",
+      "size": 3054214,
+      "local_pdf": "data/web50/raw/web50_023.pdf",
+      "downloaded_bytes": 3054214
+    },
+    {
+      "id": "web50_024",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AiVoiceAgent Token Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AiVoiceAgent%20Token%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "43354f4028589f36b043142dbfffa8625c573a6a",
+      "size": 6121501,
+      "local_pdf": "data/web50/raw/web50_024.pdf",
+      "downloaded_bytes": 6121501
+    },
+    {
+      "id": "web50_025",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AirLyft Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AirLyft%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "478241061785a7a2019fe60c854bdfcaa6d5fa6d",
+      "size": 1893063,
+      "local_pdf": "data/web50/raw/web50_025.pdf",
+      "downloaded_bytes": 1893063
+    },
+    {
+      "id": "web50_026",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Akt.io Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Akt.io%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "ebfef26b9be5a57584eebd90a7d30c6581e2cb0d",
+      "size": 1674500,
+      "local_pdf": "data/web50/raw/web50_026.pdf",
+      "downloaded_bytes": 1674500
+    },
+    {
+      "id": "web50_027",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alfcoin Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alfcoin%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "4eb92a9a002ba63d712fc05864c052c65230d16f",
+      "size": 2514053,
+      "local_pdf": "data/web50/raw/web50_027.pdf",
+      "downloaded_bytes": 2514053
+    },
+    {
+      "id": "web50_028",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Algovest Audit Report.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Algovest%20Audit%20Report.pdf",
+      "sha": "1b0bd252b8b73f93b98f16bc7c55ec985af6b736",
+      "size": 5936362,
+      "local_pdf": "data/web50/raw/web50_028.pdf",
+      "downloaded_bytes": 5936362
+    },
+    {
+      "id": "web50_029",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alium Finance (MulticallUserExecutable)Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alium%20Finance%20%28MulticallUserExecutable%29Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "cad129fce93827cbfadbc0a3ef8d4e7b4cef8021",
+      "size": 1618320,
+      "local_pdf": "data/web50/raw/web50_029.pdf",
+      "downloaded_bytes": 1618320
+    },
+    {
+      "id": "web50_030",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alium Finance Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alium%20Finance%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "1faf98b4d2faf9c5fa7c612dd5dae19c1df2dd33",
+      "size": 2549554,
+      "local_pdf": "data/web50/raw/web50_030.pdf",
+      "downloaded_bytes": 2549554
+    },
+    {
+      "id": "web50_031",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AliumSwap Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AliumSwap%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "047a067f931b87624a77357f2662d6da940bd932",
+      "size": 2396372,
+      "local_pdf": "data/web50/raw/web50_031.pdf",
+      "downloaded_bytes": 2396372
+    },
+    {
+      "id": "web50_032",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alkimi Move Smart Contract Audit report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alkimi%20Move%20Smart%20Contract%20Audit%20report%20-%20QuillAudits.pdf",
+      "sha": "af9ce5bd6d4f9d916b6ea1a43b8fc918532b56eb",
+      "size": 1253589,
+      "local_pdf": "data/web50/raw/web50_032.pdf",
+      "downloaded_bytes": 1253589
+    },
+    {
+      "id": "web50_033",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alkimi Pentest Audit Report.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alkimi%20Pentest%20Audit%20Report.pdf",
+      "sha": "8bbbad1e2b2eba7111859218d839128530804a44",
+      "size": 2019124,
+      "local_pdf": "data/web50/raw/web50_033.pdf",
+      "downloaded_bytes": 2019124
+    },
+    {
+      "id": "web50_034",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alkimi Solidity Smart Contract Audit report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alkimi%20Solidity%20Smart%20Contract%20Audit%20report%20-%20QuillAudits.pdf",
+      "sha": "8af73184e2957bb484f082250dfe550e017bdbda",
+      "size": 1993628,
+      "local_pdf": "data/web50/raw/web50_034.pdf",
+      "downloaded_bytes": 1993628
+    },
+    {
+      "id": "web50_035",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alkimi Token Gen Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alkimi%20Token%20Gen%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "a2e8389753000eb51b19291280490842ef04eefa",
+      "size": 864336,
+      "local_pdf": "data/web50/raw/web50_035.pdf",
+      "downloaded_bytes": 864336
+    },
+    {
+      "id": "web50_036",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alkimi Token Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alkimi%20Token%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "57fd54551f86ae80c45c94b55f69d83853d8380f",
+      "size": 1341259,
+      "local_pdf": "data/web50/raw/web50_036.pdf",
+      "downloaded_bytes": 1341259
+    },
+    {
+      "id": "web50_037",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Allo Pentest Audit report - QuillAudits .pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Allo%20Pentest%20Audit%20report%20-%20QuillAudits%20.pdf",
+      "sha": "afb21009a3efd081f9ce099c4482adf2481e6d9b",
+      "size": 3641366,
+      "local_pdf": "data/web50/raw/web50_037.pdf",
+      "downloaded_bytes": 3641366
+    },
+    {
+      "id": "web50_038",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Allo Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Allo%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "fd018f1dc4a06e3e9c45df63aa2a2f444acbbc6f",
+      "size": 6379683,
+      "local_pdf": "data/web50/raw/web50_038.pdf",
+      "downloaded_bytes": 6379683
+    },
+    {
+      "id": "web50_039",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Almanak Smart Contract Audit report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Almanak%20Smart%20Contract%20Audit%20report%20-%20QuillAudits.pdf",
+      "sha": "b9a18ce5ea86840d3d0e0ed8c961eea06114a488",
+      "size": 2524518,
+      "local_pdf": "data/web50/raw/web50_039.pdf",
+      "downloaded_bytes": 2524518
+    },
+    {
+      "id": "web50_040",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Altranium Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Altranium%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "1d23676c253acbcdee11f298fe15c9c679fc6cd4",
+      "size": 1796444,
+      "local_pdf": "data/web50/raw/web50_040.pdf",
+      "downloaded_bytes": 1796444
+    },
+    {
+      "id": "web50_041",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alvara Gauge Weight Rewards Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alvara%20Gauge%20Weight%20Rewards%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "acc8bb29a8350891150eb700d0686b147246fe71",
+      "size": 1634797,
+      "local_pdf": "data/web50/raw/web50_041.pdf",
+      "downloaded_bytes": 1634797
+    },
+    {
+      "id": "web50_042",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alvara Smart Contracts Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alvara%20Smart%20Contracts%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "d25616ef559a36542977f98b35cec00fb3cb5b9b",
+      "size": 6855138,
+      "local_pdf": "data/web50/raw/web50_042.pdf",
+      "downloaded_bytes": 6855138
+    },
+    {
+      "id": "web50_043",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Alvara Staking Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Alvara%20Staking%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "1869800fb5f3ab2e4441b367af5de22c0c5e6627",
+      "size": 6309039,
+      "local_pdf": "data/web50/raw/web50_043.pdf",
+      "downloaded_bytes": 6309039
+    },
+    {
+      "id": "web50_044",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AlvaraAvax Smart Contract Audit Report - QuillAudits .pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AlvaraAvax%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits%20.pdf",
+      "sha": "d0b172047b4335d808d15891ffbd12092c2864a6",
+      "size": 1799408,
+      "local_pdf": "data/web50/raw/web50_044.pdf",
+      "downloaded_bytes": 1799408
+    },
+    {
+      "id": "web50_045",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Amplify Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "098759b569d036818d3669f3e8324296ea1cb17c",
+      "size": 2711975,
+      "local_pdf": "data/web50/raw/web50_045.pdf",
+      "downloaded_bytes": 2711975
+    },
+    {
+      "id": "web50_046",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Amplify Smart Contract Audit Report(vesting) - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Smart%20Contract%20Audit%20Report%28vesting%29%20-%20QuillAudits.pdf",
+      "sha": "14063aa371d73c216dd68bcabe9915f578c9d7dc",
+      "size": 1448907,
+      "local_pdf": "data/web50/raw/web50_046.pdf",
+      "downloaded_bytes": 1448907
+    },
+    {
+      "id": "web50_047",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Amplify Token Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20Token%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "a94c8a87ab77cec0e01d282a7ca54e626e5b5ff0",
+      "size": 2477160,
+      "local_pdf": "data/web50/raw/web50_047.pdf",
+      "downloaded_bytes": 2477160
+    },
+    {
+      "id": "web50_048",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Amplify voting Smart Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify%20voting%20Smart%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "00fc54e8f7ac057d9bc198dcdb6e0e3e18c24b82",
+      "size": 1824811,
+      "local_pdf": "data/web50/raw/web50_048.pdf",
+      "downloaded_bytes": 1824811
+    },
+    {
+      "id": "web50_049",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "Amplify_Child_Token_Smart_Contract_Audit_Report_QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/Amplify_Child_Token_Smart_Contract_Audit_Report_QuillAudits.pdf",
+      "sha": "f13628d6b90eaa76f5fe890133ccd9ae20b1bc91",
+      "size": 4720670,
+      "local_pdf": "data/web50/raw/web50_049.pdf",
+      "downloaded_bytes": 4720670
+    },
+    {
+      "id": "web50_050",
+      "source_repo": "Quillhash/QuillAudit_smart_contract_audit_Reports",
+      "path": "AngelsCreed Token Contract Audit Report - QuillAudits.pdf",
+      "raw_url": "https://raw.githubusercontent.com/Quillhash/QuillAudit_smart_contract_audit_Reports/master/AngelsCreed%20Token%20Contract%20Audit%20Report%20-%20QuillAudits.pdf",
+      "sha": "d95ff37162ae738e334f9af6ced9f157b72539f0",
+      "size": 3861436,
+      "local_pdf": "data/web50/raw/web50_050.pdf",
+      "downloaded_bytes": 3861436
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "query": "reentrancy withdraw call before balance update",
+    "expected_chunk_ids": ["report_001_0000"]
+  },
+  {
+    "query": "missing onlyOwner privileged function access control",
+    "expected_chunk_ids": ["report_002_0000"]
+  },
+  {
+    "query": "unchecked low level call return success boolean",
+    "expected_chunk_ids": ["report_003_0000"]
+  },
+  {
+    "query": "user controlled delegatecall target allowlist",
+    "expected_chunk_ids": ["report_004_0000"]
+  }
+]

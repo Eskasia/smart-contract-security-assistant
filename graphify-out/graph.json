@@ -1,0 +1,374 @@
+{
+  "schema_version": "skill-graph.v1",
+  "generated_at": "2026-04-30T05:34:57+00:00",
+  "generated_by": "scripts/build_skill_graph.py",
+  "project_root": "/Users/william/智能合約安全分析助理 ",
+  "nodes": [
+    {
+      "id": "goal.local_first_audit",
+      "label": "Local-first Solidity security triage",
+      "type": "goal",
+      "owner": "Orchestrator",
+      "evidence": [
+        "README.md"
+      ]
+    },
+    {
+      "id": "capability.cli",
+      "label": "CLI entrypoint",
+      "type": "capability",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "src/smart_contract_audit/cli.py"
+      ]
+    },
+    {
+      "id": "capability.slither",
+      "label": "Slither static analysis",
+      "type": "capability",
+      "owner": "Solidity Security Agent",
+      "evidence": [
+        "src/smart_contract_audit/slither_runner.py"
+      ]
+    },
+    {
+      "id": "capability.adapter",
+      "label": "Finding normalization",
+      "type": "capability",
+      "owner": "Solidity Security Agent",
+      "evidence": [
+        "src/smart_contract_audit/finding_adapter.py"
+      ]
+    },
+    {
+      "id": "capability.schema",
+      "label": "JSON schema validation",
+      "type": "capability",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "schemas/finding_schema.json"
+      ]
+    },
+    {
+      "id": "capability.rag",
+      "label": "Local RAG retrieval",
+      "type": "capability",
+      "owner": "RAG Data Agent",
+      "evidence": [
+        "src/smart_contract_audit/rag/retriever.py"
+      ]
+    },
+    {
+      "id": "capability.llm",
+      "label": "MLX-ready generation",
+      "type": "capability",
+      "owner": "LLM Eval Agent",
+      "evidence": [
+        "src/smart_contract_audit/llm/mlx_runtime.py"
+      ]
+    },
+    {
+      "id": "capability.trace",
+      "label": "SQLite traceability",
+      "type": "capability",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "src/smart_contract_audit/trace/store.py"
+      ]
+    },
+    {
+      "id": "capability.report",
+      "label": "Markdown and JSON reports",
+      "type": "capability",
+      "owner": "Product Doc Agent",
+      "evidence": [
+        "src/smart_contract_audit/report.py"
+      ]
+    },
+    {
+      "id": "capability.ci",
+      "label": "CI validation",
+      "type": "capability",
+      "owner": "Release Agent",
+      "evidence": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "agent.orchestrator",
+      "label": "Orchestrator",
+      "type": "agent",
+      "owner": "Orchestrator",
+      "evidence": [
+        "docs/skill-graph.md"
+      ]
+    },
+    {
+      "id": "agent.security",
+      "label": "Solidity Security Agent",
+      "type": "agent",
+      "owner": "Solidity Security Agent",
+      "evidence": [
+        "tests/test_slither.py"
+      ]
+    },
+    {
+      "id": "agent.rag",
+      "label": "RAG Data Agent",
+      "type": "agent",
+      "owner": "RAG Data Agent",
+      "evidence": [
+        "eval/run_eval.py"
+      ]
+    },
+    {
+      "id": "agent.llm_eval",
+      "label": "LLM Eval Agent",
+      "type": "agent",
+      "owner": "LLM Eval Agent",
+      "evidence": [
+        "eval/run_judge.py"
+      ]
+    },
+    {
+      "id": "agent.quality",
+      "label": "Python Quality Agent",
+      "type": "agent",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "id": "agent.docs",
+      "label": "Product Doc Agent",
+      "type": "agent",
+      "owner": "Product Doc Agent",
+      "evidence": [
+        "README.md",
+        "docs/handoff.md"
+      ]
+    },
+    {
+      "id": "evidence.pytest",
+      "label": "uv run pytest: 15 passed",
+      "type": "evidence",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "tests"
+      ]
+    },
+    {
+      "id": "evidence.ruff",
+      "label": "uv run ruff check .: passed",
+      "type": "evidence",
+      "owner": "Python Quality Agent",
+      "evidence": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "id": "evidence.rag_eval",
+      "label": "RAG recall eval: recall_at_k=1.0",
+      "type": "evidence",
+      "owner": "RAG Data Agent",
+      "evidence": [
+        "eval/run_eval.py"
+      ]
+    },
+    {
+      "id": "evidence.judge_eval",
+      "label": "Judge eval: average_judge_score=5.0",
+      "type": "evidence",
+      "owner": "LLM Eval Agent",
+      "evidence": [
+        "eval/run_judge.py"
+      ]
+    },
+    {
+      "id": "evidence.mlx_probe",
+      "label": "MLX 4bit model load probe succeeded",
+      "type": "evidence",
+      "owner": "LLM Eval Agent",
+      "evidence": [
+        "src/smart_contract_audit/llm/mlx_runtime.py"
+      ]
+    },
+    {
+      "id": "artifact.mlx_probe",
+      "label": "reports-mlx/mlx_probe.json",
+      "type": "artifact",
+      "owner": "LLM Eval Agent",
+      "evidence": [
+        "reports-mlx/mlx_probe.json"
+      ]
+    },
+    {
+      "id": "artifact.graph_json",
+      "label": "graphify-out/graph.json",
+      "type": "artifact",
+      "owner": "Orchestrator",
+      "evidence": [
+        "graphify-out/graph.json"
+      ]
+    },
+    {
+      "id": "artifact.graph_report",
+      "label": "graphify-out/GRAPH_REPORT.md",
+      "type": "artifact",
+      "owner": "Orchestrator",
+      "evidence": [
+        "graphify-out/GRAPH_REPORT.md"
+      ]
+    },
+    {
+      "id": "artifact.graph_html",
+      "label": "graphify-out/graph.html",
+      "type": "artifact",
+      "owner": "Orchestrator",
+      "evidence": [
+        "graphify-out/graph.html"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "goal.local_first_audit",
+      "target": "capability.cli",
+      "type": "REQUIRES",
+      "evidence": "README.md"
+    },
+    {
+      "source": "capability.cli",
+      "target": "capability.slither",
+      "type": "TRIGGERS",
+      "evidence": "src/smart_contract_audit/cli.py"
+    },
+    {
+      "source": "capability.slither",
+      "target": "capability.adapter",
+      "type": "PRODUCES",
+      "evidence": "src/smart_contract_audit/analyzer.py"
+    },
+    {
+      "source": "capability.adapter",
+      "target": "capability.schema",
+      "type": "VALIDATES",
+      "evidence": "src/smart_contract_audit/validation/validator.py"
+    },
+    {
+      "source": "capability.schema",
+      "target": "capability.rag",
+      "type": "UNLOCKS",
+      "evidence": "src/smart_contract_audit/analyzer.py"
+    },
+    {
+      "source": "capability.rag",
+      "target": "capability.llm",
+      "type": "SUPPLIES_CONTEXT",
+      "evidence": "src/smart_contract_audit/llm/prompt_template.py"
+    },
+    {
+      "source": "capability.llm",
+      "target": "capability.report",
+      "type": "PRODUCES",
+      "evidence": "src/smart_contract_audit/report.py"
+    },
+    {
+      "source": "capability.report",
+      "target": "capability.trace",
+      "type": "RECORDS",
+      "evidence": "src/smart_contract_audit/trace/store.py"
+    },
+    {
+      "source": "agent.security",
+      "target": "capability.slither",
+      "type": "OWNS",
+      "evidence": "docs/skill-graph.md"
+    },
+    {
+      "source": "agent.rag",
+      "target": "capability.rag",
+      "type": "OWNS",
+      "evidence": "docs/skill-graph.md"
+    },
+    {
+      "source": "agent.llm_eval",
+      "target": "capability.llm",
+      "type": "OWNS",
+      "evidence": "docs/skill-graph.md"
+    },
+    {
+      "source": "agent.quality",
+      "target": "capability.schema",
+      "type": "OWNS",
+      "evidence": "docs/skill-graph.md"
+    },
+    {
+      "source": "agent.docs",
+      "target": "capability.report",
+      "type": "OWNS",
+      "evidence": "docs/skill-graph.md"
+    },
+    {
+      "source": "evidence.pytest",
+      "target": "capability.ci",
+      "type": "VALIDATES",
+      "evidence": ".github/workflows/ci.yml"
+    },
+    {
+      "source": "evidence.ruff",
+      "target": "capability.ci",
+      "type": "VALIDATES",
+      "evidence": ".github/workflows/ci.yml"
+    },
+    {
+      "source": "evidence.rag_eval",
+      "target": "capability.rag",
+      "type": "VALIDATES",
+      "evidence": "eval/rag_recall_test.json"
+    },
+    {
+      "source": "evidence.judge_eval",
+      "target": "capability.llm",
+      "type": "VALIDATES",
+      "evidence": "eval/judge_eval_set.json"
+    },
+    {
+      "source": "evidence.mlx_probe",
+      "target": "artifact.mlx_probe",
+      "type": "PRODUCES",
+      "evidence": "reports-mlx/mlx_probe.json"
+    },
+    {
+      "source": "agent.orchestrator",
+      "target": "artifact.graph_json",
+      "type": "PRODUCES",
+      "evidence": "scripts/build_skill_graph.py"
+    },
+    {
+      "source": "artifact.graph_json",
+      "target": "artifact.graph_report",
+      "type": "PRODUCES",
+      "evidence": "scripts/build_skill_graph.py"
+    },
+    {
+      "source": "artifact.graph_json",
+      "target": "artifact.graph_html",
+      "type": "PRODUCES",
+      "evidence": "scripts/build_skill_graph.py"
+    },
+    {
+      "source": "artifact.graph_report",
+      "target": "agent.orchestrator",
+      "type": "UPDATES",
+      "evidence": "docs/skill-graph.md"
+    }
+  ],
+  "summary": {
+    "nodes": 25,
+    "edges": 22,
+    "core_files": 52,
+    "remaining_gaps": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "overall_status": "error",
+  "contract_id": "10679f2de6b7",
+  "requires_human_review": true,
+  "business_logic_review_required": false,
+  "review_reason": "Slither-based MVP findings still require human security review.",
+  "findings": [],
+  "analysis_metadata": {
+    "dataset_version": "dataset_v1.0",
+    "model_version": "mlx-8b-4bit",
+    "solc_version": null,
+    "slither_version": null,
+    "partial_analysis": false,
+    "analysis_trace_id": "trace_dc74c27a1a4d",
+    "context_tokens_used": 0,
+    "rag_mode": "fallback",
+    "total_duration_ms": 3,
+    "errors": [
+      "slither executable not found; install with `uv sync --extra audit`."
+    ]
+  }
+}

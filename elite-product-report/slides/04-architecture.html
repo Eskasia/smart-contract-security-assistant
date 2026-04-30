@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>Architecture</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="topline" style=""></div><div class="title" style=""><div class="label" style=""><p>ARCHITECTURE</p></div><h1>工具做判定，AI 做解釋</h1><p>Slither finding 是事實來源；LLM 僅生成可追溯的修復說明。</p></div><div class="rule thick" style="left:92pt;top:294pt;width:770pt;"></div><div class="step abs" style="left:78pt;top:242pt;width:110pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>1</p></div><div class="abs" style="left:0;top:34pt;width:110pt;"><h3>.sol input</h3><p>single contract</p></div></div><div class="step abs" style="left:214pt;top:242pt;width:110pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>2</p></div><div class="abs" style="left:0;top:34pt;width:110pt;"><h3>Slither</h3><p>detector + AST</p></div></div><div class="step abs" style="left:350pt;top:242pt;width:120pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>3</p></div><div class="abs" style="left:0;top:34pt;width:120pt;"><h3>Adapter</h3><p>FindingSchema</p></div></div><div class="step abs" style="left:496pt;top:242pt;width:110pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--green);"><p>4</p></div><div class="abs" style="left:0;top:34pt;width:110pt;"><h3>RAG</h3><p>evidence chunks</p></div></div><div class="step abs" style="left:632pt;top:242pt;width:120pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>5</p></div><div class="abs" style="left:0;top:34pt;width:120pt;"><h3>MLX-ready</h3><p>local output</p></div></div><div class="step abs" style="left:786pt;top:242pt;width:110pt;height:74pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--green);"><p>6</p></div><div class="abs" style="left:0;top:34pt;width:110pt;"><h3>Trace</h3><p>JSON / MD / DB</p></div></div><div class="footer" style=""><p>template: process_flow · transition: fade/morph class</p></div>
+</body>
+</html>

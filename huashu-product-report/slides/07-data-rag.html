@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>資料與檢索</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="grid-v" style="left:290pt;"></div><div class="grid-v" style="left:530pt;"></div><div class="grid-v" style="left:770pt;"></div><div class="grid-h" style="top:178pt;"></div><div class="grid-h" style="top:316pt;"></div><div class="grid-h" style="top:454pt;"></div><div class="title" style=""><div class="label" style=""><p>DATA + RETRIEVAL</p></div><h1>公開審計報告先轉成可評測語料</h1><p>非結構化資料萃取——把文件中的純文字、程式碼區塊與 metadata 分離，避免髒資料污染檢索。</p></div><div class="panel" style="left:62pt;top:220pt;width:235pt;height:145pt;"><h3>資料清理</h3><p>PDF / HTML / Markdown 分流，保留 Solidity code block，寫入 source_id、severity、sha256。</p></div><div class="panel" style="left:360pt;top:220pt;width:235pt;height:145pt;"><h3>檢索策略</h3><p>quality / balanced / fast / fallback 四種模式，fixture 目前以 BM25 fallback 驗證。</p></div><div class="panel" style="left:658pt;top:220pt;width:235pt;height:145pt;"><h3>評測方式</h3><p>eval/run_eval.py 讀取題庫，計算正確文件是否被檢索進 top-k。</p></div><div class="metric abs" style="left:385pt;top:390pt;width:150pt;"><h2><span style="color:var(--green)">1.0</span></h2><p>fixture recall@k</p></div><div class="foot" style=""><p>current corpus: data/dataset_v1.0/chunks/chunks.jsonl</p></div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>Traceability</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="topline" style=""></div><div class="title" style=""><div class="label" style=""><p>TRACEABILITY</p></div><h1>每個報告欄位都能查回來源</h1><p>Trace 把 Slither raw、schema、RAG chunks、prompt 與 final report 串成證據鏈。</p></div><div class="panel" style="left:100pt;top:235pt;width:285pt;height:160pt;"><div class="code" style=""><p>finding_id<br>  → slither_raw<br>  → normalized_schema<br>  → rag_chunk_ids<br>  → packed_prompt<br>  → llm_raw_output<br>  → report_field</p></div></div><div class="panel mini" style="left:482pt;top:220pt;width:310pt;height:56pt;"><h3>analysis_trace</h3><p>contract_id、dataset_version、final_status</p></div><div class="panel mini" style="left:482pt;top:304pt;width:310pt;height:56pt;"><h3>trace_findings</h3><p>per-finding rag_mode、耗時、chunks_used</p></div><div class="panel mini" style="left:482pt;top:388pt;width:310pt;height:56pt;"><h3>trace_lookup</h3><p>CLI 查詢單一 finding</p></div><div class="footer" style=""><p>observability: SQLite trace database</p></div>
+</body>
+</html>

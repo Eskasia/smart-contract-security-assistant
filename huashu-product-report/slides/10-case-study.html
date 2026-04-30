@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>案例研究</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="grid-v" style="left:290pt;"></div><div class="grid-v" style="left:530pt;"></div><div class="grid-v" style="left:770pt;"></div><div class="grid-h" style="top:178pt;"></div><div class="grid-h" style="top:316pt;"></div><div class="grid-h" style="top:454pt;"></div><div class="title" style=""><div class="label" style=""><p>CASE STUDY</p></div><h1>VulnerableVault reentrancy 被正規化成 High finding</h1><p>實例顯示產品能從測試合約定位漏洞、附上位置、風險敘述與修復方向。</p></div><div class="panel" style="left:62pt;top:205pt;width:410pt;height:220pt;"><div class="code" style="position:absolute;left:18pt;top:18pt;width:365pt;height:178pt;"><p class="mono">function withdraw() external {<br>  uint256 amount = balances[msg.sender];<br>  (bool success,) = msg.sender.call{value: amount}("");<br>  require(success, "transfer failed");<br>  balances[msg.sender] = 0;<br>}</p></div></div><div class="rowline" style="left:535pt;top:220pt;width:330pt;height:38pt;"><h3>detector</h3><p>reentrancy-eth</p></div><div class="rowline" style="left:535pt;top:282pt;width:330pt;height:38pt;"><h3>location</h3><p>tests/contracts/VulnerableVault.sol:11-16</p></div><div class="rowline" style="left:535pt;top:344pt;width:330pt;height:38pt;"><h3>fix</h3><p>checks-effects-interactions + nonReentrant</p></div><div class="foot" style=""><p>case finding: external call precedes balance reset</p></div>
+</body>
+</html>

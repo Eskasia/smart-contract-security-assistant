@@ -1,0 +1,28 @@
+[
+  {
+    "contract_snippet": "function withdraw() external { uint256 amount = balances[msg.sender]; (bool success,) = msg.sender.call{value: amount}(\"\"); require(success); balances[msg.sender] = 0; }",
+    "static_finding": {
+      "vulnerability_type": "reentrancy",
+      "detector_name": "reentrancy-eth"
+    },
+    "rag_chunks": ["report_001"],
+    "local_model_output": {
+      "explanation": "Slither reported reentrancy at line 11 and aligns with report_001 because ETH is sent before balance is updated.",
+      "attack_path": "1. Attacker deposits ETH. 2. Attacker calls withdraw. 3. Fallback reenters before balance is set to zero.",
+      "fix_suggestion": "Apply checks-effects-interactions and add a nonReentrant modifier."
+    }
+  },
+  {
+    "contract_snippet": "function sweep(address to) external { payable(to).transfer(address(this).balance); }",
+    "static_finding": {
+      "vulnerability_type": "access_control",
+      "detector_name": "arbitrary-send-eth"
+    },
+    "rag_chunks": ["report_002"],
+    "local_model_output": {
+      "explanation": "The access_control issue at line 3 matches report_002 because a privileged transfer lacks onlyOwner authorization.",
+      "attack_path": "1. Unauthorized caller invokes sweep. 2. Contract transfers the full balance. 3. Funds leave the contract.",
+      "fix_suggestion": "Add an onlyOwner or role-based modifier and test unauthorized callers."
+    }
+  }
+]

@@ -1,0 +1,201 @@
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0B0D0E;
+  --panel: #101719;
+  --panel2: #151E20;
+  --paper: #F3F0E6;
+  --paper2: #D8D2C3;
+  --ink: #F7F2DF;
+  --muted: #9AA39B;
+  --line: #284037;
+  --green: #39FF88;
+  --green2: #1FB36A;
+  --orange: #FFB000;
+  --red: #FF4D4D;
+  --blue: #2CA7FF;
+  --violet: #B47CFF;
+}
+html, body {
+  width: 960pt;
+  height: 540pt;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: "PingFang TC", "PingFang SC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+}
+body {
+  position: relative;
+  letter-spacing: 0;
+}
+h1, h2, h3, h4, p, li {
+  font-weight: 500;
+  line-height: 1.12;
+}
+h1 {
+  font-size: 55pt;
+  font-weight: 800;
+  color: var(--ink);
+}
+h2 {
+  font-size: 30pt;
+  font-weight: 800;
+  color: var(--ink);
+}
+h3 {
+  font-size: 18pt;
+  font-weight: 800;
+  color: var(--ink);
+}
+p {
+  font-size: 14pt;
+  color: var(--muted);
+  line-height: 1.38;
+}
+.paper { background: var(--paper); color: #101211; }
+.paper h1, .paper h2, .paper h3 { color: #101211; }
+.paper p { color: #5E665F; }
+.abs { position: absolute; }
+.title {
+  position: absolute;
+  left: 46pt;
+  top: 44pt;
+  width: 670pt;
+}
+.subtitle {
+  margin-top: 12pt;
+  width: 575pt;
+}
+.eyebrow p {
+  color: var(--green);
+  font-size: 10pt;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.kicker p {
+  color: var(--green);
+  font-size: 12pt;
+  font-weight: 800;
+}
+.small p { font-size: 10pt; line-height: 1.28; }
+.micro p { font-size: 8.5pt; line-height: 1.25; color: #778179; }
+.mono p, p.mono {
+  font-family: Menlo, Monaco, Consolas, monospace;
+}
+.code p {
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5pt;
+  line-height: 1.38;
+  color: #D8FFE4;
+  white-space: pre-wrap;
+}
+.code.dark p { color: #111315; }
+.paper .code p { color: #111315; }
+.panel {
+  position: absolute;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(216,210,195,0.18);
+  border-radius: 7pt;
+}
+.paper .panel {
+  background: rgba(11,13,14,0.035);
+  border-color: rgba(11,13,14,0.15);
+}
+.chip {
+  position: absolute;
+  background: #12251C;
+  border: 1px solid rgba(57,255,136,0.55);
+  border-radius: 99pt;
+}
+.chip p {
+  color: var(--green);
+  font-size: 10pt;
+  font-weight: 800;
+  text-align: center;
+}
+.bar { position: absolute; background: var(--green); }
+.bar.orange { background: var(--orange); }
+.bar.red { background: var(--red); }
+.bar.blue { background: var(--blue); }
+.bar.violet { background: var(--violet); }
+.line { position: absolute; background: rgba(57,255,136,0.22); }
+.line.strong { background: rgba(57,255,136,0.65); }
+.line.muted { background: rgba(216,210,195,0.16); }
+.paper .line.muted { background: rgba(11,13,14,0.16); }
+.metric h2 {
+  font-size: 42pt;
+  color: var(--green);
+}
+.metric p {
+  margin-top: 5pt;
+  color: var(--muted);
+  font-size: 10pt;
+}
+.paper .metric h2 { color: #0AA768; }
+.paper .metric p { color: #667168; }
+.node-index {
+  position: absolute;
+  width: 24pt;
+  height: 24pt;
+  border-radius: 99pt;
+  background: var(--green);
+}
+.node-index p {
+  color: #07100B;
+  text-align: center;
+  font-size: 11pt;
+  line-height: 24pt;
+  font-weight: 900;
+}
+.node-title {
+  position: absolute;
+  left: 34pt;
+  top: 0;
+  width: 170pt;
+}
+.node-title h3 {
+  font-size: 16pt;
+}
+.node-title p {
+  font-size: 9.5pt;
+  margin-top: 4pt;
+}
+.rail {
+  position: absolute;
+  left: 46pt;
+  right: 46pt;
+  bottom: 26pt;
+  height: 1pt;
+  background: rgba(216,210,195,0.26);
+}
+.foot {
+  position: absolute;
+  left: 46pt;
+  bottom: 30pt;
+  width: 520pt;
+}
+.foot p {
+  font-family: Menlo, Monaco, Consolas, monospace;
+  color: rgba(216,210,195,0.60);
+  font-size: 8.5pt;
+}
+.paper .foot p { color: rgba(11,13,14,0.55); }
+.table-row {
+  position: absolute;
+  border-top: 1px solid rgba(216,210,195,0.18);
+}
+.paper .table-row { border-top-color: rgba(11,13,14,0.14); }
+.table-row h3 {
+  position: absolute;
+  left: 0;
+  top: 8pt;
+  font-size: 13pt;
+}
+.table-row p {
+  position: absolute;
+  left: 190pt;
+  top: 8pt;
+  width: 250pt;
+  font-size: 10.5pt;
+}

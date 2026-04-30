@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>系統架構</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="grid-v" style="left:290pt;"></div><div class="grid-v" style="left:530pt;"></div><div class="grid-v" style="left:770pt;"></div><div class="grid-h" style="top:178pt;"></div><div class="grid-h" style="top:316pt;"></div><div class="grid-h" style="top:454pt;"></div><div class="title" style=""><div class="label" style=""><p>ARCHITECTURE</p></div><h1>確定性工具做判定，AI 做解釋</h1><p>RAG——先檢索技術文件與審計語料，再把相關片段交給模型生成答案。</p></div><div class="rule navy" style="left:90pt;top:292pt;width:770pt;"></div><div class="abs" style="left:70pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--green);"><p>1</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>.sol input</h3><p>單檔 Solidity 合約</p></div></div><div class="abs" style="left:205pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>2</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>Slither</h3><p>detector finding + AST</p></div></div><div class="abs" style="left:340pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--amber);"><p>3</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>Adapter</h3><p>FindingSchema</p></div></div><div class="abs" style="left:475pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--green);"><p>4</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>RAG</h3><p>chunks + references</p></div></div><div class="abs" style="left:610pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--blue);"><p>5</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>MLX-ready</h3><p>local generation</p></div></div><div class="abs" style="left:745pt;top:250pt;width:125pt;height:48pt;"><div class="dot" style="left:0pt;top:0pt;background:var(--amber);"><p>6</p></div><div class="abs" style="left:27pt;top:-1pt;width:98pt;"><h3>Trace</h3><p>JSON / MD / SQLite</p></div></div><div class="foot" style=""><p>architecture principle: detector source remains authoritative through report generation</p></div>
+</body>
+</html>

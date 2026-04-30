@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>Case Study</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+<div class="topline" style=""></div><div class="title" style=""><div class="label" style=""><p>CASE STUDY</p></div><h1>VulnerableVault：reentrancy</h1><p>外部 call 發生在餘額歸零前，Slither 映射成 High severity finding。</p></div><div class="panel" style="left:90pt;top:220pt;width:380pt;height:190pt;"><div class="code" style=""><p>function withdraw() external {<br>  uint256 amount = balances[msg.sender];<br>  (bool success,) = msg.sender.call{value: amount}("");<br>  require(success, "transfer failed");<br>  balances[msg.sender] = 0;<br>}</p></div></div><div class="table-row" style="left:545pt;top:230pt;width:300pt;height:38pt;"><h3>detector</h3><p>reentrancy-eth</p></div><div class="table-row" style="left:545pt;top:290pt;width:300pt;height:38pt;"><h3>location</h3><p>VulnerableVault.sol:11-16</p></div><div class="table-row" style="left:545pt;top:350pt;width:300pt;height:38pt;"><h3>fix</h3><p>checks-effects-interactions + nonReentrant</p></div><div class="footer" style=""><p>template: before/after evidence card</p></div>
+</body>
+</html>
