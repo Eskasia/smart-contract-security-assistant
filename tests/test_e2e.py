@@ -21,8 +21,15 @@ def test_e2e_slither_to_trace_report(tmp_path: Path) -> None:
     assert report.analysis_metadata.total_duration_ms < 120_000
     assert report.findings[0].vulnerability_type == "reentrancy"
     assert report.findings[0].explanation_confidence >= 0.5
+    assert "msg.sender.call" in report.findings[0].vulnerable_code
+    assert "nonReentrant" in report.findings[0].remediation_code
+    assert report.analysis_metadata.total_tokens > 0
+    assert report.analysis_metadata.external_average_judge_score == 5.0
     assert (tmp_path / "reports" / f"{report.contract_id}.json").exists()
     assert (tmp_path / "reports" / "analysis_trace.sqlite").exists()
+    markdown = (tmp_path / "reports" / f"{report.contract_id}.md").read_text(encoding="utf-8")
+    assert "Vulnerable code:" in markdown
+    assert "AI remediation code:" in markdown
 
 
 def test_e2e_timeout_marks_partial(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

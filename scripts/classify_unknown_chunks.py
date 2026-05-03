@@ -7,11 +7,20 @@ from smart_contract_audit.rag.indexer import load_chunks, write_chunks
 
 KEYWORDS = {
     "reentrancy": "reentrancy",
-    "onlyowner": "access_control",
-    "access control": "access_control",
+    "onlyowner": "privilege_escalation",
+    "access control": "privilege_escalation",
+    "owner can": "privilege_escalation",
     "low-level call": "unchecked_external_call",
     "delegatecall": "dangerous_delegatecall",
     "array length": "array_length_manipulation",
+    "oracle": "oracle",
+    "price feed": "oracle",
+    "slippage": "price_manipulation",
+    "swap": "price_manipulation",
+    "upgrade": "upgrade_risk",
+    "proxy": "upgrade_risk",
+    "zero address": "input_validation",
+    "zero amount": "input_validation",
 }
 
 
@@ -29,9 +38,9 @@ def main() -> None:
         for keyword, vuln_type in KEYWORDS.items():
             if keyword in lowered:
                 chunk.vuln_type = vuln_type
-                chunk.label_source = "zero_shot_llm"
+                chunk.label_source = "rule_based_backfill"
                 chunk.label_confidence = 0.75
-                chunk.eligible_for_eval = False
+                chunk.eligible_for_eval = True
                 break
     write_chunks(chunks, args.output_jsonl)
 

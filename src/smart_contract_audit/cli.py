@@ -7,8 +7,8 @@ from pathlib import Path
 from .analyzer import analyze_contract
 from .llm.mlx_runtime import MLXRuntimeConfig, discover_mlx_model_paths, probe_mlx_runtime
 from .rag.chunker import chunk_document
-from .rag.indexer import write_chunks
-from .trace.lookup import lookup_trace
+from .rag.indexer import deduplicate_chunks, write_chunks
+from .trace.lookup import lookup_trace, trace_dashboard
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -30,11 +30,15 @@ def main(argv: list[str] | None = None) -> None:
     clean = subparsers.add_parser("clean-reports", help="Extract and chunk raw reports into JSONL.")
     clean.add_argument("raw_reports_dir", type=Path)
     clean.add_argument("output_jsonl", type=Path)
+    clean.add_argument("--filter-unknown", action="store_true")
 
     lookup = subparsers.add_parser("trace-lookup", help="Lookup trace rows.")
     lookup.add_argument("trace_db", type=Path)
     lookup.add_argument("trace_id")
     lookup.add_argument("--finding-id")
+
+    dashboard = subparsers.add_parser("trace-dashboard", help="Summarize analysis traces.")
+    dashboard.add_argument("trace_db", type=Path)
 
     mlx_probe = subparsers.add_parser("mlx-probe", help="Record MLX load/fallback status.")
     mlx_probe.add_argument("--model-path")
@@ -49,6 +53,12 @@ def main(argv: list[str] | None = None) -> None:
     web = subparsers.add_parser("web", help="Run the optional Gradio UI.")
     web.add_argument("--host", default="127.0.0.1")
     web.add_argument("--port", type=int, default=7860)
+
+    api = subparsers.add_parser("api", help="Run the local HTTP API for the React frontend.")
+    api.add_argument("--host", default="127.0.0.1")
+    api.add_argument("--port", type=int, default=8787)
+    api.add_argument("--out-dir", type=Path, default=Path("reports-api"))
+    api.add_argument("--trace-db", type=Path)
 
     args = parser.parse_args(argv)
     if args.command == "analyze":
@@ -65,11 +75,15 @@ def main(argv: list[str] | None = None) -> None:
         chunks = []
         for path in sorted(args.raw_reports_dir.iterdir()):
             if path.is_file():
-                chunks.extend(chunk_document(path))
+                chunks.extend(chunk_document(path, include_unknown=not args.filter_unknown))
+        chunks = deduplicate_chunks(chunks)
         write_chunks(chunks, args.output_jsonl)
         print(json.dumps({"chunks": len(chunks), "output": str(args.output_jsonl)}, indent=2))
     elif args.command == "trace-lookup":
         rows = lookup_trace(args.trace_db, args.trace_id, args.finding_id)
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+    elif args.command == "trace-dashboard":
+        rows = trace_dashboard(args.trace_db)
         print(json.dumps(rows, ensure_ascii=False, indent=2))
     elif args.command == "mlx-probe":
         discovered_paths = []
@@ -103,3 +117,12 @@ def main(argv: list[str] | None = None) -> None:
         from .web import launch
 
         launch(host=args.host, port=args.port)
+    elif args.command == "api":
+        from .http_api import run_api_server
+
+        run_api_server(
+            host=args.host,
+            port=args.port,
+            output_dir=args.out_dir,
+            trace_db=args.trace_db,
+        )

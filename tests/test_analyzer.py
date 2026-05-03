@@ -78,5 +78,11 @@ def test_analyze_contract_with_fake_slither(tmp_path: Path) -> None:
     assert report.overall_status == "finding"
     assert report.findings[0].vulnerability_type == "reentrancy"
     assert report.findings[0].finding_confidence == 1.0
+    assert "call{value: amount}" in report.findings[0].vulnerable_code
+    assert "nonReentrant" in report.findings[0].remediation_code
+    assert report.findings[0].local_judge_score == 5.0
+    assert report.findings[0].external_judge_score == 5.0
+    assert report.findings[0].total_tokens > 0
+    assert report.analysis_metadata.total_tokens == report.findings[0].total_tokens
     assert (tmp_path / "reports" / f"{report.contract_id}.json").exists()
     assert (tmp_path / "reports" / "analysis_trace.sqlite").exists()

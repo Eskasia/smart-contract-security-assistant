@@ -19,7 +19,7 @@ def pack_finding_prompt(finding: Finding, chunks: list[RagChunk]) -> str:
             "You are a smart contract security analyst.",
             (
                 "Given one static analysis finding and related audit knowledge, "
-                "provide explanation, attack path, and fix suggestion."
+                "provide explanation, attack path, fix suggestion, and remediation_code."
             ),
             "",
             "[Finding]",
@@ -29,7 +29,7 @@ def pack_finding_prompt(finding: Finding, chunks: list[RagChunk]) -> str:
             related or "No related knowledge chunks were retrieved.",
             "",
             "[Instructions]",
-            "- Output valid JSON matching the finding explanation fields.",
+            "- Output valid JSON with explanation, attack_path, fix_suggestion, remediation_code.",
             "- Reference specific code lines from the static finding.",
             "- Do not invent vulnerabilities not present in the static finding.",
         ]

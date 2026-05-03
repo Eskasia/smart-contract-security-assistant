@@ -17,7 +17,7 @@ current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_a
 
 ## Summary
 
-本文件是專案操作手冊，覆蓋安裝、單檔 Solidity 分析、trace 查詢、MLX probe、資料清理與 Web UI。當前穩定入口是 CLI：`scsa analyze`。
+本文件是專案操作手冊，覆蓋安裝、單檔或專案級 Solidity 分析、trace 查詢、MLX probe、資料清理與 Web UI。當前穩定入口是 CLI：`scsa analyze`。
 
 ## 前置條件
 
@@ -32,15 +32,17 @@ current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_a
 cd "/Users/william/智能合約安全分析助理 "
 uv sync --extra audit --dev
 uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports
+uv run scsa analyze tests/fixtures/solidity_projects/foundry --out-dir reports-foundry
 uv run pytest
 ```
 
 預期輸出：`reports/<contract_id>.json`、`reports/<contract_id>.md`、`reports/analysis_trace.sqlite`。
+報告會直接包含漏洞原始碼片段、AI remediation code、local/external judge score 與 prompt/completion/total token usage。
 
 ## 分析合約
 
 ```bash
-uv run scsa analyze <contract.sol> --out-dir reports
+uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 ```
 
 可選參數：
@@ -53,7 +55,7 @@ uv run scsa analyze <contract.sol> --out-dir reports
 | `--rag-mode` | 可選 `quality`、`balanced`、`fast`、`fallback`，預設 `balanced` |
 | `--model-path` | 指定 MLX 模型路徑；未指定時可走 deterministic fallback |
 
-輸入限制：只支援單一入口 `.sol` 檔，入口檔最多 500 行；同目錄本地 import 已由 `tests/test_slither.py` 覆蓋。
+輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；單檔最多 500 行，專案最多 100 個 Solidity 檔與 5,000 行。
 
 ## 報告狀態
 
@@ -71,9 +73,10 @@ uv run scsa analyze <contract.sol> --out-dir reports
 ```bash
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id> --finding-id f_001
+uv run scsa trace-dashboard reports/analysis_trace.sqlite
 ```
 
-Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid 與 partial 狀態。
+Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid、partial 狀態、judge score、token usage 與 review status。
 
 ## MLX Probe
 
@@ -86,7 +89,8 @@ uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/
 ## 清理審計報告語料
 
 ```bash
-uv run scsa clean-reports data/dataset_v1.0/raw_reports data/dataset_v1.0/chunks/chunks.jsonl
+uv run scsa clean-reports data/web50/raw data/web50/chunks.jsonl
+uv run python scripts/validate_chunks.py data/web50/chunks.jsonl --max-unknown-rate 0.4 --min-eligible 400
 ```
 
 此命令會讀取原始報告資料夾，產生 RAG 用 JSONL chunks。

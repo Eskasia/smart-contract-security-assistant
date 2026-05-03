@@ -24,5 +24,31 @@
       "attack_path": "1. Unauthorized caller invokes sweep. 2. Contract transfers the full balance. 3. Funds leave the contract.",
       "fix_suggestion": "Add an onlyOwner or role-based modifier and test unauthorized callers."
     }
+  },
+  {
+    "contract_snippet": "function latestPrice() external view returns (int256) { return priceFeed.latestAnswer(); }",
+    "static_finding": {
+      "vulnerability_type": "oracle",
+      "detector_name": "pyth-unchecked-confidence"
+    },
+    "rag_chunks": ["report_005"],
+    "local_model_output": {
+      "explanation": "The oracle issue at line 6 matches report_005 because the price is consumed without freshness or confidence validation.",
+      "attack_path": "1. Oracle returns stale data. 2. Contract accepts the stale price. 3. Accounting uses the wrong value.",
+      "fix_suggestion": "Check publish time, confidence bounds, and fallback behavior before using the price."
+    }
+  },
+  {
+    "contract_snippet": "function upgradeTo(address implementation) external { _implementation = implementation; }",
+    "static_finding": {
+      "vulnerability_type": "upgrade_risk",
+      "detector_name": "unprotected-upgrade"
+    },
+    "rag_chunks": ["report_008"],
+    "local_model_output": {
+      "explanation": "The upgrade_risk issue at line 4 matches report_008 because upgradeTo changes implementation without authorization.",
+      "attack_path": "1. Unauthorized caller invokes upgradeTo. 2. Proxy implementation changes. 3. Future calls execute attacker logic.",
+      "fix_suggestion": "Require onlyOwner or role checks and validate initializer and storage layout tests."
+    }
   }
 ]

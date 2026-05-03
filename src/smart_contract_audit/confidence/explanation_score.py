@@ -32,7 +32,17 @@ def _references_line_numbers(text: str) -> bool:
 
 
 def _has_code_level_fix(text: str) -> bool:
-    fix_markers = ("modifier", "require(", "nonReentrant", "onlyOwner", "checks-effects")
+    fix_markers = (
+        "modifier",
+        "require(",
+        "nonReentrant",
+        "onlyOwner",
+        "checks-effects",
+        "twap",
+        "slippage",
+        "initializer",
+        "role",
+    )
     return any(marker in text for marker in fix_markers)
 
 

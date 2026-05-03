@@ -1,0 +1,128 @@
+import type { AnalysisReport, TraceFinding } from "../types/report";
+
+export const demoReport: AnalysisReport = {
+  report_version: "1.0",
+  overall_status: "finding",
+  contract_id: "10679f2de6b7",
+  review_status: "pending_human_review",
+  requires_human_review: true,
+  business_logic_review_required: false,
+  review_reason: "Slither-based MVP findings still require human security review.",
+  findings: [
+    {
+      finding_id: "f_001",
+      vulnerability_type: "reentrancy",
+      severity: 3,
+      location: {
+        file: "tests/contracts/VulnerableVault.sol",
+        function: "withdraw",
+        line_start: 11,
+        line_end: 16,
+      },
+      evidence:
+        "External call msg.sender.call{value: amount}() happens before balances[msg.sender] is reset.",
+      reference: ["SWC-107"],
+      finding_confidence: 0.85,
+      explanation_confidence: 0.72,
+      explanation:
+        "withdraw() sends ETH before clearing the caller balance. A receiving contract can re-enter withdraw() while the recorded balance is still positive.",
+      attack_path:
+        "1. Attacker deposits ETH. 2. Attacker calls withdraw(). 3. Fallback re-enters before balance reset. 4. Repeated withdrawals drain available ETH.",
+      fix_suggestion:
+        "Move the balance update before the external call and guard withdraw() with a nonReentrant lock.",
+      remediation_code:
+        "function withdraw() external nonReentrant {\n  uint256 amount = balances[msg.sender];\n  require(amount > 0, \"No balance\");\n  balances[msg.sender] = 0;\n  (bool success, ) = msg.sender.call{value: amount}(\"\");\n  require(success, \"Transfer failed\");\n}",
+      vulnerable_code:
+        "11: function withdraw() external {\n12:   uint256 amount = balances[msg.sender];\n13:   (bool success, ) = msg.sender.call{value: amount}(\"\");\n14:   require(success, \"Transfer failed\");\n15:   balances[msg.sender] = 0;\n16: }",
+      static_tool_source: "slither",
+      detector_name: "reentrancy-eth",
+      partial: false,
+      local_judge_score: 5,
+      external_judge_score: 5,
+      prompt_tokens: 680,
+      completion_tokens: 300,
+      total_tokens: 980,
+    },
+    {
+      finding_id: "f_002",
+      vulnerability_type: "access_control",
+      severity: 2,
+      location: {
+        file: "tests/contracts/detectors/PrivilegeOwnerDrain.sol",
+        function: "drain",
+        line_start: 18,
+        line_end: 22,
+      },
+      evidence: "Privileged asset transfer depends on owner-only control and requires human review.",
+      reference: ["CWE-284"],
+      finding_confidence: 0.68,
+      explanation_confidence: 0.64,
+      explanation:
+        "The drain path moves contract value through a privileged function. Static analysis can identify the privileged flow, while business authorization intent requires reviewer confirmation.",
+      attack_path:
+        "1. Owner key or owner assignment is compromised. 2. drain() is called. 3. Contract-held funds move to the attacker-controlled address.",
+      fix_suggestion:
+        "Constrain privileged transfer scope, add multisig ownership, and emit reviewable operational events.",
+      remediation_code:
+        "function drain(address payable receiver, uint256 amount) external onlyOwner {\n  require(receiver != address(0), \"receiver\");\n  require(amount <= address(this).balance, \"amount\");\n  receiver.transfer(amount);\n  emit Drain(receiver, amount);\n}",
+      vulnerable_code:
+        "18: function drain(address payable receiver) external onlyOwner {\n19:   receiver.transfer(address(this).balance);\n20: }",
+      static_tool_source: "slither",
+      detector_name: "owner-drain",
+      partial: false,
+      local_judge_score: 4.5,
+      external_judge_score: 4.5,
+      prompt_tokens: 420,
+      completion_tokens: 190,
+      total_tokens: 610,
+    },
+  ],
+  analysis_metadata: {
+    dataset_version: "dataset_v1.0",
+    model_version: "mlx-8b-4bit",
+    solc_version: "0.8.34",
+    slither_version: "0.11.5",
+    partial_analysis: false,
+    analysis_trace_id: "trace_6cb6648b074e",
+    context_tokens_used: 41,
+    prompt_tokens: 1100,
+    completion_tokens: 490,
+    total_tokens: 1590,
+    local_average_judge_score: 4.75,
+    external_average_judge_score: 4.75,
+    rag_mode: "fallback",
+    total_duration_ms: 1222,
+    input_kind: "single_file",
+    project_type: "single_file",
+    entry_path: "tests/contracts/VulnerableVault.sol",
+    project_root: "",
+    source_files_count: 1,
+    errors: ["Using system solc 0.8.34 for pragma-compatible 0.8.19."],
+  },
+};
+
+export const demoTrace: TraceFinding[] = demoReport.findings.map((finding, index) => ({
+  trace_id: demoReport.analysis_metadata.analysis_trace_id,
+  finding_id: finding.finding_id,
+  detector_name: finding.detector_name,
+  rag_mode: demoReport.analysis_metadata.rag_mode,
+  retrieval_duration_ms: 18 + index * 4,
+  llm_duration_ms: 120 + index * 25,
+  chunks_used: 3,
+  slither_raw: JSON.stringify({ check: finding.detector_name, impact: finding.severity }, null, 2),
+  normalized_finding: JSON.stringify(finding, null, 2),
+  rag_chunk_ids: JSON.stringify(["web50_022#12", "web50_036#04", "dataset_v1.0#08"]),
+  packed_prompt: `Finding ${finding.finding_id}: ${finding.evidence}`,
+  llm_raw_output: JSON.stringify(
+    {
+      explanation: finding.explanation,
+      attack_path: finding.attack_path,
+      fix_suggestion: finding.fix_suggestion,
+    },
+    null,
+    2,
+  ),
+  schema_valid: true,
+  retry_count: 0,
+  partial: finding.partial,
+}));

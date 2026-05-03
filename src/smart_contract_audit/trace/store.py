@@ -35,6 +35,7 @@ class TraceStore:
                 model_version TEXT,
                 dataset_version TEXT,
                 initial_rag_mode TEXT,
+                review_status TEXT,
                 final_status TEXT,
                 total_duration_ms INTEGER
             );
@@ -59,7 +60,17 @@ class TraceStore:
             );
             """
         )
+        self._ensure_column("analysis_trace", "review_status", "TEXT")
         self.conn.commit()
+
+    def _ensure_column(self, table: str, column: str, column_type: str) -> None:
+        assert self.conn is not None
+        columns = {
+            row[1]
+            for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in columns:
+            self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
 
     def create_trace(
         self,
@@ -69,6 +80,7 @@ class TraceStore:
         model_version: str,
         dataset_version: str,
         initial_rag_mode: str,
+        review_status: str,
     ) -> str:
         assert self.conn is not None
         trace_id = f"trace_{uuid.uuid4().hex[:12]}"
@@ -76,9 +88,9 @@ class TraceStore:
             """
             INSERT INTO analysis_trace (
                 trace_id, contract_id, solc_version, slither_version, model_version,
-                dataset_version, initial_rag_mode, final_status, total_duration_ms
+                dataset_version, initial_rag_mode, review_status, final_status, total_duration_ms
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 trace_id,
@@ -88,6 +100,7 @@ class TraceStore:
                 model_version,
                 dataset_version,
                 initial_rag_mode,
+                review_status,
                 "running",
                 0,
             ),
@@ -95,11 +108,21 @@ class TraceStore:
         self.conn.commit()
         return trace_id
 
-    def finish_trace(self, trace_id: str, final_status: str, total_duration_ms: int) -> None:
+    def finish_trace(
+        self,
+        trace_id: str,
+        final_status: str,
+        total_duration_ms: int,
+        review_status: str,
+    ) -> None:
         assert self.conn is not None
         self.conn.execute(
-            "UPDATE analysis_trace SET final_status = ?, total_duration_ms = ? WHERE trace_id = ?",
-            (final_status, total_duration_ms, trace_id),
+            """
+            UPDATE analysis_trace
+            SET final_status = ?, total_duration_ms = ?, review_status = ?
+            WHERE trace_id = ?
+            """,
+            (final_status, total_duration_ms, review_status, trace_id),
         )
         self.conn.commit()
 

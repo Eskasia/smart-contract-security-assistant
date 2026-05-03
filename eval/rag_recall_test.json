@@ -14,5 +14,21 @@
   {
     "query": "user controlled delegatecall target allowlist",
     "expected_chunk_ids": ["report_004_0000"]
+  },
+  {
+    "query": "stale oracle price feed unchecked confidence publish time",
+    "expected_chunk_ids": ["report_005_0000"]
+  },
+  {
+    "query": "spot price slippage flash loan AMM TWAP protection",
+    "expected_chunk_ids": ["report_006_0000"]
+  },
+  {
+    "query": "owner admin role can drain assets bypass authorization",
+    "expected_chunk_ids": ["report_007_0000"]
+  },
+  {
+    "query": "unprotected proxy upgrade unsafe initializer storage layout",
+    "expected_chunk_ids": ["report_008_0000"]
   }
 ]

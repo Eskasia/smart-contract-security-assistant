@@ -40,6 +40,8 @@ def normalize_slither_json(raw_json: dict[str, Any], contract_path: Path) -> Ada
             explanation="",
             attack_path="",
             fix_suggestion="",
+            remediation_code="",
+            vulnerable_code="",
             static_tool_source="slither",
             detector_name=detector_name,
             partial=False,

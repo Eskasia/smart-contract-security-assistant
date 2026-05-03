@@ -7,13 +7,149 @@ from pathlib import Path
 
 from smart_contract_audit.models import RagChunk
 
-VULN_KEYWORDS = {
-    "reentrancy": "reentrancy",
-    "access control": "access_control",
-    "unchecked": "unchecked_external_call",
-    "delegatecall": "dangerous_delegatecall",
-    "array length": "array_length_manipulation",
-}
+VULN_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "reentrancy",
+        (
+            "reentrancy",
+            "checks-effects-interaction",
+            "checks effects interaction",
+            "external call before",
+            "call before state",
+        ),
+    ),
+    (
+        "unchecked_external_call",
+        (
+            "unchecked",
+            "low-level call",
+            "call failed",
+            "send failed",
+            "transfer failed",
+            "success boolean",
+        ),
+    ),
+    ("dangerous_delegatecall", ("delegatecall", "arbitrary call", "arbitrary external call")),
+    ("array_length_manipulation", ("array length", "length manipulation")),
+    (
+        "oracle",
+        (
+            "oracle",
+            "chainlink",
+            "price feed",
+            "stale price",
+            "twap",
+            "price manipulation",
+            "manipulate price",
+            "manipulation attack",
+        ),
+    ),
+    (
+        "price_manipulation",
+        (
+            "slippage",
+            "sandwich",
+            "front-run",
+            "frontrun",
+            "front run",
+            "amm",
+            "pool price",
+            "liquidity pool",
+            "swap",
+            "dex",
+            "flash loan",
+            "flashloan",
+        ),
+    ),
+    (
+        "privilege_escalation",
+        (
+            "centralization risk",
+            "owner can",
+            "admin can",
+            "onlyowner",
+            "access control",
+            "missing access",
+            "unauthorized",
+            "privileged",
+            "role",
+            "ownership",
+            "owner address",
+            "setowner",
+            "renounceownership",
+        ),
+    ),
+    (
+        "upgrade_risk",
+        (
+            "upgrade",
+            "proxy",
+            "initializer",
+            "implementation contract",
+            "uups",
+            "transparent proxy",
+            "storage gap",
+            "storage collision",
+            "initialize",
+        ),
+    ),
+    (
+        "input_validation",
+        (
+            "missing validation",
+            "zero address",
+            "zero amount",
+            "input validation",
+            "invalid address",
+            "validate",
+            "require(",
+            "should be checked",
+            "not validated",
+        ),
+    ),
+    (
+        "arithmetic",
+        (
+            "overflow",
+            "underflow",
+            "precision loss",
+            "rounding",
+            "division before multiplication",
+            "integer",
+            "calculation",
+            "decimals",
+        ),
+    ),
+    (
+        "denial_of_service",
+        (
+            "denial of service",
+            "dos",
+            "unbounded loop",
+            "gas limit",
+            "out of gas",
+            "blocked",
+            "revert",
+        ),
+    ),
+    ("timestamp_dependence", ("timestamp", "block.timestamp", "deadline", "time manipulation")),
+    ("signature_replay", ("signature", "replay", "nonce", "permit", "eip-712", "ecrecover")),
+    ("event_logging", ("missing event", "event emission", "emit event")),
+    (
+        "state_consistency",
+        (
+            "state update",
+            "balance",
+            "vesting",
+            "claim",
+            "deposit",
+            "withdraw",
+            "transfer",
+            "burn",
+            "mint",
+        ),
+    ),
+)
 
 
 def load_raw_report(path: Path) -> tuple[str, bool]:
@@ -32,6 +168,7 @@ def chunk_document(
     source_id: str | None = None,
     chunk_size: int = 384,
     overlap: int = 64,
+    include_unknown: bool = True,
 ) -> list[RagChunk]:
     text, unsupported_visual_content = load_raw_report(path)
     source = source_id or path.stem
@@ -43,11 +180,16 @@ def chunk_document(
     for block in blocks:
         count = _token_count(block)
         if buffer and token_total + count > chunk_size:
-            chunks.append(
-                _build_chunk(
-                    source, path.stem, "\n\n".join(buffer), len(chunks), unsupported_visual_content
-                )
+            chunk = _build_chunk(
+                source,
+                path.stem,
+                "\n\n".join(buffer),
+                len(chunks),
+                unsupported_visual_content,
+                path,
             )
+            if include_unknown or chunk.vuln_type != "unknown":
+                chunks.append(chunk)
             carry = _tail_tokens("\n\n".join(buffer), overlap)
             buffer = [carry] if carry else []
             token_total = _token_count(carry) if carry else 0
@@ -56,11 +198,16 @@ def chunk_document(
         token_total += count
 
     if buffer:
-        chunks.append(
-            _build_chunk(
-                source, path.stem, "\n\n".join(buffer), len(chunks), unsupported_visual_content
-            )
+        chunk = _build_chunk(
+            source,
+            path.stem,
+            "\n\n".join(buffer),
+            len(chunks),
+            unsupported_visual_content,
+            path,
         )
+        if include_unknown or chunk.vuln_type != "unknown":
+            chunks.append(chunk)
 
     return chunks
 
@@ -110,6 +257,7 @@ def _build_chunk(
     content: str,
     index: int,
     unsupported_visual_content: bool,
+    source_path: Path,
 ) -> RagChunk:
     digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
     vuln_type = _guess_vuln_type(content)
@@ -127,15 +275,29 @@ def _build_chunk(
         label_source="rule_based" if vuln_type != "unknown" else "unknown",
         label_confidence=0.9 if vuln_type != "unknown" else 0.0,
         eligible_for_eval=vuln_type != "unknown",
+        source_path=str(source_path),
+        section_title=_section_title(content),
+        chunk_index=index,
     )
 
 
 def _guess_vuln_type(text: str) -> str:
     lowered = text.lower()
-    for keyword, vuln_type in VULN_KEYWORDS.items():
-        if keyword in lowered:
+    for vuln_type, keywords in VULN_KEYWORDS:
+        if any(keyword in lowered for keyword in keywords):
             return vuln_type
     return "unknown"
+
+
+def _section_title(text: str) -> str:
+    for line in text.splitlines():
+        stripped = re.sub(r"\s+", " ", line).strip(" #\t")
+        if not stripped:
+            continue
+        if len(stripped) <= 120:
+            return stripped
+        return stripped[:117] + "..."
+    return ""
 
 
 def _guess_severity(text: str) -> int:

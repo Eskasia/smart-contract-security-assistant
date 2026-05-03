@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import Any
 
 from .config import SUPPORTED_DETECTORS
+from .solidity_target import (
+    SolidityTarget,
+    resolve_solidity_target,
+    slither_command_args_for_target,
+)
 
 
 class SlitherRunError(RuntimeError):
@@ -113,18 +118,50 @@ def run_slither(contract_path: Path, timeout_seconds: int = 90) -> SlitherRunRes
     if shutil.which("slither") is None:
         raise SlitherRunError("slither executable not found; install with `uv sync --extra audit`.")
 
-    source = contract_path.read_text(encoding="utf-8")
+    try:
+        target = resolve_solidity_target(contract_path)
+    except ValueError as exc:
+        raise SlitherRunError(str(exc)) from exc
+
+    source = target.combined_source
     solc_version, warnings = ensure_solc_version(detect_pragma_version(source))
 
+    raw_results = [
+        _run_slither_once(target, analysis_path, timeout_seconds)
+        for analysis_path in _analysis_paths(target)
+    ]
+
+    return SlitherRunResult(
+        raw_json=_merge_slither_results(raw_results),
+        solc_version=solc_version,
+        slither_version=get_slither_version(),
+        warnings=warnings,
+    )
+
+
+def _analysis_paths(target: SolidityTarget) -> tuple[Path, ...]:
+    if target.input_kind == "project_directory":
+        return target.source_files
+    return (target.analysis_path,)
+
+
+def _run_slither_once(
+    target: SolidityTarget, analysis_path: Path, timeout_seconds: int
+) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "slither.json"
+        analysis_arg = analysis_path
+        execution_root = Path.cwd().resolve()
+        if analysis_path.is_relative_to(execution_root):
+            analysis_arg = analysis_path.relative_to(execution_root)
         command = [
             "slither",
-            str(contract_path),
+            str(analysis_arg),
             "--json",
             str(output_path),
             "--detect",
             ",".join(SUPPORTED_DETECTORS),
+            *slither_command_args_for_target(target, execution_root),
         ]
         result = subprocess.run(
             command,
@@ -140,13 +177,23 @@ def run_slither(contract_path: Path, timeout_seconds: int = 90) -> SlitherRunRes
             raise SlitherRunError(stderr or f"Slither failed with exit code {result.returncode}.")
 
         try:
-            raw_json = json.loads(raw_text or "{}")
+            return json.loads(raw_text or "{}")
         except json.JSONDecodeError as exc:
             raise SlitherRunError(f"Slither returned invalid JSON: {exc}") from exc
 
-    return SlitherRunResult(
-        raw_json=raw_json,
-        solc_version=solc_version,
-        slither_version=get_slither_version(),
-        warnings=warnings,
-    )
+
+def _merge_slither_results(results: list[dict[str, Any]]) -> dict[str, Any]:
+    merged_detectors: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw_json in results:
+        detectors = raw_json.get("results", {}).get("detectors", []) or []
+        for detector in detectors:
+            key = json.dumps(detector, sort_keys=True, ensure_ascii=False)
+            if key in seen:
+                continue
+            merged_detectors.append(detector)
+            seen.add(key)
+    return {
+        "success": all(result.get("success", True) for result in results),
+        "results": {"detectors": merged_detectors},
+    }
