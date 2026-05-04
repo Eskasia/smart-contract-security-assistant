@@ -21,6 +21,19 @@ on:
         description: Comma-separated optional tools, for example mythril,echidna.
         required: false
         default: ""
+      baseline_report:
+        description: Optional baseline JSON report path for regression comparison.
+        required: false
+        default: ""
+      fail_on_high_added:
+        description: Fail when the comparison adds severity 3 findings.
+        required: true
+        default: true
+        type: boolean
+      fail_on_score_drop:
+        description: Fail when the security score drops by this many points. Use 0 to disable.
+        required: true
+        default: "10"
 
 jobs:
   audit:
@@ -55,7 +68,25 @@ jobs:
             done
           fi
           uv run scsa analyze "$TARGET" --out-dir reports-github --rag-mode "$RAG_MODE" "${args[@]}"
+      - name: Compare with baseline
+        if: ${{ inputs.baseline_report != '' }}
+        env:
+          BASELINE_REPORT: ${{ inputs.baseline_report }}
+          FAIL_ON_HIGH_ADDED: ${{ inputs.fail_on_high_added }}
+          FAIL_ON_SCORE_DROP: ${{ inputs.fail_on_score_drop }}
+        run: |
+          set -euo pipefail
+          head_report="$(find reports-github -maxdepth 1 -name '*.json' | head -n 1)"
+          args=(--output reports-github/comparison.md)
+          if [ "$FAIL_ON_HIGH_ADDED" = "true" ]; then
+            args+=(--fail-on-high-added)
+          fi
+          if [ "$FAIL_ON_SCORE_DROP" != "0" ]; then
+            args+=(--fail-on-score-drop "$FAIL_ON_SCORE_DROP")
+          fi
+          uv run scsa compare-reports "$BASELINE_REPORT" "$head_report" "${args[@]}"
       - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: scsa-reports

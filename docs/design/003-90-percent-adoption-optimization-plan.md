@@ -100,11 +100,11 @@ Verification：10 個公開專案中 9 個能完成分析；`uv run pytest tests
 
 ## Phase 3：工作流層
 
-Task 07：GitHub Actions 掃描入口、PR comment 與 CI fail gate。
+Task 07：GitHub Actions 掃描入口、report comparison 與 CI fail gate。
 
-Acceptance criteria：2026-05-04 已完成手動掃描入口 `.github/workflows/smart-contract-audit.yml`；v1 再在 PR 上輸出新增 finding、修復 finding、安全分數差異，高危新增 finding 使 CI fail。
+Acceptance criteria：2026-05-04 已完成手動掃描入口 `.github/workflows/smart-contract-audit.yml` 與 `scsa compare-reports`；提供 baseline report 時會輸出新增 finding、修復 finding、安全分數差異，高危新增 finding 或分數下降超門檻會使 CI fail。
 
-Verification：`.github/workflows/smart-contract-audit.yml` 可產生 `scsa-reports` artifact；v1 補 workflow lint 與測試 PR。
+Verification：`uv run pytest tests/test_report_compare.py`；`.github/workflows/smart-contract-audit.yml` 可產生 `scsa-reports` artifact 與 `comparison.md`。
 
 Task 08：誤報/漏報 review 回寫。
 

@@ -96,7 +96,15 @@ Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz �
 
 ## GitHub Actions
 
-`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會上傳 `scsa-reports` artifact。
+`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會上傳 `scsa-reports` artifact；提供 `baseline_report` 時會額外產生 `comparison.md`。
+
+## Report Comparison
+
+```bash
+uv run scsa compare-reports reports/base.json reports/head.json --output reports/comparison.md --fail-on-high-added --fail-on-score-drop 10
+```
+
+Report comparison——報告差異比較，會列出新增、修復、持續存在 findings 與安全分數差異；`--fail-on-high-added` 會在新增 severity 3 finding 時回傳 exit code 2。
 
 ## MLX Probe
 

@@ -8,6 +8,11 @@ from .analyzer import analyze_contract
 from .llm.mlx_runtime import MLXRuntimeConfig, discover_mlx_model_paths, probe_mlx_runtime
 from .rag.chunker import chunk_document
 from .rag.indexer import deduplicate_chunks, write_chunks
+from .report_compare import (
+    compare_report_files,
+    comparison_should_fail,
+    render_comparison_markdown,
+)
 from .trace.lookup import lookup_trace, trace_dashboard
 
 
@@ -47,6 +52,16 @@ def main(argv: list[str] | None = None) -> None:
 
     dashboard = subparsers.add_parser("trace-dashboard", help="Summarize analysis traces.")
     dashboard.add_argument("trace_db", type=Path)
+
+    compare = subparsers.add_parser(
+        "compare-reports",
+        help="Compare two JSON reports and optionally fail on security regression.",
+    )
+    compare.add_argument("base_report", type=Path)
+    compare.add_argument("head_report", type=Path)
+    compare.add_argument("--output", type=Path)
+    compare.add_argument("--fail-on-high-added", action="store_true")
+    compare.add_argument("--fail-on-score-drop", type=float)
 
     mlx_probe = subparsers.add_parser("mlx-probe", help="Record MLX load/fallback status.")
     mlx_probe.add_argument("--model-path")
@@ -95,6 +110,19 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "trace-dashboard":
         rows = trace_dashboard(args.trace_db)
         print(json.dumps(rows, ensure_ascii=False, indent=2))
+    elif args.command == "compare-reports":
+        comparison = compare_report_files(args.base_report, args.head_report)
+        markdown = render_comparison_markdown(comparison)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(markdown, encoding="utf-8")
+        print(json.dumps(comparison, ensure_ascii=False, indent=2))
+        if comparison_should_fail(
+            comparison,
+            fail_on_high_added=args.fail_on_high_added,
+            fail_on_score_drop=args.fail_on_score_drop,
+        ):
+            raise SystemExit(2)
     elif args.command == "mlx-probe":
         discovered_paths = []
         model_path = args.model_path

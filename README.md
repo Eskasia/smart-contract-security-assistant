@@ -39,6 +39,7 @@ npm run test
 ```bash
 uv run scsa analyze <contract.sol> --out-dir reports
 uv run scsa analyze <contract.sol> --out-dir reports --external-tool mythril --external-tool echidna
+uv run scsa compare-reports reports/base.json reports/head.json --output reports/comparison.md --fail-on-high-added --fail-on-score-drop 10
 uv run scsa analyze tests/fixtures/solidity_projects/foundry --out-dir reports
 uv run scsa clean-reports data/dataset_v1.0/raw_reports data/dataset_v1.0/chunks/chunks.jsonl
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id> --finding-id f_001
@@ -63,14 +64,15 @@ uv run python scripts/validate_chunks.py data/web50/chunks.jsonl --max-unknown-r
 - Trace——SQLite 追蹤每個 finding 的 Slither raw output、標準化結果、RAG chunk、prompt、LLM output、報告品質 judge score、token usage 與 review status。
 - Security score——0–100 合約安全分數，公式版本為 `security_score_v1`，依 severity、finding confidence、partial analysis 與 business logic review penalty 計算。
 - External tools——可選 `--external-tool mythril` 與 `--external-tool echidna`，工具已安裝時會把符號執行與 fuzz 摘要寫入 JSON/Markdown；未安裝時以 `skipped` 記錄。
+- Report comparison——`compare-reports` 會輸出新增、修復、持續存在 findings 與安全分數差異，可用 `--fail-on-high-added`、`--fail-on-score-drop 10` 作 CI fail gate。
 - Benchmark——`eval/run_public_benchmark.py` 預設讀取 `eval/public_benchmark/hf-slither50-v2-manifest.json`，目前固定 50 份 Hugging Face Slither 標註樣本；支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`。
 - Report——Markdown/JSON 直接輸出 security score、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；judge score 評估報告完整度，security score 才是合約風險量化分數。
 
-GitHub Actions：`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會產生 `scsa-reports` artifact。
+GitHub Actions：`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會產生 `scsa-reports` artifact；提供 `baseline_report` 時會額外產生 `comparison.md` 並可用高危新增或分數下降門檻讓 CI 失敗。
 
 ## 驗證狀態
 
-2026-05-04 驗證通過：`uv run pytest` 共 31 passed，`uv run ruff check .` 通過，`npm run test` 共 6 passed，`npm run build` 通過，`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30` 支援類型命中率 `1.0`，平均安全分數差 `45.05`。2026-05-01 驗證通過：`uv run python eval/run_eval.py` 召回率 1.0，`uv run python eval/run_judge.py` local/external 報告品質平均分皆 5.0，Web50 corpus 為 `unknown_rate=0.1916`、`eligible_chunks=637`；`VulnerableVault.sol` 實測報告輸出 prompt/completion/total tokens 為 `680/300/980`，local/external 報告品質 judge score 皆 `5.00/5`。CI 已接入 ruff、pytest、RAG recall eval、judge eval。
+2026-05-04 驗證通過：`uv run pytest` 共 37 passed，`uv run ruff check .` 通過，`npm run test` 共 6 passed，`npm run build` 通過，`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30` 支援類型命中率 `1.0`，平均安全分數差 `45.05`。2026-05-01 驗證通過：`uv run python eval/run_eval.py` 召回率 1.0，`uv run python eval/run_judge.py` local/external 報告品質平均分皆 5.0，Web50 corpus 為 `unknown_rate=0.1916`、`eligible_chunks=637`；`VulnerableVault.sol` 實測報告輸出 prompt/completion/total tokens 為 `680/300/980`，local/external 報告品質 judge score 皆 `5.00/5`。CI 已接入 ruff、pytest、RAG recall eval、judge eval。
 
 Git baseline 已建立在 `main`，review checklist 位於 `.claude/skills/review/checklist.md` 與 `docs/review_checklist.md`。
 

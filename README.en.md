@@ -40,6 +40,7 @@ Open `http://127.0.0.1:5173`. The React UI sends analysis requests to `http://12
 ```bash
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool mythril --external-tool echidna
+uv run scsa compare-reports reports/base.json reports/head.json --output reports/comparison.md --fail-on-high-added --fail-on-score-drop 10
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
@@ -60,7 +61,7 @@ Validated on 2026-05-04:
 
 ## GitHub Actions
 
-The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit button in GitHub Actions. It accepts a Solidity file or project directory, runs `scsa analyze`, and uploads the generated reports as the `scsa-reports` artifact.
+The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit button in GitHub Actions. It accepts a Solidity file or project directory, runs `scsa analyze`, and uploads the generated reports as the `scsa-reports` artifact. When `baseline_report` is provided, it also writes `comparison.md` and can fail on new severity 3 findings or a configurable score drop.
 
 ## Validation
 

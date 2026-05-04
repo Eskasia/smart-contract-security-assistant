@@ -16,6 +16,7 @@
 - 2026-05-04 公開資料測試補上 `unchecked-transfer` 與 `unused-return`，統一映射到 `unchecked_external_call`。
 - 2026-05-04 已新增 `security_score_v1` 合約安全分數、`eval/run_public_benchmark.py` 與 `eval/public_benchmark/hf-slither50-v2-manifest.json`；目前 50 份 Hugging Face Slither 標註樣本支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`。
 - 2026-05-04 已新增 Mythril/Echidna 可選整合，`--external-tool mythril --external-tool echidna` 會把結果寫入 `external_tool_results`。
+- 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
 - 2026-05-04 已新增英文版 `README.en.md`。
 
 ## 技術核心
@@ -34,12 +35,14 @@ Report——Markdown/JSON 會輸出 security score、vulnerable code snippet、�
 
 External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；本專案只做可選摘要整合，未安裝時結果為 `skipped`。
 
+Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
+
 ## 驗證結果
 
 2026-05-04 本地驗證結果：
 
 ```text
-uv run pytest                           35 passed
+uv run pytest                           37 passed
 uv run ruff check .                     all checks passed
 npm run test                            6 passed
 npm run build                           completed
