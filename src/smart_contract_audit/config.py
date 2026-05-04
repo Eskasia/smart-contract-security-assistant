@@ -18,6 +18,8 @@ DETECTOR_MAPPING: dict[str, tuple[str, int, list[str]]] = {
     "protected-vars": ("privilege_escalation", 2, ["Slither-specific"]),
     "unchecked-lowlevel": ("unchecked_external_call", 2, ["SWC-104"]),
     "unchecked-send": ("unchecked_external_call", 2, ["SWC-104"]),
+    "unchecked-transfer": ("unchecked_external_call", 2, ["SWC-104"]),
+    "unused-return": ("unchecked_external_call", 2, ["SWC-104"]),
     "controlled-delegatecall": ("dangerous_delegatecall", 3, ["SWC-112"]),
     "delegatecall-loop": ("dangerous_delegatecall", 2, ["SWC-112"]),
     "controlled-array-length": ("array_length_manipulation", 2, ["Slither-specific"]),

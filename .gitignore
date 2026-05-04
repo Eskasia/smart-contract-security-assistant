@@ -14,3 +14,11 @@ frontend/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+reports-public/
+tutorial-assets/
+.ship/tasks/ad-hoc-review-main/
+public-contracts/*
+!public-contracts/hf-slither50-v2/
+!public-contracts/hf-slither50-v2/**
+eval/public_benchmark/manifest.json
+eval/public_benchmark/hf-slither50-manifest.json

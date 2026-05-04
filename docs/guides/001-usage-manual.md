@@ -6,14 +6,14 @@ number: "001"
 status: current
 services: ["src/smart_contract_audit", "data/dataset_v1.0", "reports-mlx"]
 related: ["design/001", "reference/001"]
-last_modified: "2026-04-30"
+last_modified: "2026-05-04"
 ---
 
 # 001 — 使用說明書
 
 ## Status
 
-current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`README.md` 與 2026-04-30 本地驗證結果核對。
+current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-04 本地驗證結果核對。
 
 ## Summary
 
@@ -37,7 +37,7 @@ uv run pytest
 ```
 
 預期輸出：`reports/<contract_id>.json`、`reports/<contract_id>.md`、`reports/analysis_trace.sqlite`。
-報告會直接包含漏洞原始碼片段、AI remediation code、local/external judge score 與 prompt/completion/total token usage。
+報告會直接包含 security score、漏洞原始碼片段、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total token usage；security score 是 0–100 合約風險量化分數，judge score 評估報告完整度。
 
 ## 分析合約
 
@@ -76,7 +76,27 @@ uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id> --finding-id f
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 ```
 
-Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid、partial 狀態、judge score、token usage 與 review status。
+Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid、partial 狀態、報告品質 judge score、token usage 與 review status。
+
+## Public Benchmark
+
+```bash
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30
+```
+
+此命令預設讀取 `eval/public_benchmark/hf-slither50-v2-manifest.json`，目前固定 50 份 Hugging Face Slither 標註樣本；2026-05-04 實測支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`，輸出寫入 `reports-public/benchmark/summary.json`。
+
+## External Tools
+
+```bash
+uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool mythril --external-tool echidna
+```
+
+Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz 工具。兩者為可選整合，命令存在時會把摘要寫入 `external_tool_results`，不存在時以 `skipped` 記錄。
+
+## GitHub Actions
+
+`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會上傳 `scsa-reports` artifact。
 
 ## MLX Probe
 

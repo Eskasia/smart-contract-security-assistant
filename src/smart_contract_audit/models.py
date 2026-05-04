@@ -72,6 +72,21 @@ class Finding:
 
 
 @dataclass
+class ExternalToolResult:
+    tool_name: str
+    command: list[str]
+    status: str
+    findings_count: int
+    summary: str
+    output_path: str = ""
+    error: str = ""
+    duration_ms: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
 class AnalysisMetadata:
     dataset_version: str
     model_version: str
@@ -109,6 +124,10 @@ class AnalysisReport:
     review_reason: str
     findings: list[Finding]
     analysis_metadata: AnalysisMetadata
+    security_score: float = 100.0
+    score_formula_version: str = "security_score_v1"
+    score_factors: dict[str, Any] = field(default_factory=dict)
+    external_tool_results: list[ExternalToolResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -121,4 +140,8 @@ class AnalysisReport:
             "review_reason": self.review_reason,
             "findings": [finding.to_dict() for finding in self.findings],
             "analysis_metadata": self.analysis_metadata.to_dict(),
+            "security_score": self.security_score,
+            "score_formula_version": self.score_formula_version,
+            "score_factors": self.score_factors,
+            "external_tool_results": [result.to_dict() for result in self.external_tool_results],
         }

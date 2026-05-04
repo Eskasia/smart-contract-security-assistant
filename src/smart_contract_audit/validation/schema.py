@@ -13,6 +13,9 @@ REPORT_SCHEMA: dict = {
         "review_reason",
         "findings",
         "analysis_metadata",
+        "security_score",
+        "score_formula_version",
+        "score_factors",
     ],
     "properties": {
         "report_version": {"type": "string"},
@@ -28,6 +31,9 @@ REPORT_SCHEMA: dict = {
             "type": "array",
             "items": {"$ref": "#/$defs/finding"},
         },
+        "security_score": {"type": "number", "minimum": 0, "maximum": 100},
+        "score_formula_version": {"type": "string"},
+        "score_factors": {"type": "object"},
         "analysis_metadata": {
             "type": "object",
             "required": [

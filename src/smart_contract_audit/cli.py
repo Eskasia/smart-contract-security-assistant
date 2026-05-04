@@ -26,6 +26,14 @@ def main(argv: list[str] | None = None) -> None:
         "--rag-mode", choices=["quality", "balanced", "fast", "fallback"], default="balanced"
     )
     analyze.add_argument("--model-path")
+    analyze.add_argument(
+        "--external-tool",
+        action="append",
+        choices=["mythril", "echidna"],
+        default=[],
+        help="Run optional external tools and attach their summaries to the report.",
+    )
+    analyze.add_argument("--external-timeout-seconds", type=int, default=60)
 
     clean = subparsers.add_parser("clean-reports", help="Extract and chunk raw reports into JSONL.")
     clean.add_argument("raw_reports_dir", type=Path)
@@ -69,6 +77,8 @@ def main(argv: list[str] | None = None) -> None:
             dataset_chunks=args.dataset_chunks,
             rag_mode=args.rag_mode,
             model_path=args.model_path,
+            external_tools=tuple(args.external_tool),
+            external_timeout_seconds=args.external_timeout_seconds,
         )
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     elif args.command == "clean-reports":

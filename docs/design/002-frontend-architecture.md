@@ -27,7 +27,7 @@ draft；2026-05-04 已實作 React/Vite 工作台與 `src/smart_contract_audit/h
 2. 設定 `rag_mode`、`dataset_chunks`、`model_path`。
 3. 顯示分析狀態：queued、running、finding、no_finding、partial_analysis、error。
 4. 報告首屏顯示 `overall_status`、`review_status`、`trace_id`、`dataset_version`、`model_version`、`solc_version`、`slither_version`。
-5. 每個 finding 顯示 vulnerable code、Explanation、Attack path、Fix suggestion、AI remediation code、local/external judge score、prompt/completion/total tokens。
+5. 每個 finding 顯示 vulnerable code、Explanation、Attack path、Fix suggestion、AI remediation code、local/external 報告品質 judge score、prompt/completion/total tokens。
 6. 支援 trace detail 查詢：raw Slither、normalized finding、RAG chunk ids、packed prompt、LLM raw output。
 7. 支援 reviewer status 編輯：pending_human_review、approved、rejected、blocked。
 
@@ -71,7 +71,7 @@ flowchart TD
 |---|---:|---|
 | 左欄 | 280 px | 輸入、RAG mode、模型設定、歷史 trace list |
 | 中欄 | flex | findings list、vulnerable code、AI remediation code |
-| 右欄 | 360 px | metadata、judge score、token usage、review status、trace evidence |
+| 右欄 | 360 px | metadata、報告品質 judge score、token usage、review status、trace evidence |
 
 報告 finding card 固定欄位順序：
 
@@ -152,7 +152,7 @@ URL 格式：
 
 - 部署形態為本機單使用者，分析併發固定 1。
 - 後端 Python package 保持 `analyze_contract()` 作唯一分析入口。
-- 報告 schema 至少包含 2026-05-01 已驗證欄位：vulnerable code、remediation code、judge score、token usage。
+- 報告 schema 至少包含 2026-05-01 已驗證欄位：vulnerable code、remediation code、報告品質 judge score、token usage。
 - 初版不處理大型 monorepo；專案輸入上限為 100 個 Solidity 檔與 5,000 行。
 
 ## Trade-offs

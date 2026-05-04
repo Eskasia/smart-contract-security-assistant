@@ -12,6 +12,10 @@ export function formatScore(score: number | undefined): string {
   return `${(score ?? 0).toFixed(2)}/5`;
 }
 
+export function formatSecurityScore(score: number | undefined): string {
+  return `${(score ?? 100).toFixed(2)}/100`;
+}
+
 export function formatTokens(value: number | undefined): string {
   return new Intl.NumberFormat("en-US").format(value ?? 0);
 }

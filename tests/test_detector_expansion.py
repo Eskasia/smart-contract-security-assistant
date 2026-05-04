@@ -21,6 +21,10 @@ DETECTOR_CASES = {
         ("unprotected-upgrade", "tests/contracts/detectors/UpgradeInitializer.sol"),
         ("uninitialized-state", "tests/contracts/detectors/UpgradeStorage.sol"),
     ],
+    "unchecked_external_call": [
+        ("unchecked-transfer", "tests/contracts/detectors/UncheckedTransfer.sol"),
+        ("unused-return", "tests/contracts/detectors/UnusedReturn.sol"),
+    ],
 }
 
 

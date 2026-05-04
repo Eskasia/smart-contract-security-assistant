@@ -8,6 +8,29 @@ export const demoReport: AnalysisReport = {
   requires_human_review: true,
   business_logic_review_required: false,
   review_reason: "Slither-based MVP findings still require human security review.",
+  security_score: 61.84,
+  score_formula_version: "security_score_v1",
+  score_factors: {
+    base_score: 100,
+    total_finding_penalty: 38.16,
+    severity_counts: { "1": 0, "2": 1, "3": 1 },
+  },
+  external_tool_results: [
+    {
+      tool_name: "mythril",
+      command: ["myth", "analyze", "tests/contracts/VulnerableVault.sol", "-o", "json"],
+      status: "skipped",
+      findings_count: 0,
+      summary: "mythril not installed; skipped optional external analysis.",
+    },
+    {
+      tool_name: "echidna",
+      command: ["echidna", "tests/contracts/VulnerableVault.sol", "--format", "json"],
+      status: "skipped",
+      findings_count: 0,
+      summary: "echidna not installed; skipped optional external analysis.",
+    },
+  ],
   findings: [
     {
       finding_id: "f_001",

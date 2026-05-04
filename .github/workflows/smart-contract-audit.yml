@@ -1,0 +1,62 @@
+name: Smart Contract Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Solidity file or project directory to analyze.
+        required: true
+        default: tests/contracts/VulnerableVault.sol
+      rag_mode:
+        description: RAG mode.
+        required: true
+        default: fallback
+        type: choice
+        options:
+          - quality
+          - balanced
+          - fast
+          - fallback
+      external_tools:
+        description: Comma-separated optional tools, for example mythril,echidna.
+        required: false
+        default: ""
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --extra audit --dev
+      - name: Run audit
+        env:
+          TARGET: ${{ inputs.target }}
+          RAG_MODE: ${{ inputs.rag_mode }}
+          EXTERNAL_TOOLS: ${{ inputs.external_tools }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$EXTERNAL_TOOLS" ]; then
+            IFS=',' read -ra tools <<< "$EXTERNAL_TOOLS"
+            for tool in "${tools[@]}"; do
+              tool="$(echo "$tool" | xargs)"
+              if [ -n "$tool" ]; then
+                args+=(--external-tool "$tool")
+              fi
+            done
+          fi
+          uv run scsa analyze "$TARGET" --out-dir reports-github --rag-mode "$RAG_MODE" "${args[@]}"
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: scsa-reports
+          path: reports-github/

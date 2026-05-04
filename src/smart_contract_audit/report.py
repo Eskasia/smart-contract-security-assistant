@@ -23,6 +23,8 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
         f"- Contract ID: `{report.contract_id}`",
         f"- Status: `{report.overall_status}`",
         f"- Reviewer status: `{report.review_status}`",
+        f"- Contract security score: `{report.security_score:.2f}/100`",
+        f"- Security score formula: `{report.score_formula_version}`",
         f"- Human review required: `{report.requires_human_review}`",
         f"- Business logic review required: `{report.business_logic_review_required}`",
         f"- Review reason: {report.review_reason}",
@@ -32,13 +34,39 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
         f"- Prompt tokens: `{report.analysis_metadata.prompt_tokens}`",
         f"- Completion tokens: `{report.analysis_metadata.completion_tokens}`",
         f"- Total tokens: `{report.analysis_metadata.total_tokens}`",
-        f"- Local judge score: `{report.analysis_metadata.local_average_judge_score:.2f}/5`",
-        f"- External judge score: `{report.analysis_metadata.external_average_judge_score:.2f}/5`",
+        "- Judge score meaning: report-quality completeness score, not a contract security score",
+        "- Local report-quality judge score: "
+        f"`{report.analysis_metadata.local_average_judge_score:.2f}/5`",
+        "- External report-quality judge score: "
+        f"`{report.analysis_metadata.external_average_judge_score:.2f}/5`",
         f"- Entry path: `{report.analysis_metadata.entry_path}`",
         "",
-        "## Findings",
+        "## External Tool Results",
         "",
     ]
+
+    if not report.external_tool_results:
+        lines.append("No optional external tools were executed.")
+    else:
+        for result in report.external_tool_results:
+            lines.extend(
+                [
+                    f"- `{result.tool_name}`: `{result.status}`, "
+                    f"findings `{result.findings_count}`",
+                    f"  - Summary: {result.summary}",
+                    f"  - Output: `{result.output_path or 'not generated'}`",
+                ]
+            )
+            if result.error:
+                lines.append(f"  - Error: `{result.error}`")
+
+    lines.extend(
+        [
+            "",
+            "## Findings",
+            "",
+        ]
+    )
 
     if not report.findings:
         lines.append("No mapped Slither findings were included in the formal report.")
@@ -53,8 +81,9 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     f"- Location: `{finding.location.file}:{finding.location.line_start}`",
                     f"- Finding confidence: `{finding.finding_confidence:.2f}`",
                     f"- Explanation confidence: `{finding.explanation_confidence:.2f}`",
-                    f"- Local judge score: `{finding.local_judge_score:.2f}/5`",
-                    f"- External judge score: `{finding.external_judge_score:.2f}/5`",
+                    f"- Local report-quality judge score: `{finding.local_judge_score:.2f}/5`",
+                    "- External report-quality judge score: "
+                    f"`{finding.external_judge_score:.2f}/5`",
                     f"- Tokens: prompt `{finding.prompt_tokens}`, completion "
                     f"`{finding.completion_tokens}`, total `{finding.total_tokens}`",
                     "",

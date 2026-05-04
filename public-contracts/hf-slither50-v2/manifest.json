@@ -1,0 +1,960 @@
+[
+  {
+    "case_id": "hf50_01",
+    "row_idx": 166,
+    "address": "0x0027089Ea6d8a5fD5c1Eec16cE582287E65ac409",
+    "pragma": "^0.8.6",
+    "line_count": 213,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/01_0x0027089Ea6d8a5fD5c1Eec16cE582287E65ac409.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_02",
+    "row_idx": 200,
+    "address": "0x0146714490ae3c9b1c4b68d96b4c6a1ba0f38949",
+    "pragma": "^0.8.0",
+    "line_count": 481,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/02_0x0146714490ae3c9b1c4b68d96b4c6a1ba0f38949.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_03",
+    "row_idx": 214,
+    "address": "0x01b1bd887e043ca6d5c4098153cdccddf74e0c54",
+    "pragma": "^0.8.0",
+    "line_count": 211,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/03_0x01b1bd887e043ca6d5c4098153cdccddf74e0c54.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_04",
+    "row_idx": 222,
+    "address": "0x01e0e2e61f554ecaaec0cc933e739ad90f24a86d",
+    "pragma": "^0.8.0",
+    "line_count": 482,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/04_0x01e0e2e61f554ecaaec0cc933e739ad90f24a86d.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_05",
+    "row_idx": 2503,
+    "address": "0x4a52d22e892d1da1706194309bd9e735bc15493c",
+    "pragma": "^0.8.0",
+    "line_count": 475,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "external_class": "safe",
+    "file": "public-contracts/hf-slither50-v2/05_0x4a52d22e892d1da1706194309bd9e735bc15493c.sol"
+  },
+  {
+    "case_id": "hf50_06",
+    "row_idx": 332,
+    "address": "0x04d79f02e8d529CCEDe8393413973a9AceD36213",
+    "pragma": "^0.8.4",
+    "line_count": 14,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/06_0x04d79f02e8d529CCEDe8393413973a9AceD36213.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_07",
+    "row_idx": 396,
+    "address": "0x0691cf9d171d6c9c3876598b14732248b204c2cf",
+    "pragma": "^0.8.1",
+    "line_count": 152,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/07_0x0691cf9d171d6c9c3876598b14732248b204c2cf.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_08",
+    "row_idx": 538,
+    "address": "0x0b4BCAA8fb49bD565c206Ad90f964F78695FECd1",
+    "pragma": "^0.8.0",
+    "line_count": 470,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/08_0x0b4BCAA8fb49bD565c206Ad90f964F78695FECd1.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_09",
+    "row_idx": 553,
+    "address": "0x0bb544dc838848e14a1adc2a3f4588b02db34b55",
+    "pragma": "^0.8.0",
+    "line_count": 211,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/09_0x0bb544dc838848e14a1adc2a3f4588b02db34b55.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_10",
+    "row_idx": 567,
+    "address": "0x0C565d28364a2C073AF3E270444476C19e8b986c",
+    "pragma": "^0.8.10",
+    "line_count": 19,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/10_0x0C565d28364a2C073AF3E270444476C19e8b986c.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_11",
+    "row_idx": 637,
+    "address": "0x0E8c93880726D3070fAF4eF2B52064047A13F13d",
+    "pragma": "^0.8.0",
+    "line_count": 470,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/11_0x0E8c93880726D3070fAF4eF2B52064047A13F13d.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_12",
+    "row_idx": 679,
+    "address": "0x0fdf0e8Cf602fdFE528CD0B47188A22Fead8E86C",
+    "pragma": "^0.8.0",
+    "line_count": 470,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/12_0x0fdf0e8Cf602fdFE528CD0B47188A22Fead8E86C.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_13",
+    "row_idx": 718,
+    "address": "0x116C57bf39c2c88833a44a0C770C59F108169593",
+    "pragma": "^0.8.4",
+    "line_count": 74,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/13_0x116C57bf39c2c88833a44a0C770C59F108169593.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_14",
+    "row_idx": 768,
+    "address": "0x12b7458c90616c68fcc37c74609313fd105771f8",
+    "pragma": "^0.8.0",
+    "line_count": 63,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/14_0x12b7458c90616c68fcc37c74609313fd105771f8.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_15",
+    "row_idx": 789,
+    "address": "0x133127da0EA84b93828890093F9936f170103e7C",
+    "pragma": "^0.8.4",
+    "line_count": 71,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/15_0x133127da0EA84b93828890093F9936f170103e7C.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_16",
+    "row_idx": 807,
+    "address": "0x13E8edE278E3D70D5EaFB077d2ACa7852ca6Ab14",
+    "pragma": "^0.8.0",
+    "line_count": 470,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/16_0x13E8edE278E3D70D5EaFB077d2ACa7852ca6Ab14.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_17",
+    "row_idx": 907,
+    "address": "0x1715A2aA49C67F1fd3f6f19BD54568B1325d484D",
+    "pragma": "^0.8.4",
+    "line_count": 64,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/17_0x1715A2aA49C67F1fd3f6f19BD54568B1325d484D.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_18",
+    "row_idx": 933,
+    "address": "0x17D2c68900D92dbB98CC67ef69F28D44FA579bc8",
+    "pragma": "^0.8.12",
+    "line_count": 210,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/18_0x17D2c68900D92dbB98CC67ef69F28D44FA579bc8.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_19",
+    "row_idx": 977,
+    "address": "0x19736bd89ccab90d62b7b3d8efb798c6a04566f7",
+    "pragma": "^0.8.0",
+    "line_count": 475,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/19_0x19736bd89ccab90d62b7b3d8efb798c6a04566f7.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_20",
+    "row_idx": 1007,
+    "address": "0x1a57367c6194199e5d9aea1ce027431682dfb411",
+    "pragma": "^0.8.0",
+    "line_count": 437,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/20_0x1a57367c6194199e5d9aea1ce027431682dfb411.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_21",
+    "row_idx": 1098,
+    "address": "0x1d5529855965F350ecf5f9504999BD085f441E16",
+    "pragma": "^0.8.0",
+    "line_count": 30,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/21_0x1d5529855965F350ecf5f9504999BD085f441E16.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_22",
+    "row_idx": 1105,
+    "address": "0x1d7b37e14aa9202b4e5d49dcd9a58890710a69a7",
+    "pragma": "^0.8.0",
+    "line_count": 243,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/22_0x1d7b37e14aa9202b4e5d49dcd9a58890710a69a7.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_23",
+    "row_idx": 1176,
+    "address": "0x1f8a1733debf150f4f38e72c811fc1af0e7e5e7f",
+    "pragma": "^0.8.4",
+    "line_count": 263,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/23_0x1f8a1733debf150f4f38e72c811fc1af0e7e5e7f.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_24",
+    "row_idx": 1185,
+    "address": "0x1fCEcC90F635A24FA8f29C1740977b1A89281418",
+    "pragma": "^0.8.0",
+    "line_count": 384,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/24_0x1fCEcC90F635A24FA8f29C1740977b1A89281418.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_25",
+    "row_idx": 1245,
+    "address": "0x2180e899CDF96fF9D9691d664369f3f9E1F2F1f8",
+    "pragma": "^0.8.0",
+    "line_count": 468,
+    "labels": [
+      "safe"
+    ],
+    "supported_labels": [],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/25_0x2180e899CDF96fF9D9691d664369f3f9E1F2F1f8.sol",
+    "external_class": "safe"
+  },
+  {
+    "case_id": "hf50_26",
+    "row_idx": 324,
+    "address": "0x04ab7d3305494074d4cb41600b50f5edd5633bba",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/26_0x04ab7d3305494074d4cb41600b50f5edd5633bba.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_27",
+    "row_idx": 329,
+    "address": "0x04C59ba40670f59a4d2241b251039a65309c6C08",
+    "pragma": "^0.8.0",
+    "line_count": 329,
+    "labels": [
+      "arithmetic",
+      "bad-randomness"
+    ],
+    "supported_labels": [
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/27_0x04C59ba40670f59a4d2241b251039a65309c6C08.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_28",
+    "row_idx": 422,
+    "address": "0x077c1b67c4a55cd3efac483b1aa8b84680db6aad",
+    "pragma": "^0.8.7",
+    "line_count": 119,
+    "labels": [
+      "locked-ether",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/28_0x077c1b67c4a55cd3efac483b1aa8b84680db6aad.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_29",
+    "row_idx": 556,
+    "address": "0x0bea952f131f7cd9d73c5e86118050bca9873d19",
+    "pragma": "^0.8.10",
+    "line_count": 232,
+    "labels": [
+      "unchecked-calls",
+      "other",
+      "locked-ether",
+      "arithmetic",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/29_0x0bea952f131f7cd9d73c5e86118050bca9873d19.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_30",
+    "row_idx": 578,
+    "address": "0x0c96d6eb32d5edd6e88cb8c582fee86707b55851",
+    "pragma": "^0.8.7",
+    "line_count": 428,
+    "labels": [
+      "unchecked-calls",
+      "reentrancy",
+      "bad-randomness",
+      "other"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "reentrancy",
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/30_0x0c96d6eb32d5edd6e88cb8c582fee86707b55851.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_31",
+    "row_idx": 648,
+    "address": "0x0efcc698612539d1c6620c4ceeddd55d9a21a761",
+    "pragma": "^0.8.0",
+    "line_count": 265,
+    "labels": [
+      "bad-randomness"
+    ],
+    "supported_labels": [
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/31_0x0efcc698612539d1c6620c4ceeddd55d9a21a761.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_32",
+    "row_idx": 659,
+    "address": "0x0f324b2bc7918ae479aa83312198fcf29a561849",
+    "pragma": "^0.8.7",
+    "line_count": 183,
+    "labels": [
+      "bad-randomness"
+    ],
+    "supported_labels": [
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/32_0x0f324b2bc7918ae479aa83312198fcf29a561849.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_33",
+    "row_idx": 686,
+    "address": "0x1006dc7c926d78ff72301f3a7b869966fb94a32f",
+    "pragma": "^0.8.0",
+    "line_count": 131,
+    "labels": [
+      "bad-randomness",
+      "access-control",
+      "other"
+    ],
+    "supported_labels": [
+      "bad-randomness",
+      "access-control"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/33_0x1006dc7c926d78ff72301f3a7b869966fb94a32f.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_34",
+    "row_idx": 738,
+    "address": "0x1210eccf68f6c0869c393bdc4a0f882fdac16830",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/34_0x1210eccf68f6c0869c393bdc4a0f882fdac16830.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_35",
+    "row_idx": 886,
+    "address": "0x16695Eda034b21B5094472E4fe5EEa3D8e1B2C11",
+    "pragma": "^0.8.10",
+    "line_count": 24,
+    "labels": [
+      "bad-randomness"
+    ],
+    "supported_labels": [
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/35_0x16695Eda034b21B5094472E4fe5EEa3D8e1B2C11.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_36",
+    "row_idx": 888,
+    "address": "0x167152a46e8616d4a6892a6afd8e52f060151c70",
+    "pragma": "^0.8.0",
+    "line_count": 232,
+    "labels": [
+      "unchecked-calls",
+      "arithmetic",
+      "locked-ether",
+      "other"
+    ],
+    "supported_labels": [
+      "unchecked-calls"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/36_0x167152a46e8616d4a6892a6afd8e52f060151c70.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_37",
+    "row_idx": 914,
+    "address": "0x175695cd35e021b6f9dea64df6ace9ecfc43fb0b",
+    "pragma": ">=0.8.0",
+    "line_count": 278,
+    "labels": [
+      "unchecked-calls",
+      "bad-randomness"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/37_0x175695cd35e021b6f9dea64df6ace9ecfc43fb0b.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_38",
+    "row_idx": 971,
+    "address": "0x1938C2248A4013dCB776dcAC482008FEb33c66dd",
+    "pragma": "^0.8.11",
+    "line_count": 180,
+    "labels": [
+      "reentrancy",
+      "locked-ether",
+      "bad-randomness",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy",
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/38_0x1938C2248A4013dCB776dcAC482008FEb33c66dd.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_39",
+    "row_idx": 1184,
+    "address": "0x1FBeB7273E32dCE3Cf1eCe3D02f393E21d90BB46",
+    "pragma": "^0.8.0",
+    "line_count": 363,
+    "labels": [
+      "unchecked-calls",
+      "locked-ether"
+    ],
+    "supported_labels": [
+      "unchecked-calls"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/39_0x1FBeB7273E32dCE3Cf1eCe3D02f393E21d90BB46.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_40",
+    "row_idx": 1193,
+    "address": "0x202c54b523ed93721f0ecf4ba716e4e22f51679f",
+    "pragma": "^0.8.11",
+    "line_count": 262,
+    "labels": [
+      "unchecked-calls",
+      "other",
+      "locked-ether",
+      "arithmetic",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/40_0x202c54b523ed93721f0ecf4ba716e4e22f51679f.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_41",
+    "row_idx": 1260,
+    "address": "0x21eb74241a6d3d6107137cecee0bf70276df2ebf",
+    "pragma": "^0.8.0",
+    "line_count": 308,
+    "labels": [
+      "unchecked-calls",
+      "other",
+      "locked-ether",
+      "arithmetic",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/41_0x21eb74241a6d3d6107137cecee0bf70276df2ebf.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_42",
+    "row_idx": 1371,
+    "address": "0x261fd151d72fa424347a7119daf317ae420b1e14",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/42_0x261fd151d72fa424347a7119daf317ae420b1e14.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_43",
+    "row_idx": 1399,
+    "address": "0x27662ec00573dca447f5f2c50af1724b63679b29",
+    "pragma": ">=0.8.0",
+    "line_count": 80,
+    "labels": [
+      "unchecked-calls",
+      "double-spending"
+    ],
+    "supported_labels": [
+      "unchecked-calls"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/43_0x27662ec00573dca447f5f2c50af1724b63679b29.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_44",
+    "row_idx": 1678,
+    "address": "0x301aaf18de48108389826db9a1c65ed60d9c46be",
+    "pragma": "^0.8.0",
+    "line_count": 300,
+    "labels": [
+      "bad-randomness",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "bad-randomness",
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/44_0x301aaf18de48108389826db9a1c65ed60d9c46be.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_45",
+    "row_idx": 1716,
+    "address": "0x3145b04272D19789035A585E1CA3AE601972Dc3a",
+    "pragma": "^0.8.6",
+    "line_count": 474,
+    "labels": [
+      "locked-ether",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/45_0x3145b04272D19789035A585E1CA3AE601972Dc3a.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_46",
+    "row_idx": 1735,
+    "address": "0x32173cbcbeaec5731e2f0153617c926c7fe31751",
+    "pragma": ">=0.8.0 <0.9.0",
+    "line_count": 216,
+    "labels": [
+      "arithmetic",
+      "locked-ether",
+      "reentrancy"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/46_0x32173cbcbeaec5731e2f0153617c926c7fe31751.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_47",
+    "row_idx": 2178,
+    "address": "0x3fb5a65b2d9c34a8427cf9588e3aafdeb16f2775",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/47_0x3fb5a65b2d9c34a8427cf9588e3aafdeb16f2775.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_48",
+    "row_idx": 2193,
+    "address": "0x40623755199da964c86709b2d174e82c0526bf4a",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/48_0x40623755199da964c86709b2d174e82c0526bf4a.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_49",
+    "row_idx": 2307,
+    "address": "0x43f46f5fb03ed113c29e543999075d7b985a7b5a",
+    "pragma": "^0.8.7",
+    "line_count": 309,
+    "labels": [
+      "unchecked-calls",
+      "reentrancy",
+      "bad-randomness",
+      "other"
+    ],
+    "supported_labels": [
+      "unchecked-calls",
+      "reentrancy",
+      "bad-randomness"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/49_0x43f46f5fb03ed113c29e543999075d7b985a7b5a.sol",
+    "external_class": "vulnerable"
+  },
+  {
+    "case_id": "hf50_50",
+    "row_idx": 2469,
+    "address": "0x496e12fb4f6f4c9559dd7e836144855d76de8656",
+    "pragma": "^0.8.0",
+    "line_count": 217,
+    "labels": [
+      "locked-ether",
+      "reentrancy",
+      "other"
+    ],
+    "supported_labels": [
+      "reentrancy"
+    ],
+    "source": "mwritescode/slither-audited-smart-contracts",
+    "config": "small-multilabel",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/mwritescode/slither-audited-smart-contracts",
+    "file": "public-contracts/hf-slither50-v2/50_0x496e12fb4f6f4c9559dd7e836144855d76de8656.sol",
+    "external_class": "vulnerable"
+  }
+]

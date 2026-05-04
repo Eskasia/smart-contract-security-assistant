@@ -64,6 +64,17 @@ export interface AnalysisMetadata {
   errors: string[];
 }
 
+export interface ExternalToolResult {
+  tool_name: string;
+  command: string[];
+  status: "finding" | "passed" | "skipped" | "error" | string;
+  findings_count: number;
+  summary: string;
+  output_path?: string;
+  error?: string;
+  duration_ms?: number;
+}
+
 export interface AnalysisReport {
   report_version?: string;
   overall_status: AnalysisStatus;
@@ -74,6 +85,10 @@ export interface AnalysisReport {
   review_reason: string;
   findings: Finding[];
   analysis_metadata: AnalysisMetadata;
+  security_score?: number;
+  score_formula_version?: string;
+  score_factors?: Record<string, unknown>;
+  external_tool_results?: ExternalToolResult[];
 }
 
 export interface TraceFinding {

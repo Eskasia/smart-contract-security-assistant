@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatLocation, formatScore, severityLabel } from "./format";
+import { formatLocation, formatScore, formatSecurityScore, severityLabel } from "./format";
 
 describe("format helpers", () => {
   it("formats source locations with line ranges", () => {
@@ -16,6 +16,10 @@ describe("format helpers", () => {
 
   it("formats empty judge scores as zero", () => {
     expect(formatScore(undefined)).toBe("0.00/5");
+  });
+
+  it("formats empty security score as one hundred", () => {
+    expect(formatSecurityScore(undefined)).toBe("100.00/100");
   });
 
   it("maps numeric severity to labels", () => {

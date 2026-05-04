@@ -10,6 +10,10 @@
     "business_logic_review_required",
     "review_reason",
     "findings",
-    "analysis_metadata"
+    "analysis_metadata",
+    "security_score",
+    "score_formula_version",
+    "score_factors",
+    "external_tool_results"
   ]
 }

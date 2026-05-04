@@ -19,21 +19,24 @@ from .config import (
     MAX_SOLIDITY_LINES,
     REPORT_SCHEMA_VERSION,
 )
+from .external_tools import run_external_tools
 from .finding_adapter import normalize_slither_json
 from .judge import score_finding_output
 from .llm.generator import generate_finding_details
 from .llm.mlx_runtime import MLXRuntimeConfig
 from .llm.prompt_template import pack_finding_prompt
-from .models import AnalysisMetadata, AnalysisReport, Finding
+from .models import AnalysisMetadata, AnalysisReport, ExternalToolResult, Finding
 from .rag.indexer import load_chunks
 from .rag.retriever import retrieve_chunks
 from .report import write_json_report, write_markdown_report
+from .scoring.security_score import compute_security_score
 from .slither_runner import SlitherRunError, SlitherRunResult, run_slither
 from .solidity_target import SolidityTarget, resolve_solidity_target
 from .trace.store import TraceStore
 from .validation.validator import validate_report
 
 SlitherRunner = Callable[[Path], SlitherRunResult]
+ExternalToolRunner = Callable[[Path, Path, tuple[str, ...], int], list[ExternalToolResult]]
 
 
 def analyze_contract(
@@ -44,6 +47,9 @@ def analyze_contract(
     rag_mode: str = DEFAULT_RAG_MODE,
     model_path: str | None = None,
     slither_runner: SlitherRunner = run_slither,
+    external_tools: tuple[str, ...] = (),
+    external_timeout_seconds: int = 60,
+    external_tool_runner: ExternalToolRunner = run_external_tools,
 ) -> AnalysisReport:
     started = time.perf_counter()
     errors: list[str] = []
@@ -69,6 +75,7 @@ def analyze_contract(
     raw_slither: dict = {}
     mapped: list[Finding] = []
     unmapped: list[dict] = []
+    external_tool_results: list[ExternalToolResult] = []
     final_status = "error"
 
     with TraceStore(trace_db) as trace_store:
@@ -98,6 +105,7 @@ def analyze_contract(
                 started,
                 errors,
                 target,
+                external_tool_results,
             )
             _finish(trace_store, trace_id, report, output_dir, contract_id)
             return report
@@ -125,9 +133,19 @@ def analyze_contract(
                 started,
                 errors,
                 target,
+                external_tool_results,
             )
             _finish(trace_store, trace_id, report, output_dir, contract_id)
             return report
+
+        if external_tools:
+            assert target is not None
+            external_tool_results = external_tool_runner(
+                target.input_path,
+                output_dir / "external-tools" / contract_id,
+                external_tools,
+                external_timeout_seconds,
+            )
 
         adapter_result = normalize_slither_json(raw_slither, target.entry_path)
         mapped = adapter_result.findings
@@ -249,6 +267,7 @@ def analyze_contract(
             started,
             errors,
             target,
+            external_tool_results,
         )
 
         validation = validate_report(report.to_dict())
@@ -307,13 +326,21 @@ def _build_report(
     started: float,
     errors: list[str],
     target: SolidityTarget | None,
+    external_tool_results: list[ExternalToolResult],
 ) -> AnalysisReport:
     target = target or _empty_target()
+    review_status = _review_status(status)
+    security_score = compute_security_score(
+        findings=findings,
+        review_status=review_status,
+        partial_analysis=status == "partial_analysis",
+        business_logic_review_required=business_logic_review_required,
+    )
     return AnalysisReport(
         report_version=REPORT_SCHEMA_VERSION,
         overall_status=status,
         contract_id=contract_id,
-        review_status=_review_status(status),
+        review_status=review_status,
         requires_human_review=True,
         business_logic_review_required=business_logic_review_required,
         review_reason=review_reason,
@@ -344,6 +371,10 @@ def _build_report(
             source_files_count=len(target.source_files),
             errors=errors,
         ),
+        security_score=security_score.score,
+        score_formula_version=security_score.formula_version,
+        score_factors=security_score.factors,
+        external_tool_results=external_tool_results,
     )
 
 

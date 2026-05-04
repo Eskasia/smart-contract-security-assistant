@@ -1,6 +1,6 @@
 import { Activity, Database, GitBranch, Timer } from "lucide-react";
 
-import { formatScore, formatTokens } from "../lib/format";
+import { formatSecurityScore, formatTokens } from "../lib/format";
 import { useTranslation } from "../lib/i18n";
 import { useAnalysisStore } from "../store/analysisStore";
 import { LanguageToggle } from "./LanguageToggle";
@@ -38,7 +38,7 @@ export function ReportHeader() {
           <dl className="grid w-full grid-cols-2 gap-3 md:grid-cols-4 lg:min-w-[360px] lg:w-auto">
             <Metric label={t("findings")} value={report.findings.length} />
             <Metric label={t("tokens")} value={formatTokens(metadata.total_tokens)} />
-            <Metric label={t("localJudge")} value={formatScore(metadata.local_average_judge_score)} />
+            <Metric label={t("securityScore")} value={formatSecurityScore(report.security_score)} />
             <Metric label={t("duration")} value={`${metadata.total_duration_ms} ms`} />
           </dl>
         </div>

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from smart_contract_audit.analyzer import analyze_contract
-from smart_contract_audit.models import RagChunk
+from smart_contract_audit.models import ExternalToolResult, RagChunk
 from smart_contract_audit.rag.indexer import write_chunks
 from smart_contract_audit.slither_runner import SlitherRunResult
 
@@ -73,6 +73,16 @@ def test_analyze_contract_with_fake_slither(tmp_path: Path) -> None:
         output_dir=tmp_path / "reports",
         dataset_chunks=chunks_path,
         slither_runner=fake_slither,
+        external_tools=("mythril",),
+        external_tool_runner=lambda *_: [
+            ExternalToolResult(
+                tool_name="mythril",
+                command=["myth", "analyze", str(contract)],
+                status="finding",
+                findings_count=1,
+                summary="Mythril reported 1 issue.",
+            )
+        ],
     )
 
     assert report.overall_status == "finding"
@@ -84,5 +94,7 @@ def test_analyze_contract_with_fake_slither(tmp_path: Path) -> None:
     assert report.findings[0].external_judge_score == 5.0
     assert report.findings[0].total_tokens > 0
     assert report.analysis_metadata.total_tokens == report.findings[0].total_tokens
+    assert report.external_tool_results[0].tool_name == "mythril"
+    assert report.external_tool_results[0].findings_count == 1
     assert (tmp_path / "reports" / f"{report.contract_id}.json").exists()
     assert (tmp_path / "reports" / "analysis_trace.sqlite").exists()

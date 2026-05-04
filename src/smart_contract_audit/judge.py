@@ -9,6 +9,7 @@ from .models import Finding, RagChunk
 
 
 def score_finding_output(finding: Finding, chunks: list[RagChunk]) -> tuple[float, float]:
+    """Score generated finding report completeness, not contract security posture."""
     local_score = _score(finding, chunks)
     external_score = _external_score(finding, chunks)
     return local_score, external_score
