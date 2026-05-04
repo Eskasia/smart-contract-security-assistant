@@ -72,12 +72,17 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
         lines.append("No mapped Slither findings were included in the formal report.")
     else:
         for finding in report.findings:
-            lines.extend(
+            finding_lines = [
+                f"### {finding.finding_id}: {finding.vulnerability_type}",
+                "",
+                f"- Severity: `{finding.severity}`",
+                f"- Detector: `{finding.detector_name}`",
+                f"- Finding review status: `{finding.review_status}`",
+            ]
+            if finding.review_note:
+                finding_lines.append(f"- Finding review note: {finding.review_note}")
+            finding_lines.extend(
                 [
-                    f"### {finding.finding_id}: {finding.vulnerability_type}",
-                    "",
-                    f"- Severity: `{finding.severity}`",
-                    f"- Detector: `{finding.detector_name}`",
                     f"- Location: `{finding.location.file}:{finding.location.line_start}`",
                     f"- Finding confidence: `{finding.finding_confidence:.2f}`",
                     f"- Explanation confidence: `{finding.explanation_confidence:.2f}`",
@@ -117,5 +122,6 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     "",
                 ]
             )
+            lines.extend(finding_lines)
 
     output_path.write_text("\n".join(lines), encoding="utf-8")

@@ -13,7 +13,7 @@ last_modified: "2026-05-04"
 
 ## Status
 
-draft；依據 2026-05-04 公開 Hugging Face Slither 標註資料測試、目前產品功能與使用率推估建立。Phase 1 已完成第一版 `security_score_v1`、public benchmark harness、50 份樣本 manifest、safe/vulnerable 分數差 gate 與前端 security score 顯示；100 份 benchmark 仍待擴充。
+draft；依據 2026-05-04 公開 Hugging Face Slither 標註資料測試、目前產品功能與使用率推估建立。Phase 1 已完成 `security_score_v2`、finding-level review multiplier、public benchmark harness、50 份樣本 manifest、safe/vulnerable 分數差 gate 與前端 security score 顯示；100 份 benchmark 仍待擴充。
 
 ## Summary
 
@@ -53,7 +53,7 @@ AI 責任邊界：Slither/Mythril/規則引擎產生漏洞事實；LLM 只負責
 
 ## Architecture Decisions
 
-1. 安全分數放在 `src/smart_contract_audit/scoring/`，輸入只接受 normalized findings、confidence、review status 與 benchmark 權重，輸出固定 0–100。
+1. 安全分數放在 `src/smart_contract_audit/scoring/`，輸入只接受 normalized findings、confidence、report review status、finding review status 與 benchmark 權重，輸出固定 0–100。
 2. benchmark 放在 `eval/public_benchmark/`，保存 manifest、預期 labels、分析結果與回歸門檻；公開樣本不混入 RAG 訓練語料。
 3. 工具擴充先走 adapter 層，Slither 與 Mythril 都轉成同一個 `Finding` schema，避免前端與報告格式分裂。
 4. CI gate 只阻擋新增高危 finding 或 benchmark 命中率下降，避免因既有歷史風險造成團隊無法合併修復 PR。

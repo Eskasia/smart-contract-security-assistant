@@ -7,14 +7,14 @@
 - Python package `smart_contract_audit` 已建立，入口命令為 `scsa`。
 - 核心流程為 `.sol` 或 Solidity 專案輸入 → Slither → finding normalization → JSON schema validation → RAG retrieval → LLM explanation fallback 或 MLX runtime → JSON/Markdown report → SQLite trace。
 - 2026-05-04 已新增 `src/smart_contract_audit/http_api.py` 本機 HTTP API，前端可透過 `POST /api/analyses` 觸發 `analyze_contract()`，再用 SSE、report endpoint、trace endpoint 與 review PATCH 完成真實工作流。
-- 2026-05-01 已新增 `frontend/` React/Vite 工作台，包含三欄 triage UI、Zustand 狀態、Local Storage 設定、SSE hook、1,000 ms polling fallback、virtualized findings、syntax-highlighted vulnerable code、remediation diff、review status 與 trace evidence panel。
+- 2026-05-01 已新增 `frontend/` React/Vite 工作台，包含三欄 triage UI、Zustand 狀態、Local Storage 設定、SSE hook、1,000 ms polling fallback、virtualized findings、syntax-highlighted vulnerable code、remediation diff、review status、finding-level review feedback 與 trace evidence panel。
 - 測試覆蓋 adapter、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、skill graph artifact、schema validation、端到端流程。
 - Eval 腳本已存在：`eval/run_eval.py` 測 RAG recall，`eval/run_judge.py` 同時輸出 local 與 external 報告品質 judge adapter 分數。
 - CI 設定在 `.github/workflows/ci.yml`，目前執行 ruff、pytest、RAG eval 與 judge eval。
 - 2026-05-04 已新增 `.github/workflows/smart-contract-audit.yml`，GitHub Actions 可手動輸入 Solidity 檔案或專案目錄並上傳 `scsa-reports` artifact。
 - Git baseline 已建立在 `main`，review checklist 位於 `.claude/skills/review/checklist.md` 與 `docs/review_checklist.md`。
 - 2026-05-04 公開資料測試補上 `unchecked-transfer` 與 `unused-return`，統一映射到 `unchecked_external_call`。
-- 2026-05-04 已新增 `security_score_v1` 合約安全分數、`eval/run_public_benchmark.py` 與 `eval/public_benchmark/hf-slither50-v2-manifest.json`；目前 50 份 Hugging Face Slither 標註樣本支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`。
+- 2026-05-04 已新增 `security_score_v2` 合約安全分數、finding-level review multiplier、`eval/run_public_benchmark.py` 與 `eval/public_benchmark/hf-slither50-v2-manifest.json`；目前 50 份 Hugging Face Slither 標註樣本支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`。
 - 2026-05-04 已新增 Mythril/Echidna 可選整合，`--external-tool mythril --external-tool echidna` 會把結果寫入 `external_tool_results`。
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
 - 2026-05-04 已新增英文版 `README.en.md`。
@@ -27,11 +27,11 @@ RAG——Retrieval-Augmented Generation，先從審計語料與技術文件 chun
 
 MLX——Apple Silicon 本地推理 runtime，本專案以 4-bit 權重量化估算記憶體需求，`8B` 參數模型在 4-bit 權重下約需 `4.0GB` 權重記憶體；`uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json` 會輸出模型路徑、量化位元、預估權重記憶體、fallback 原因、load_succeeded 與 peak_rss_bytes。
 
-Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG chunks、prompt、LLM output、報告品質 judge score、token usage、partial 狀態與 review status，用於除錯與報告回溯；`scsa trace-dashboard` 可列出 trace id、dataset version、model version、review status。
+Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG chunks、prompt、LLM output、報告品質 judge score、token usage、partial 狀態、review status 與 review note，用於除錯與報告回溯；`scsa trace-dashboard` 可列出 trace id、dataset version、model version、review status。
 
-HTTP API——本機 stdlib `ThreadingHTTPServer`，入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup 與 review status 寫回。
+HTTP API——本機 stdlib `ThreadingHTTPServer`，入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
 
-Report——Markdown/JSON 會輸出 security score、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
+Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
 
 External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；本專案只做可選摘要整合，未安裝時結果為 `skipped`。
 
@@ -42,9 +42,9 @@ Report comparison——兩份 JSON 報告的差異比較，用 finding type、de
 2026-05-04 本地驗證結果：
 
 ```text
-uv run pytest                           37 passed
+uv run pytest                           39 passed
 uv run ruff check .                     all checks passed
-npm run test                            6 passed
+npm run test                            7 passed
 npm run build                           completed
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30  supported_hit_rate = 1.0, score_gap = 45.05
 ```

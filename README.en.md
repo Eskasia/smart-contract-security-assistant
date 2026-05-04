@@ -1,6 +1,6 @@
 # Smart Contract Security Assistant
 
-Local-first Solidity security triage assistant that runs Slither, normalizes findings, retrieves local audit knowledge, generates readable remediation reports, and writes JSON, Markdown, and SQLite trace artifacts.
+Local-first Solidity security triage assistant that runs Slither, normalizes findings, retrieves local audit knowledge, generates readable remediation reports, and writes JSON, Markdown, and SQLite trace artifacts with finding-level review feedback.
 
 ## Quick Start
 
@@ -31,8 +31,9 @@ Open `http://127.0.0.1:5173`. The React UI sends analysis requests to `http://12
 - Input support: single `.sol` files, Foundry projects, Hardhat projects, and generic Solidity projects with nested imports.
 - Static analysis: Slither detector mapping for reentrancy, access control, unchecked external calls, delegatecall, array length manipulation, oracle issues, price manipulation, privilege escalation, and upgrade risk.
 - Report quality: local and external judge adapters score report completeness on a 0-5 scale.
-- Security score: `security_score_v1` returns a 0-100 contract risk score based on severity, confidence, partial analysis state, and business logic review requirements.
-- Traceability: SQLite trace rows store raw Slither output, normalized findings, RAG chunk ids, prompts, LLM output, token usage, judge scores, and review status.
+- Security score: `security_score_v2` returns a 0-100 contract risk score based on severity, confidence, finding review status, partial analysis state, and business logic review requirements.
+- Traceability: SQLite trace rows store raw Slither output, normalized findings, RAG chunk ids, prompts, LLM output, token usage, judge scores, review status, and review notes.
+- Review feedback: `PATCH /api/reports/{contract_id}/findings/{finding_id}/review` saves `unreviewed`, `true_positive`, `false_positive`, `accepted_risk`, or `fixed`; `false_positive` uses a 0.0 score multiplier and `fixed` uses 0.2 until a fresh scan confirms removal.
 - Optional external tools: `--external-tool mythril` and `--external-tool echidna` attach symbolic execution and fuzzing summaries when those tools are installed.
 
 ## Commands

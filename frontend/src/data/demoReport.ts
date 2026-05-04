@@ -9,7 +9,7 @@ export const demoReport: AnalysisReport = {
   business_logic_review_required: false,
   review_reason: "Slither-based MVP findings still require human security review.",
   security_score: 61.84,
-  score_formula_version: "security_score_v1",
+  score_formula_version: "security_score_v2",
   score_factors: {
     base_score: 100,
     total_finding_penalty: 38.16,
@@ -65,6 +65,8 @@ export const demoReport: AnalysisReport = {
       prompt_tokens: 680,
       completion_tokens: 300,
       total_tokens: 980,
+      review_status: "unreviewed",
+      review_note: "",
     },
     {
       finding_id: "f_002",
@@ -98,6 +100,8 @@ export const demoReport: AnalysisReport = {
       prompt_tokens: 420,
       completion_tokens: 190,
       total_tokens: 610,
+      review_status: "accepted_risk",
+      review_note: "Privileged transfer requires business owner confirmation.",
     },
   ],
   analysis_metadata: {
@@ -148,4 +152,6 @@ export const demoTrace: TraceFinding[] = demoReport.findings.map((finding, index
   schema_valid: true,
   retry_count: 0,
   partial: finding.partial,
+  review_status: finding.review_status,
+  review_note: finding.review_note,
 }));

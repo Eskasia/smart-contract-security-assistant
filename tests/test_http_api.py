@@ -126,6 +126,28 @@ def test_http_api_analysis_report_trace_review_and_sse(tmp_path: Path) -> None:
         assert updated_report["review_status"] == "approved"
         dashboard = trace_dashboard(output_dir / "analysis_trace.sqlite")
         assert dashboard[0]["review_status"] == "approved"
+
+        patched_finding = _json_request(
+            f"{base_url}/api/reports/contract_api_001/findings/f_001/review",
+            method="PATCH",
+            payload={
+                "review_status": "false_positive",
+                "review_note": "Known safe fixture.",
+            },
+        )
+        assert patched_finding["finding"]["review_status"] == "false_positive"
+        assert patched_finding["finding"]["review_note"] == "Known safe fixture."
+        assert patched_finding["report"]["security_score"] == 100.0
+        assert (
+            patched_finding["report"]["score_factors"]["finding_penalties"][0][
+                "finding_review_multiplier"
+            ]
+            == 0.0
+        )
+
+        trace_rows = _json_request(f"{base_url}/api/traces/{trace_id}?finding_id=f_001")
+        assert trace_rows[0]["review_status"] == "false_positive"
+        assert trace_rows[0]["review_note"] == "Known safe fixture."
     finally:
         server.shutdown()
         server.server_close()
@@ -153,6 +175,14 @@ def test_http_api_rejects_invalid_payload_and_review_status(tmp_path: Path) -> N
 
         error = _json_request(
             f"{base_url}/api/reports/missing/review",
+            method="PATCH",
+            payload={"review_status": "needs_more_work"},
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+
+        error = _json_request(
+            f"{base_url}/api/reports/missing/findings/f_001/review",
             method="PATCH",
             payload={"review_status": "needs_more_work"},
             expect_error=422,

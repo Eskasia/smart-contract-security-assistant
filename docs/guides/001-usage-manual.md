@@ -78,6 +78,10 @@ uv run scsa trace-dashboard reports/analysis_trace.sqlite
 
 Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid、partial 狀態、報告品質 judge score、token usage 與 review status。
 
+## Finding 審核回饋
+
+前端 finding card 可保存 `unreviewed`、`true_positive`、`false_positive`、`accepted_risk`、`fixed` 與備註；API endpoint 是 `PATCH /api/reports/{contract_id}/findings/{finding_id}/review`。`false_positive` 會把該 finding 的安全分數懲罰係數設為 `0.0`，`fixed` 係數為 `0.2`，並同步更新 JSON report、Markdown report 與 SQLite `trace_findings.review_status/review_note`。
+
 ## Public Benchmark
 
 ```bash

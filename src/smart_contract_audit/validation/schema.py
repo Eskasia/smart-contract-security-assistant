@@ -107,6 +107,8 @@ REPORT_SCHEMA: dict = {
                 "prompt_tokens",
                 "completion_tokens",
                 "total_tokens",
+                "review_status",
+                "review_note",
             ],
             "properties": {
                 "finding_id": {"type": "string"},
@@ -133,6 +135,16 @@ REPORT_SCHEMA: dict = {
                 "prompt_tokens": {"type": "integer", "minimum": 0},
                 "completion_tokens": {"type": "integer", "minimum": 0},
                 "total_tokens": {"type": "integer", "minimum": 0},
+                "review_status": {
+                    "enum": [
+                        "unreviewed",
+                        "true_positive",
+                        "false_positive",
+                        "accepted_risk",
+                        "fixed",
+                    ]
+                },
+                "review_note": {"type": "string"},
             },
         }
     },

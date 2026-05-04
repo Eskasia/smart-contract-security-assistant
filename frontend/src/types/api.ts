@@ -1,4 +1,11 @@
-import type { AnalysisReport, AnalysisStatus, Finding, RagMode, ReviewStatus } from "./report";
+import type {
+  AnalysisReport,
+  AnalysisStatus,
+  Finding,
+  FindingReviewStatus,
+  RagMode,
+  ReviewStatus,
+} from "./report";
 
 export interface CreateAnalysisRequest {
   input_path: string;
@@ -28,4 +35,14 @@ export interface PatchReviewRequest {
 
 export interface PatchReviewResponse {
   report: AnalysisReport;
+}
+
+export interface PatchFindingReviewRequest {
+  review_status: FindingReviewStatus;
+  review_note?: string;
+}
+
+export interface PatchFindingReviewResponse {
+  report: AnalysisReport;
+  finding: Finding;
 }

@@ -3,6 +3,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+FINDING_REVIEW_STATUSES = frozenset(
+    {"unreviewed", "true_positive", "false_positive", "accepted_risk", "fixed"}
+)
+
 
 @dataclass
 class Location:
@@ -64,6 +68,8 @@ class Finding:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    review_status: str = "unreviewed"
+    review_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -125,7 +131,7 @@ class AnalysisReport:
     findings: list[Finding]
     analysis_metadata: AnalysisMetadata
     security_score: float = 100.0
-    score_formula_version: str = "security_score_v1"
+    score_formula_version: str = "security_score_v2"
     score_factors: dict[str, Any] = field(default_factory=dict)
     external_tool_results: list[ExternalToolResult] = field(default_factory=list)
 

@@ -13,8 +13,9 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .analyzer import analyze_contract
-from .models import AnalysisReport
+from .models import FINDING_REVIEW_STATUSES, AnalysisReport
 from .report import write_json_report, write_markdown_report
+from .scoring.security_score import compute_security_score
 from .trace.lookup import lookup_trace
 
 AnalysisStatus = str
@@ -23,6 +24,7 @@ AnalyzerFn = Callable[..., AnalysisReport]
 
 RAG_MODES = {"quality", "balanced", "fast", "fallback"}
 REVIEW_STATUSES = {"pending_human_review", "approved", "rejected", "blocked"}
+MAX_REVIEW_NOTE_LENGTH = 2_000
 
 
 @dataclass(frozen=True)
@@ -246,6 +248,14 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         if len(path) == 4 and path[:2] == ["api", "reports"] and path[3] == "review":
             self._patch_review(path[2])
             return
+        if (
+            len(path) == 6
+            and path[:2] == ["api", "reports"]
+            and path[3] == "findings"
+            and path[5] == "review"
+        ):
+            self._patch_finding_review(path[2], path[4])
+            return
         self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
 
     def log_message(self, format: str, *args: Any) -> None:
@@ -324,6 +334,46 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
                 review_status,
             )
         self._send_json({"report": report})
+
+    def _patch_finding_review(self, contract_id: str, finding_id: str) -> None:
+        try:
+            payload = self._read_json_body()
+            review_status, review_note = _parse_finding_review(payload)
+        except ValueError as exc:
+            self._send_error_response(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_ERROR",
+                str(exc),
+            )
+            return
+
+        report = _read_report(self.server.config.output_dir, contract_id)
+        if report is None:
+            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            return
+
+        finding = _update_report_finding_review(
+            report,
+            finding_id,
+            review_status,
+            review_note,
+        )
+        if finding is None:
+            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Finding not found.")
+            return
+
+        _refresh_report_security_score(report)
+        _write_report_dict(self.server.config.output_dir, contract_id, report)
+        trace_id = report.get("analysis_metadata", {}).get("analysis_trace_id")
+        if isinstance(trace_id, str):
+            _update_trace_finding_review(
+                self.server.config.resolved_trace_db(),
+                trace_id,
+                finding_id,
+                review_status,
+                review_note,
+            )
+        self._send_json({"report": report, "finding": finding})
 
     def _read_json_body(self) -> dict[str, Any]:
         try:
@@ -429,6 +479,25 @@ def _parse_review_status(payload: dict[str, Any]) -> str:
     return str(review_status)
 
 
+def _parse_finding_review(payload: dict[str, Any]) -> tuple[str, str]:
+    review_status = payload.get("review_status")
+    if review_status not in FINDING_REVIEW_STATUSES:
+        raise ValueError(
+            "review_status must be one of: accepted_risk, false_positive, fixed, "
+            "true_positive, unreviewed."
+        )
+
+    review_note = payload.get("review_note", "")
+    if review_note is None:
+        review_note = ""
+    if not isinstance(review_note, str):
+        raise ValueError("review_note must be a string or null.")
+    if len(review_note) > MAX_REVIEW_NOTE_LENGTH:
+        raise ValueError("review_note must be 2000 characters or fewer.")
+
+    return str(review_status), review_note
+
+
 def _path_parts(path: str) -> list[str]:
     parsed = urlparse(path)
     return [unquote(part) for part in parsed.path.strip("/").split("/") if part]
@@ -450,14 +519,150 @@ def _write_report_dict(output_dir: Path, contract_id: str, report: dict[str, Any
     markdown_path = output_dir / f"{contract_id}.md"
     if not markdown_path.exists():
         return
+    _sync_markdown_report(markdown_path, report)
+
+
+def _update_report_finding_review(
+    report: dict[str, Any],
+    finding_id: str,
+    review_status: str,
+    review_note: str,
+) -> dict[str, Any] | None:
+    findings = report.get("findings")
+    if not isinstance(findings, list):
+        return None
+
+    for finding in findings:
+        if isinstance(finding, dict) and finding.get("finding_id") == finding_id:
+            finding["review_status"] = review_status
+            finding["review_note"] = review_note
+            return finding
+    return None
+
+
+def _refresh_report_security_score(report: dict[str, Any]) -> None:
+    findings = report.get("findings")
+    if not isinstance(findings, list):
+        findings = []
+    metadata = report.get("analysis_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+
+    result = compute_security_score(
+        findings=findings,
+        review_status=str(report.get("review_status", "pending_human_review")),
+        partial_analysis=bool(metadata.get("partial_analysis", False)),
+        business_logic_review_required=bool(
+            report.get("business_logic_review_required", False)
+        ),
+    )
+    report["security_score"] = result.score
+    report["score_formula_version"] = result.formula_version
+    report["score_factors"] = result.factors
+
+
+def _sync_markdown_report(markdown_path: Path, report: dict[str, Any]) -> None:
     lines = markdown_path.read_text(encoding="utf-8").splitlines()
     updated = [
-        f"- Reviewer status: `{report['review_status']}`"
-        if line.startswith("- Reviewer status: `")
-        else line
+        _update_markdown_summary_line(line, report)
         for line in lines
     ]
+    findings = report.get("findings")
+    if isinstance(findings, list):
+        for finding in findings:
+            if isinstance(finding, dict):
+                updated = _upsert_finding_review_lines(updated, finding)
     markdown_path.write_text("\n".join(updated), encoding="utf-8")
+
+
+def _update_markdown_summary_line(line: str, report: dict[str, Any]) -> str:
+    if line.startswith("- Reviewer status: `"):
+        return f"- Reviewer status: `{report['review_status']}`"
+    if line.startswith("- Contract security score: `"):
+        try:
+            score = float(report.get("security_score", 0.0))
+        except (TypeError, ValueError):
+            score = 0.0
+        return f"- Contract security score: `{score:.2f}/100`"
+    if line.startswith("- Security score formula: `"):
+        return f"- Security score formula: `{report.get('score_formula_version', '')}`"
+    return line
+
+
+def _upsert_finding_review_lines(
+    lines: list[str],
+    finding: dict[str, Any],
+) -> list[str]:
+    finding_id = finding.get("finding_id")
+    if not isinstance(finding_id, str):
+        return lines
+
+    start = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if line.startswith(f"### {finding_id}: ")
+        ),
+        None,
+    )
+    if start is None:
+        return lines
+
+    end = next(
+        (
+            index
+            for index in range(start + 1, len(lines))
+            if lines[index].startswith("### ")
+        ),
+        len(lines),
+    )
+    review_status = str(finding.get("review_status", "unreviewed"))
+    review_note = str(finding.get("review_note", ""))
+    status_line = f"- Finding review status: `{review_status}`"
+    note_line = f"- Finding review note: {review_note}"
+
+    status_index = _find_line_index(lines, start, end, "- Finding review status:")
+    if status_index is None:
+        insert_at = _finding_review_insert_index(lines, start, end)
+        lines.insert(insert_at, status_line)
+        end += 1
+        status_index = insert_at
+    else:
+        lines[status_index] = status_line
+
+    note_index = _find_line_index(lines, start, end, "- Finding review note:")
+    if review_note:
+        if note_index is None:
+            lines.insert(status_index + 1, note_line)
+        else:
+            lines[note_index] = note_line
+    elif note_index is not None:
+        del lines[note_index]
+
+    return lines
+
+
+def _find_line_index(
+    lines: list[str],
+    start: int,
+    end: int,
+    prefix: str,
+) -> int | None:
+    return next(
+        (
+            index
+            for index in range(start, end)
+            if lines[index].startswith(prefix)
+        ),
+        None,
+    )
+
+
+def _finding_review_insert_index(lines: list[str], start: int, end: int) -> int:
+    detector_index = _find_line_index(lines, start, end, "- Detector:")
+    if detector_index is not None:
+        return detector_index + 1
+    return min(start + 2, len(lines))
 
 
 def _update_trace_review_status(trace_db: Path, trace_id: str, review_status: str) -> None:
@@ -469,3 +674,76 @@ def _update_trace_review_status(trace_db: Path, trace_id: str, review_status: st
             (review_status, trace_id),
         )
         conn.commit()
+
+
+def _update_trace_finding_review(
+    trace_db: Path,
+    trace_id: str,
+    finding_id: str,
+    review_status: str,
+    review_note: str,
+) -> None:
+    if not trace_db.exists():
+        return
+
+    with sqlite3.connect(trace_db) as conn:
+        _ensure_trace_finding_review_columns(conn)
+        row = conn.execute(
+            """
+            SELECT normalized_finding
+            FROM trace_findings
+            WHERE trace_id = ? AND finding_id = ?
+            """,
+            (trace_id, finding_id),
+        ).fetchone()
+        normalized_finding = _updated_normalized_finding(
+            row[0] if row else None,
+            review_status,
+            review_note,
+        )
+        conn.execute(
+            """
+            UPDATE trace_findings
+            SET review_status = ?, review_note = ?, normalized_finding = ?
+            WHERE trace_id = ? AND finding_id = ?
+            """,
+            (
+                review_status,
+                review_note,
+                normalized_finding,
+                trace_id,
+                finding_id,
+            ),
+        )
+        conn.commit()
+
+
+def _ensure_trace_finding_review_columns(conn: sqlite3.Connection) -> None:
+    columns = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(trace_findings)").fetchall()
+    }
+    if "review_status" not in columns:
+        conn.execute(
+            "ALTER TABLE trace_findings ADD COLUMN review_status TEXT DEFAULT 'unreviewed'"
+        )
+    if "review_note" not in columns:
+        conn.execute("ALTER TABLE trace_findings ADD COLUMN review_note TEXT DEFAULT ''")
+
+
+def _updated_normalized_finding(
+    normalized_finding: str | None,
+    review_status: str,
+    review_note: str,
+) -> str | None:
+    if not normalized_finding:
+        return normalized_finding
+    try:
+        payload = json.loads(normalized_finding)
+    except json.JSONDecodeError:
+        return normalized_finding
+    if not isinstance(payload, dict):
+        return normalized_finding
+    payload["review_status"] = review_status
+    payload["review_note"] = review_note
+    return json.dumps(payload, ensure_ascii=False)

@@ -3,7 +3,13 @@ import { persist } from "zustand/middleware";
 
 import { demoReport, demoTrace } from "../data/demoReport";
 import type { AnalysisJob } from "../types/api";
-import type { AnalysisReport, ReviewStatus, TraceFinding, UserSettings } from "../types/report";
+import type {
+  AnalysisReport,
+  FindingReviewStatus,
+  ReviewStatus,
+  TraceFinding,
+  UserSettings,
+} from "../types/report";
 
 export type ConnectionMode = "sse" | "polling" | "demo";
 
@@ -21,6 +27,11 @@ interface AnalysisState {
   setConnectionMode: (mode: ConnectionMode) => void;
   appendFindingToken: (findingId: string, token: string) => void;
   updateReviewStatus: (status: ReviewStatus) => void;
+  updateFindingReview: (
+    findingId: string,
+    status: FindingReviewStatus,
+    note: string,
+  ) => void;
   loadDemo: () => void;
 }
 
@@ -58,6 +69,21 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
     })),
   updateReviewStatus: (reviewStatus) =>
     set((state) => ({ report: { ...state.report, review_status: reviewStatus } })),
+  updateFindingReview: (findingId, reviewStatus, reviewNote) =>
+    set((state) => ({
+      report: {
+        ...state.report,
+        findings: state.report.findings.map((finding) =>
+          finding.finding_id === findingId
+            ? {
+                ...finding,
+                review_status: reviewStatus,
+                review_note: reviewNote,
+              }
+            : finding,
+        ),
+      },
+    })),
   loadDemo: () =>
     set({
       job: {

@@ -17,7 +17,7 @@ export function RightRail() {
       <section className="space-y-3 border-b border-slate-200 py-4">
         <h2 className="text-sm font-semibold text-slate-950">{t("metrics")}</h2>
         <dl className="grid grid-cols-2 gap-3">
-          <Metric label={t("scoreFormula")} value={report.score_formula_version ?? "security_score_v1"} />
+          <Metric label={t("scoreFormula")} value={report.score_formula_version ?? "security_score_v2"} />
           <Metric label={t("promptTokens")} value={formatTokens(metadata.prompt_tokens)} />
           <Metric label={t("completionTokens")} value={formatTokens(metadata.completion_tokens)} />
           <Metric label={t("totalTokens")} value={formatTokens(metadata.total_tokens)} />

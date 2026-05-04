@@ -1,6 +1,8 @@
 import type {
   AnalysisJob,
   CreateAnalysisRequest,
+  PatchFindingReviewRequest,
+  PatchFindingReviewResponse,
   PatchReviewRequest,
   PatchReviewResponse,
 } from "../types/api";
@@ -51,4 +53,18 @@ export function patchReviewStatus(
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+}
+
+export function patchFindingReview(
+  contractId: string,
+  findingId: string,
+  payload: PatchFindingReviewRequest,
+): Promise<PatchFindingReviewResponse> {
+  return requestJson<PatchFindingReviewResponse>(
+    `/api/reports/${contractId}/findings/${findingId}/review`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
 }

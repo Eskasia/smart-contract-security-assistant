@@ -1,10 +1,11 @@
-import { Clipboard, FileWarning, ShieldCheck } from "lucide-react";
-import { lazy, memo, Suspense, useCallback } from "react";
+import { Clipboard, FileWarning, Save, ShieldCheck } from "lucide-react";
+import { lazy, memo, Suspense, useCallback, useEffect, useState } from "react";
 
 import { formatLocation, formatScore, formatTokens } from "../lib/format";
-import { useTranslation } from "../lib/i18n";
-import { useSettingsStore } from "../store/analysisStore";
-import type { Finding } from "../types/report";
+import { patchFindingReview } from "../lib/api";
+import { useTranslation, type TranslationKey } from "../lib/i18n";
+import { useAnalysisStore, useSettingsStore } from "../store/analysisStore";
+import type { Finding, FindingReviewStatus } from "../types/report";
 import { CodeBlock } from "./CodeBlock";
 import { Metric } from "./Metric";
 import { SeverityBadge } from "./StatusBadge";
@@ -12,6 +13,22 @@ import { SeverityBadge } from "./StatusBadge";
 const LazyDiffViewerPanel = lazy(() =>
   import("./DiffViewerPanel").then((module) => ({ default: module.DiffViewerPanel })),
 );
+
+const findingReviewStatuses: FindingReviewStatus[] = [
+  "unreviewed",
+  "true_positive",
+  "false_positive",
+  "accepted_risk",
+  "fixed",
+];
+
+const findingReviewLabelKeys: Record<FindingReviewStatus, TranslationKey> = {
+  unreviewed: "unreviewed",
+  true_positive: "truePositive",
+  false_positive: "falsePositive",
+  accepted_risk: "acceptedRisk",
+  fixed: "fixed",
+};
 
 export const FindingCard = memo(function FindingCard({
   finding,
@@ -27,13 +44,49 @@ export const FindingCard = memo(function FindingCard({
   const { t } = useTranslation();
   const diffMode = useSettingsStore((state) => state.settings.diffMode);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
+  const contractId = useAnalysisStore((state) => state.report.contract_id);
+  const setReport = useAnalysisStore((state) => state.setReport);
+  const updateFindingReview = useAnalysisStore((state) => state.updateFindingReview);
   const vulnerableCode = finding.vulnerable_code ?? "";
   const remediationCode = finding.remediation_code ?? "";
   const explanation = streamText || finding.explanation;
+  const [reviewDraft, setReviewDraft] = useState<FindingReviewStatus>(
+    finding.review_status ?? "unreviewed",
+  );
+  const [reviewNote, setReviewNote] = useState(finding.review_note ?? "");
+  const [reviewMessage, setReviewMessage] = useState("");
+
+  useEffect(() => {
+    setReviewDraft(finding.review_status ?? "unreviewed");
+    setReviewNote(finding.review_note ?? "");
+    setReviewMessage("");
+  }, [finding.finding_id, finding.review_status, finding.review_note]);
 
   const copyRemediation = useCallback(async () => {
     if (remediationCode) await navigator.clipboard.writeText(remediationCode);
   }, [remediationCode]);
+
+  const saveFindingReview = useCallback(async () => {
+    try {
+      const response = await patchFindingReview(contractId, finding.finding_id, {
+        review_status: reviewDraft,
+        review_note: reviewNote,
+      });
+      setReport(response.report);
+      setReviewMessage(t("saved"));
+    } catch {
+      updateFindingReview(finding.finding_id, reviewDraft, reviewNote);
+      setReviewMessage(t("savedLocally"));
+    }
+  }, [
+    contractId,
+    finding.finding_id,
+    reviewDraft,
+    reviewNote,
+    setReport,
+    t,
+    updateFindingReview,
+  ]);
 
   return (
     <article
@@ -72,6 +125,48 @@ export const FindingCard = memo(function FindingCard({
         <Metric label={t("explanationConfidence")} value={finding.explanation_confidence.toFixed(2)} />
         <Metric label={t("localJudge")} value={formatScore(finding.local_judge_score)} />
         <Metric label={t("externalJudge")} value={formatScore(finding.external_judge_score)} />
+      </div>
+
+      <div className="mt-4 grid gap-3 border-t border-slate-200 pt-3 md:grid-cols-[minmax(170px,220px)_minmax(0,1fr)_auto]">
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">
+            {t("findingReviewStatus")}
+          </span>
+          <select
+            value={reviewDraft}
+            onChange={(event) =>
+              setReviewDraft(event.currentTarget.value as FindingReviewStatus)
+            }
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          >
+            {findingReviewStatuses.map((status) => (
+              <option key={status} value={status}>
+                {t(findingReviewLabelKeys[status])}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block min-w-0">
+          <span className="text-xs font-medium text-slate-600">{t("reviewNote")}</span>
+          <input
+            value={reviewNote}
+            maxLength={2000}
+            onChange={(event) => setReviewNote(event.currentTarget.value)}
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={saveFindingReview}
+          className="inline-flex h-10 items-center justify-center gap-2 self-end rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          aria-label={t("saveFindingReview")}
+        >
+          <Save className="h-4 w-4" aria-hidden="true" />
+          <span>{t("save")}</span>
+        </button>
+        <p className="min-h-5 text-xs text-slate-600 md:col-span-3" aria-live="polite">
+          {reviewMessage}
+        </p>
       </div>
 
       <div className="mt-4 space-y-4">

@@ -8,6 +8,13 @@ export type AnalysisStatus =
 
 export type ReviewStatus = "pending_human_review" | "approved" | "rejected" | "blocked";
 
+export type FindingReviewStatus =
+  | "unreviewed"
+  | "true_positive"
+  | "false_positive"
+  | "accepted_risk"
+  | "fixed";
+
 export type RagMode = "quality" | "balanced" | "fast" | "fallback";
 
 export interface Location {
@@ -39,6 +46,8 @@ export interface Finding {
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
+  review_status?: FindingReviewStatus;
+  review_note?: string;
 }
 
 export interface AnalysisMetadata {
@@ -107,6 +116,8 @@ export interface TraceFinding {
   schema_valid: boolean | number;
   retry_count: number;
   partial: boolean | number;
+  review_status?: FindingReviewStatus;
+  review_note?: string;
 }
 
 export interface UserSettings {

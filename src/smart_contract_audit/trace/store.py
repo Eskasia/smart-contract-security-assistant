@@ -56,11 +56,15 @@ class TraceStore:
                 schema_valid BOOLEAN,
                 retry_count INTEGER DEFAULT 0,
                 partial BOOLEAN DEFAULT FALSE,
+                review_status TEXT DEFAULT 'unreviewed',
+                review_note TEXT DEFAULT '',
                 PRIMARY KEY (trace_id, finding_id)
             );
             """
         )
         self._ensure_column("analysis_trace", "review_status", "TEXT")
+        self._ensure_column("trace_findings", "review_status", "TEXT DEFAULT 'unreviewed'")
+        self._ensure_column("trace_findings", "review_note", "TEXT DEFAULT ''")
         self.conn.commit()
 
     def _ensure_column(self, table: str, column: str, column_type: str) -> None:

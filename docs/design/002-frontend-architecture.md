@@ -27,9 +27,9 @@ draft；2026-05-04 已實作 React/Vite 工作台與 `src/smart_contract_audit/h
 2. 設定 `rag_mode`、`dataset_chunks`、`model_path`。
 3. 顯示分析狀態：queued、running、finding、no_finding、partial_analysis、error。
 4. 報告首屏顯示 `overall_status`、`review_status`、`trace_id`、`dataset_version`、`model_version`、`solc_version`、`slither_version`。
-5. 每個 finding 顯示 vulnerable code、Explanation、Attack path、Fix suggestion、AI remediation code、local/external 報告品質 judge score、prompt/completion/total tokens。
+5. 每個 finding 顯示 vulnerable code、Explanation、Attack path、Fix suggestion、AI remediation code、local/external 報告品質 judge score、prompt/completion/total tokens 與 finding-level review feedback。
 6. 支援 trace detail 查詢：raw Slither、normalized finding、RAG chunk ids、packed prompt、LLM raw output。
-7. 支援 reviewer status 編輯：pending_human_review、approved、rejected、blocked。
+7. 支援 reviewer status 編輯：pending_human_review、approved、rejected、blocked；支援 finding review status：unreviewed、true_positive、false_positive、accepted_risk、fixed。
 
 非功能需求：
 
@@ -93,6 +93,7 @@ flowchart TD
 | `GET` | `/api/reports/{contract_id}` | 讀 JSON report |
 | `GET` | `/api/traces/{trace_id}` | 讀 trace detail，支援 `finding_id` query |
 | `PATCH` | `/api/reports/{contract_id}/review` | 更新 reviewer status |
+| `PATCH` | `/api/reports/{contract_id}/findings/{finding_id}/review` | 更新單一 finding review status 與 note |
 
 `POST /api/analyses` request：
 
@@ -105,7 +106,7 @@ flowchart TD
 }
 ```
 
-`GET /api/reports/{contract_id}` response 直接使用 `AnalysisReport.to_dict()`，必備欄位包含 `report_version`、`review_status`、`findings[].vulnerable_code`、`findings[].remediation_code`、`findings[].local_judge_score`、`findings[].external_judge_score`、`analysis_metadata.total_tokens`。
+`GET /api/reports/{contract_id}` response 直接使用 `AnalysisReport.to_dict()`，必備欄位包含 `report_version`、`review_status`、`findings[].review_status`、`findings[].review_note`、`findings[].vulnerable_code`、`findings[].remediation_code`、`findings[].local_judge_score`、`findings[].external_judge_score`、`analysis_metadata.total_tokens`。
 
 `PATCH /api/reports/{contract_id}/review` request：
 
@@ -117,6 +118,17 @@ flowchart TD
 
 `review_status` 允許值為 `pending_human_review`、`approved`、`rejected`、`blocked`。成功後會同步更新 JSON report、Markdown report 的 reviewer status 行與 SQLite `analysis_trace.review_status`。
 
+`PATCH /api/reports/{contract_id}/findings/{finding_id}/review` request：
+
+```json
+{
+  "review_status": "false_positive",
+  "review_note": "Known safe fixture."
+}
+```
+
+Finding review status 允許值為 `unreviewed`、`true_positive`、`false_positive`、`accepted_risk`、`fixed`。成功後會同步更新 JSON report、Markdown report、SQLite `trace_findings.review_status/review_note` 與 `security_score_v2`。
+
 ## State Model
 
 前端狀態分 4 層：
@@ -127,6 +139,7 @@ flowchart TD
 | `report` | `/api/reports/{contract_id}` | job terminal status 後讀取 |
 | `selectedFindingId` | URL query `finding` | 點擊 finding 或 trace row 時更新 |
 | `reviewDraft` | local component state | PATCH 成功後同步 report.review_status |
+| `findingReviewDraft` | local component state | PATCH 成功後同步 report.findings 與 security_score |
 
 URL 格式：
 

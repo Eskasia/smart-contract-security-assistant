@@ -11,7 +11,7 @@ def test_security_score_starts_at_one_hundred_for_clean_contract() -> None:
     )
 
     assert result.score == 100.0
-    assert result.formula_version == "security_score_v1"
+    assert result.formula_version == "security_score_v2"
     assert result.factors["total_finding_penalty"] == 0.0
 
 
@@ -30,6 +30,36 @@ def test_security_score_penalizes_unreviewed_high_confidence_findings() -> None:
     assert result.factors["severity_counts"] == {"1": 0, "2": 1, "3": 1}
     assert result.factors["partial_analysis_penalty"] == 10.0
     assert result.factors["business_logic_review_penalty"] == 5.0
+
+
+def test_security_score_discounts_reviewed_false_positive_findings() -> None:
+    finding = _finding("f_001", severity=3, confidence=1.0)
+    finding.review_status = "false_positive"
+
+    result = compute_security_score(
+        findings=[finding],
+        review_status="pending_human_review",
+        partial_analysis=False,
+        business_logic_review_required=False,
+    )
+
+    assert result.score == 100.0
+    assert result.factors["finding_penalties"][0]["finding_review_multiplier"] == 0.0
+
+
+def test_security_score_keeps_partial_penalty_for_manually_fixed_findings() -> None:
+    finding = _finding("f_001", severity=3, confidence=1.0)
+    finding.review_status = "fixed"
+
+    result = compute_security_score(
+        findings=[finding],
+        review_status="pending_human_review",
+        partial_analysis=False,
+        business_logic_review_required=False,
+    )
+
+    assert result.score == 94.0
+    assert result.factors["finding_penalties"][0]["finding_review_multiplier"] == 0.2
 
 
 def _finding(finding_id: str, severity: int, confidence: float) -> Finding:
