@@ -4,7 +4,7 @@ description: "說明安裝、分析、trace 查詢、MLX probe、Web UI 與輸�
 category: "guides"
 number: "001"
 status: current
-services: ["src/smart_contract_audit", "data/dataset_v1.0", "reports-mlx"]
+services: ["src/smart_contract_audit", "data/dataset_v1.0", "eval"]
 related: ["design/001", "reference/001"]
 last_modified: "2026-05-04"
 ---
@@ -55,7 +55,7 @@ uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 | `--rag-mode` | 可選 `quality`、`balanced`、`fast`、`fallback`，預設 `balanced` |
 | `--model-path` | 指定 MLX 模型路徑；未指定時可走 deterministic fallback |
 
-輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；單檔最多 500 行，專案最多 100 個 Solidity 檔與 5,000 行。
+輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 會先嘗試原生 build，失敗時回退 Slither/solc 並寫入錯誤原因；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
 
 ## 報告狀態
 
@@ -96,7 +96,7 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool mythril --external-tool echidna
 ```
 
-Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz 工具。兩者為可選整合，命令存在時會把摘要寫入 `external_tool_results`，不存在時以 `skipped` 記錄。
+Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz 工具。Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 findings 與 trace row，工具不存在時以 `skipped` 記錄。
 
 ## GitHub Actions
 
@@ -121,8 +121,8 @@ uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/
 ## 清理審計報告語料
 
 ```bash
-uv run scsa clean-reports data/web50/raw data/web50/chunks.jsonl
-uv run python scripts/validate_chunks.py data/web50/chunks.jsonl --max-unknown-rate 0.4 --min-eligible 400
+uv run scsa clean-reports <raw-report-dir> <output-chunks.jsonl>
+uv run python scripts/validate_chunks.py <output-chunks.jsonl> --max-unknown-rate 0.4 --min-eligible 400
 ```
 
 此命令會讀取原始報告資料夾，產生 RAG 用 JSONL chunks。

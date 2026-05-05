@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,6 +98,7 @@ def resolve_solidity_target(input_path: Path) -> SolidityTarget:
 def slither_command_args_for_target(
     target: SolidityTarget,
     execution_root: Path | None = None,
+    force_framework_solc: bool = True,
 ) -> list[str]:
     args: list[str] = []
     execution_root = (execution_root or target.project_root).resolve()
@@ -104,8 +106,16 @@ def slither_command_args_for_target(
         args.extend(
             ["--solc-remaps", _remapping_for_execution_root(remapping, target, execution_root)]
         )
-    if target.project_type in {"foundry", "hardhat"}:
+    if force_framework_solc and target.project_type in {"foundry", "hardhat"}:
         args.extend(["--compile-force-framework", "solc"])
+    if target.project_type == "hardhat":
+        hardhat_paths = _hardhat_path_overrides(target.project_root)
+        artifacts = hardhat_paths.get("artifacts")
+        if artifacts:
+            args.extend(["--hardhat-artifacts-directory", artifacts])
+        cache = hardhat_paths.get("cache")
+        if cache:
+            args.extend(["--hardhat-cache-directory", cache])
     return args
 
 
@@ -144,6 +154,40 @@ def _package_json_mentions_hardhat(path: Path) -> bool:
         package.get("peerDependencies", {}),
     )
     return any("hardhat" in section for section in dependency_sections if isinstance(section, dict))
+
+
+def _hardhat_path_overrides(project_root: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for config_path in _hardhat_config_paths(project_root):
+        text = config_path.read_text(encoding="utf-8", errors="replace")
+        paths_block = _hardhat_paths_block(text)
+        if paths_block is None:
+            continue
+        for key in ("artifacts", "cache"):
+            match = re.search(rf"\b{key}\s*:\s*['\"]([^'\"]+)['\"]", paths_block)
+            if match:
+                values[key] = match.group(1)
+        if values:
+            break
+    return values
+
+
+def _hardhat_paths_block(config_text: str) -> str | None:
+    match = re.search(r"\bpaths\s*:\s*\{(?P<body>.*?)\}", config_text, re.DOTALL)
+    return match.group("body") if match else None
+
+
+def _hardhat_config_paths(project_root: Path) -> tuple[Path, ...]:
+    return tuple(
+        path
+        for path in (
+            project_root / "hardhat.config.ts",
+            project_root / "hardhat.config.js",
+            project_root / "hardhat.config.cjs",
+            project_root / "hardhat.config.mjs",
+        )
+        if path.exists()
+    )
 
 
 def _project_source_files(

@@ -1,0 +1,62 @@
+[
+  {
+    "case_id": "openzeppelin-contracts",
+    "repo_url": "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+    "ref": "094c1a1367b7d9183524a43ee080141f64ca9fb8",
+    "framework_hint": "foundry-hardhat"
+  },
+  {
+    "case_id": "uniswap-v3-core",
+    "repo_url": "https://github.com/Uniswap/v3-core.git",
+    "ref": "d0831dc6b8a318df3872b6d68f6de135c9f3ec29",
+    "framework_hint": "hardhat"
+  },
+  {
+    "case_id": "uniswap-v3-periphery",
+    "repo_url": "https://github.com/Uniswap/v3-periphery.git",
+    "ref": "0682387198a24c7cd63566a2c58398533860a5d1",
+    "framework_hint": "hardhat"
+  },
+  {
+    "case_id": "solmate",
+    "repo_url": "https://github.com/transmissions11/solmate.git",
+    "ref": "89365b880c4f3c786bdd453d4b8e8fe410344a69",
+    "framework_hint": "foundry"
+  },
+  {
+    "case_id": "solady",
+    "repo_url": "https://github.com/Vectorized/solady.git",
+    "ref": "90db92ce173856605d24a554969f2c67cadbc7e9",
+    "framework_hint": "foundry"
+  },
+  {
+    "case_id": "forge-std",
+    "repo_url": "https://github.com/foundry-rs/forge-std.git",
+    "ref": "620536fa5277db4e3fd46772d5cbc1ea0696fb43",
+    "framework_hint": "foundry"
+  },
+  {
+    "case_id": "prb-math",
+    "repo_url": "https://github.com/PaulRBerg/prb-math.git",
+    "ref": "82e5ed5561d0a1c43a3a59edbf4291c8de26479e",
+    "framework_hint": "foundry"
+  },
+  {
+    "case_id": "morpho-blue",
+    "repo_url": "https://github.com/morpho-org/morpho-blue.git",
+    "ref": "1478e9cfe1b4d514f80682b3b60e4e12ff3ee45a",
+    "framework_hint": "foundry"
+  },
+  {
+    "case_id": "aave-v3-core",
+    "repo_url": "https://github.com/aave/aave-v3-core.git",
+    "ref": "782f51917056a53a2c228701058a6c3fb233684a",
+    "framework_hint": "hardhat"
+  },
+  {
+    "case_id": "safe-smart-account",
+    "repo_url": "https://github.com/safe-global/safe-smart-account.git",
+    "ref": "d7de455e0103bd3b6d1d6a4075d7c36d1869d677",
+    "framework_hint": "hardhat"
+  }
+]

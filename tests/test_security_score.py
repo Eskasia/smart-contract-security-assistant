@@ -1,3 +1,5 @@
+import pytest
+
 from smart_contract_audit.models import Finding, Location
 from smart_contract_audit.scoring.security_score import compute_security_score
 
@@ -60,6 +62,37 @@ def test_security_score_keeps_partial_penalty_for_manually_fixed_findings() -> N
 
     assert result.score == 94.0
     assert result.factors["finding_penalties"][0]["finding_review_multiplier"] == 0.2
+
+
+@pytest.mark.parametrize(
+    ("finding_review_status", "expected_score", "expected_multiplier"),
+    [
+        ("unreviewed", 70.0, 1.0),
+        ("true_positive", 70.0, 1.0),
+        ("accepted_risk", 70.0, 1.0),
+        ("false_positive", 100.0, 0.0),
+        ("fixed", 94.0, 0.2),
+    ],
+)
+def test_security_score_applies_all_finding_review_status_multipliers(
+    finding_review_status: str,
+    expected_score: float,
+    expected_multiplier: float,
+) -> None:
+    finding = _finding("f_001", severity=3, confidence=1.0)
+    finding.review_status = finding_review_status
+
+    result = compute_security_score(
+        findings=[finding],
+        review_status="pending_human_review",
+        partial_analysis=False,
+        business_logic_review_required=False,
+    )
+
+    assert result.score == expected_score
+    assert result.factors["finding_penalties"][0]["finding_review_multiplier"] == (
+        expected_multiplier
+    )
 
 
 def _finding(finding_id: str, severity: int, confidence: float) -> Finding:

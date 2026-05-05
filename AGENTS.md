@@ -4,7 +4,7 @@
 
 ## 專案狀態
 
-截至 2026-04-30，核心 Python MVP 已可跑：Slither 串接、finding adapter、JSON schema validation、本地 RAG fallback、MLX-ready generator、SQLite trace、Markdown/JSON report、CLI、Gradio 可選入口、eval 腳本與 pytest 測試。
+截至 2026-05-04，核心 Python MVP 已可跑：Slither 串接、finding adapter、JSON schema validation、本地 RAG fallback、MLX-ready generator、SQLite trace、Markdown/JSON report、CLI、HTTP API、React/Vite 前端、Gradio 可選入口、eval 腳本與 pytest 測試。
 
 ## 常用驗證
 
@@ -15,6 +15,8 @@ uv run ruff check .
 uv run pytest tests/test_slither.py
 uv run python eval/run_eval.py
 uv run python eval/run_judge.py
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30
+uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
 /usr/bin/time -l uv run pytest tests/test_e2e.py
 ```
 
@@ -31,15 +33,13 @@ uv run python eval/run_judge.py
 - Trace：`src/smart_contract_audit/trace/`
 - 驗證 schema：`src/smart_contract_audit/validation/`
 
-## 簡報產物
+## GitHub 清理邊界
 
-最終 PPT：`elite-product-report/final-output/智能合約安全分析助理_產品報告.pptx`。來源在 `elite-product-report/src/product-report.md`、`elite-product-report/src/generate.mjs`、`elite-product-report/slides/`，修改簡報時先改來源再重新 render/export。
-
-歷史簡報資料夾：`deck-smart-contract-security-assistant/`、`huashu-redesign/`、`huashu-product-report/`、`elite-product-report/`。
+Git 只追蹤核心程式、測試、必要 benchmark fixtures、CI、docs 與 package metadata；`reports*/`、`graphify-out/`、簡報輸出、Web50 raw corpus、`.ship/`、`.claude/` 為本機可重建產物，不上傳 GitHub。
 
 ## 審查限制
 
-此目錄截至 2026-04-30 沒有 `.git` repository 邊界，`gstack/review` 的 base branch diff、commit log、PR review 與 checklist 流程無法完整執行；可用本地命令驗證測試、lint、eval 與 PPTX package integrity。
+此目錄已有 Git repository 邊界；提交前需檢查 `git status`、`git diff --check`、ruff、pytest、eval 與前端測試/build。
 
 ## 文件規則
 

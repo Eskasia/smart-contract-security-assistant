@@ -40,7 +40,7 @@ draft；2026-05-04 已實作 React/Vite 工作台與 `src/smart_contract_audit/h
 | 狀態輪詢 | 每 1,000 ms 查詢一次 running job |
 | UI 互動延遲 | p95 小於 100 ms，不含分析執行 |
 | 報告渲染 | 100 個 findings 內 p95 小於 500 ms |
-| 輸入上限 | 單檔 500 行；專案 100 個 Solidity 檔、5,000 行 |
+| 輸入上限 | 單檔 500 行；專案 500 個 Solidity 檔、100,000 行 |
 
 ## Component Diagram
 
@@ -152,7 +152,7 @@ URL 格式：
 | Failure | UI 行為 |
 |---|---|
 | Slither executable missing | 顯示 install hint：`uv sync --extra audit --dev` |
-| Input validation failed | 在 input panel 顯示 `.sol`、500 行、100 檔、5,000 行限制 |
+| Input validation failed | 在 input panel 顯示 `.sol`、500 行、500 檔、100,000 行限制 |
 | Analysis timeout | report status 顯示 `partial_analysis`，partial findings 標記 `partial=true` |
 | Trace read failed | report 仍可讀，trace drawer 顯示 unavailable |
 | External judge unavailable | external score 顯示 `0.00/5` 或 adapter error，local score 保留 |
@@ -166,7 +166,7 @@ URL 格式：
 - 部署形態為本機單使用者，分析併發固定 1。
 - 後端 Python package 保持 `analyze_contract()` 作唯一分析入口。
 - 報告 schema 至少包含 2026-05-01 已驗證欄位：vulnerable code、remediation code、報告品質 judge score、token usage。
-- 初版不處理大型 monorepo；專案輸入上限為 100 個 Solidity 檔與 5,000 行。
+- 專案輸入上限為 500 個 Solidity 檔與 100,000 行；超過上限的大型 monorepo 仍需分模組分析。
 
 ## Trade-offs
 

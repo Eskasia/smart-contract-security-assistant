@@ -7,15 +7,18 @@
 - Python package `smart_contract_audit` 已建立，入口命令為 `scsa`。
 - 核心流程為 `.sol` 或 Solidity 專案輸入 → Slither → finding normalization → JSON schema validation → RAG retrieval → LLM explanation fallback 或 MLX runtime → JSON/Markdown report → SQLite trace。
 - 2026-05-04 已新增 `src/smart_contract_audit/http_api.py` 本機 HTTP API，前端可透過 `POST /api/analyses` 觸發 `analyze_contract()`，再用 SSE、report endpoint、trace endpoint 與 review PATCH 完成真實工作流。
+- 2026-05-04 已將 `analyze_contract()` 拆分為流程協調層、`analysis_context.py` 輸入解析層、`finding_processor.py` finding enrichment 層與 `report_builder.py` report 組裝層，降低 analyzer 單點耦合。
 - 2026-05-01 已新增 `frontend/` React/Vite 工作台，包含三欄 triage UI、Zustand 狀態、Local Storage 設定、SSE hook、1,000 ms polling fallback、virtualized findings、syntax-highlighted vulnerable code、remediation diff、review status、finding-level review feedback 與 trace evidence panel。
-- 測試覆蓋 adapter、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、skill graph artifact、schema validation、端到端流程。
+- 測試覆蓋 adapter、analysis context、finding processor、report builder、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、security score review multiplier、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、skill graph artifact、schema validation、端到端流程。
 - Eval 腳本已存在：`eval/run_eval.py` 測 RAG recall，`eval/run_judge.py` 同時輸出 local 與 external 報告品質 judge adapter 分數。
 - CI 設定在 `.github/workflows/ci.yml`，目前執行 ruff、pytest、RAG eval 與 judge eval。
 - 2026-05-04 已新增 `.github/workflows/smart-contract-audit.yml`，GitHub Actions 可手動輸入 Solidity 檔案或專案目錄並上傳 `scsa-reports` artifact。
-- Git baseline 已建立在 `main`，review checklist 位於 `.claude/skills/review/checklist.md` 與 `docs/review_checklist.md`。
+- Git baseline 已建立在 `main`，review checklist 位於 `docs/review_checklist.md`。
 - 2026-05-04 公開資料測試補上 `unchecked-transfer` 與 `unused-return`，統一映射到 `unchecked_external_call`。
 - 2026-05-04 已新增 `security_score_v2` 合約安全分數、finding-level review multiplier、`eval/run_public_benchmark.py` 與 `eval/public_benchmark/hf-slither50-v2-manifest.json`；目前 50 份 Hugging Face Slither 標註樣本支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`。
-- 2026-05-04 已新增 Mythril/Echidna 可選整合，`--external-tool mythril --external-tool echidna` 會把結果寫入 `external_tool_results`。
+- 2026-05-04 已新增 Mythril/Echidna 可選整合；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 findings 並寫入 trace。
+- 2026-05-04 已新增 Foundry/Hardhat 原生 build preflight；成功時 Slither 使用專案框架，失敗或工具缺失時回退 solc fallback 並寫入 `analysis_metadata.errors`。
+- 2026-05-04 已新增 `eval/run_public_project_builds.py` 與 `eval/public_benchmark/public-project-builds-10-manifest.json`，可用 10 個 pinned public repos 自動 clone 或讀 local path，初始化 submodules、安裝 npm dependencies、支援 Hardhat 自訂 artifacts/cache 路徑，輸出 analyzer success rate、native build success rate、`forge`/`npx` 可用性與 blocker 統計；本機實測達 `10/10` analyzer 與 `10/10` native build。
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
 - 2026-05-04 已新增英文版 `README.en.md`。
 
@@ -33,7 +36,11 @@ HTTP API——本機 stdlib `ThreadingHTTPServer`，入口命令為 `uv run scsa
 
 Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
 
-External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；本專案只做可選摘要整合，未安裝時結果為 `skipped`。
+External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，未安裝時結果為 `skipped`。
+
+Native build preflight——Foundry/Hardhat 專案分析前先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback。
+
+Public project build validation——`eval/run_public_project_builds.py` 預設讀取 `eval/public_benchmark/public-project-builds-10-manifest.json`；`--preflight-only` 不 clone 即回報 framework 分布與缺失工具，完整模式會 clone、初始化 submodules、安裝 npm dependencies、處理 Hardhat 自訂 artifacts/cache 路徑並產出 `public_project_builds_summary.json`，可用 `--min-analyzer-success-rate` 與 `--min-native-build-success-rate` 設門檻。
 
 Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
 
@@ -42,11 +49,12 @@ Report comparison——兩份 JSON 報告的差異比較，用 finding type、de
 2026-05-04 本地驗證結果：
 
 ```text
-uv run pytest                           39 passed
+uv run pytest                           69 passed
 uv run ruff check .                     all checks passed
 npm run test                            7 passed
 npm run build                           completed
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30  supported_hit_rate = 1.0, score_gap = 45.05
+uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0  analyzer_success_rate = 1.0, native_build_success_rate = 1.0
 ```
 
 2026-04-30 本地驗證結果：
@@ -56,7 +64,6 @@ uv run pytest                         23 passed
 uv run ruff check .                   all checks passed
 uv run python eval/run_eval.py        recall_at_k = 1.0
 uv run python eval/run_judge.py       local_average_judge_score = 5.0, external_average_judge_score = 5.0
-uv run python scripts/validate_chunks.py data/web50/chunks.jsonl --max-unknown-rate 0.4 --min-eligible 400  unknown_rate = 0.1916, eligible_chunks = 637
 uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir <tmp> --rag-mode fallback  report tokens = 680/300/980, judge = 5.00/5
 uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json  load_succeeded = true, peak_rss_bytes = 661,520,384
 uv run python scripts/build_skill_graph.py  graphify-out artifacts generated
@@ -65,42 +72,22 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 
 端到端測試的記憶體使用低於 16GB 硬體上限；目前測試路徑使用 deterministic fallback。本機 `/Users/william/models/Qwen3.5-9B-MLX-4bit` 已完成 `mlx-lm` 載入 probe，峰值 RSS 661,520,384 bytes。
 
-## 產品報告輸出
-
-最終 PPTX：`elite-product-report/final-output/智能合約安全分析助理_產品報告.pptx`。
-
-來源檔：
-
-- `elite-product-report/src/product-report.md`
-- `elite-product-report/src/generate.mjs`
-- `elite-product-report/slides/*.html`
-- `elite-product-report/shared/tokens.css`
-
-驗證命令：
-
-```bash
-cd elite-product-report
-node scripts/render.mjs
-node scripts/export_deck_pptx.mjs
-unzip -t final-output/智能合約安全分析助理_產品報告.pptx
-```
-
 ## 已知限制
 
-- 目前支援單檔、Foundry、Hardhat 與 generic nested import 專案；尚未執行真實 Forge 或 Hardhat build artifact workflow。
-- Mythril 與完整 business-logic symbolic analysis 尚未納入。
+- 目前支援單檔、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 原生 build preflight 已用 10 個 pinned public repos 驗證 `10/10` analyzer 與 `10/10` native build。
+- 完整 business-logic symbolic analysis 尚未納入。
 - 真實外部高階模型 API judge 需透過 `EXTERNAL_JUDGE_COMMAND` 接入；預設 external adapter 是 deterministic rule adapter；兩者分數語義皆為報告品質，不是合約安全分數。
 
 ## 接手順序
 
 1. 先跑 `uv sync --extra audit --dev` 與 `uv run pytest`。
 2. 再跑 `uv run pytest tests/test_slither.py tests/test_project_input.py` 確認 Slither/solc 串接與專案級 import 解析。
-3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python scripts/validate_chunks.py data/web50/chunks.jsonl --max-unknown-rate 0.4 --min-eligible 400`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
+3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
 
 前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
 
 自主迭代架構：`docs/skill-graph.md` 記錄 skill graph、多 agent 分工、缺口排序、驗證命令與文件更新規則。
-圖譜產物：`uv run python scripts/build_skill_graph.py` 產生 `graphify-out/graph.json`、`graphify-out/GRAPH_REPORT.md`、`graphify-out/graph.html`。
+圖譜產物：`uv run python scripts/build_skill_graph.py` 產生本機 `graphify-out/`，該目錄不追蹤到 GitHub。
 
 ## 文件入口
 

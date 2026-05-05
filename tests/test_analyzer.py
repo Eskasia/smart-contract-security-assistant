@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from smart_contract_audit.analyzer import analyze_contract
@@ -98,3 +99,144 @@ def test_analyze_contract_with_fake_slither(tmp_path: Path) -> None:
     assert report.external_tool_results[0].findings_count == 1
     assert (tmp_path / "reports" / f"{report.contract_id}.json").exists()
     assert (tmp_path / "reports" / "analysis_trace.sqlite").exists()
+
+
+def test_analyze_contract_adds_mythril_findings_to_formal_report(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text(
+        "pragma solidity ^0.8.19;\ncontract Vault { function withdraw() external {} }\n",
+        encoding="utf-8",
+    )
+
+    def fake_slither(_: Path) -> SlitherRunResult:
+        return SlitherRunResult(
+            raw_json={"results": {"detectors": []}},
+            solc_version="0.8.19",
+            slither_version="0.11.5",
+            warnings=[],
+        )
+
+    def fake_external_tool_runner(
+        _: Path,
+        output_dir: Path,
+        __: tuple[str, ...],
+        ___: int,
+    ) -> list[ExternalToolResult]:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "mythril.json"
+        output_path.write_text(
+            """
+            {
+              "issues": [
+                {
+                  "title": "External Call To User-Supplied Address",
+                  "description": "An external call can lead to reentrancy.",
+                  "severity": "High",
+                  "swc-id": "SWC-107",
+                  "locations": [{"filename": "Vault.sol", "line": 2}]
+                }
+              ]
+            }
+            """,
+            encoding="utf-8",
+        )
+        return [
+            ExternalToolResult(
+                tool_name="mythril",
+                command=["myth", "analyze", str(contract)],
+                status="finding",
+                findings_count=1,
+                summary="Mythril reported 1 issue.",
+                output_path=str(output_path),
+            )
+        ]
+
+    report = analyze_contract(
+        contract,
+        output_dir=tmp_path / "reports",
+        dataset_chunks=tmp_path / "missing-chunks.jsonl",
+        slither_runner=fake_slither,
+        external_tools=("mythril",),
+        external_tool_runner=fake_external_tool_runner,
+    )
+
+    assert report.overall_status == "finding"
+    assert report.findings[0].static_tool_source == "mythril"
+    assert report.findings[0].vulnerability_type == "reentrancy"
+    assert report.findings[0].detector_name == "mythril:SWC-107"
+    with sqlite3.connect(tmp_path / "reports" / "analysis_trace.sqlite") as conn:
+        row = conn.execute(
+            "SELECT detector_name, rag_mode FROM trace_findings WHERE finding_id = 'f_001'"
+        ).fetchone()
+    assert row == ("mythril:SWC-107", "external_tool")
+
+
+def test_analyze_contract_adds_echidna_failures_to_formal_report(tmp_path: Path) -> None:
+    contract = tmp_path / "InvariantVault.sol"
+    contract.write_text(
+        "pragma solidity ^0.8.19;\ncontract InvariantVault { function withdraw() external {} }\n",
+        encoding="utf-8",
+    )
+
+    def fake_slither(_: Path) -> SlitherRunResult:
+        return SlitherRunResult(
+            raw_json={"results": {"detectors": []}},
+            solc_version="0.8.19",
+            slither_version="0.11.5",
+            warnings=[],
+        )
+
+    def fake_external_tool_runner(
+        _: Path,
+        output_dir: Path,
+        __: tuple[str, ...],
+        ___: int,
+    ) -> list[ExternalToolResult]:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "echidna.json"
+        output_path.write_text(
+            """
+            {
+              "tests": [
+                {
+                  "contract": "InvariantVault",
+                  "name": "echidna_total_assets_never_decrease",
+                  "status": "failed",
+                  "error": "property falsified after withdraw",
+                  "transactions": [{"function": "withdraw"}]
+                }
+              ]
+            }
+            """,
+            encoding="utf-8",
+        )
+        return [
+            ExternalToolResult(
+                tool_name="echidna",
+                command=["echidna", str(contract), "--format", "json"],
+                status="finding",
+                findings_count=1,
+                summary="Echidna reported 1 failed property.",
+                output_path=str(output_path),
+            )
+        ]
+
+    report = analyze_contract(
+        contract,
+        output_dir=tmp_path / "reports",
+        dataset_chunks=tmp_path / "missing-chunks.jsonl",
+        slither_runner=fake_slither,
+        external_tools=("echidna",),
+        external_tool_runner=fake_external_tool_runner,
+    )
+
+    assert report.overall_status == "finding"
+    assert report.findings[0].static_tool_source == "echidna"
+    assert report.findings[0].vulnerability_type == "invariant_violation"
+    assert report.findings[0].detector_name == "echidna:echidna_total_assets_never_decrease"
+    assert report.security_score == 91.6
+    with sqlite3.connect(tmp_path / "reports" / "analysis_trace.sqlite") as conn:
+        row = conn.execute(
+            "SELECT detector_name, rag_mode FROM trace_findings WHERE finding_id = 'f_001'"
+        ).fetchone()
+    assert row == ("echidna:echidna_total_assets_never_decrease", "external_tool")

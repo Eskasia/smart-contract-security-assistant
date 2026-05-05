@@ -95,7 +95,7 @@ flowchart TD
 
 ## Boundaries
 
-本架構不覆蓋 Foundry/Hardhat 專案、多資料夾 import resolution、Mythril bytecode 分析、外部高階 judge API、正式審計簽核流程與合約經濟模型判定。任何把 LLM 改成漏洞事實來源的變更，都必須先更新本文件與 schema 驗證策略。
+本架構不覆蓋外部高階 judge API、正式審計簽核流程與合約經濟模型判定。2026-05-04 已完成 10 個公開專案 `10/10` analyzer 與 `10/10` native build 驗證；任何把 LLM 改成漏洞事實來源的變更，都必須先更新本文件與 schema 驗證策略。
 
 ## Assumptions
 
@@ -118,7 +118,7 @@ flowchart TD
 | 條件 | 需要重看 |
 |---|---|
 | 入口檔超過 500 行成為常態 | 輸入模型與分段策略 |
-| 專案支援 Foundry/Hardhat | import resolution 與 build artifact 解析 |
+| 專案支援 Foundry/Hardhat | import resolution、native build preflight、dependency preparation、Hardhat artifacts/cache path 與 10 repo public build 驗證 |
 | 外部 judge API 接入 | API key 管理、成本、速率限制與資料外傳政策 |
 | `.git` baseline 建立 | review workflow 與 CI/PR 交付流程 |
 

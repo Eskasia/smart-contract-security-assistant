@@ -3,7 +3,10 @@ from pathlib import Path
 from smart_contract_audit.analyzer import analyze_contract
 from smart_contract_audit.finding_adapter import normalize_slither_json
 from smart_contract_audit.slither_runner import SlitherRunError, SlitherRunResult, run_slither
-from smart_contract_audit.solidity_target import resolve_solidity_target
+from smart_contract_audit.solidity_target import (
+    resolve_solidity_target,
+    slither_command_args_for_target,
+)
 
 
 def test_resolve_foundry_project_with_remappings() -> None:
@@ -16,12 +19,85 @@ def test_resolve_foundry_project_with_remappings() -> None:
     assert len(target.source_files) == 2
 
 
+def test_foundry_slither_args_disable_solc_fallback_after_native_build() -> None:
+    target = resolve_solidity_target(Path("tests/fixtures/solidity_projects/foundry"))
+
+    native_args = slither_command_args_for_target(target, force_framework_solc=False)
+    fallback_args = slither_command_args_for_target(target, force_framework_solc=True)
+
+    assert "--compile-force-framework" not in native_args
+    assert fallback_args[-2:] == ["--compile-force-framework", "solc"]
+
+
 def test_resolve_hardhat_project() -> None:
     target = resolve_solidity_target(Path("tests/fixtures/solidity_projects/hardhat"))
 
     assert target.project_type == "hardhat"
     assert target.entry_path.name == "HardhatVault.sol"
     assert len(target.source_files) == 2
+
+
+def test_hardhat_slither_args_include_custom_artifact_paths(tmp_path: Path) -> None:
+    project = tmp_path / "hardhat"
+    contracts = project / "contracts"
+    contracts.mkdir(parents=True)
+    (project / "hardhat.config.ts").write_text(
+        """
+        export default {
+          paths: {
+            artifacts: "build/artifacts",
+            cache: "build/cache",
+            sources: "contracts"
+          }
+        };
+        """,
+        encoding="utf-8",
+    )
+    (project / "package.json").write_text(
+        '{"devDependencies": {"hardhat": "^2.0.0"}}',
+        encoding="utf-8",
+    )
+    (contracts / "Vault.sol").write_text(
+        "pragma solidity ^0.8.19;\ncontract Vault {}\n",
+        encoding="utf-8",
+    )
+
+    target = resolve_solidity_target(project)
+    args = slither_command_args_for_target(target, force_framework_solc=False)
+
+    assert "--hardhat-artifacts-directory" in args
+    assert args[args.index("--hardhat-artifacts-directory") + 1] == "build/artifacts"
+    assert "--hardhat-cache-directory" in args
+    assert args[args.index("--hardhat-cache-directory") + 1] == "build/cache"
+
+
+def test_hardhat_slither_args_ignore_external_artifact_paths(tmp_path: Path) -> None:
+    project = tmp_path / "hardhat"
+    contracts = project / "contracts"
+    contracts.mkdir(parents=True)
+    (project / "hardhat.config.ts").write_text(
+        """
+        export default {
+          external: {
+            contracts: [{ artifacts: "./temp-artifacts" }]
+          }
+        };
+        """,
+        encoding="utf-8",
+    )
+    (project / "package.json").write_text(
+        '{"devDependencies": {"hardhat": "^2.0.0"}}',
+        encoding="utf-8",
+    )
+    (contracts / "Vault.sol").write_text(
+        "pragma solidity ^0.8.19;\ncontract Vault {}\n",
+        encoding="utf-8",
+    )
+
+    target = resolve_solidity_target(project)
+    args = slither_command_args_for_target(target, force_framework_solc=False)
+
+    assert "--hardhat-artifacts-directory" not in args
 
 
 def test_resolve_nested_import_project() -> None:

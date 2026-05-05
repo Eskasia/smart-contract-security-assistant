@@ -55,7 +55,7 @@ AI 責任邊界：Slither/Mythril/規則引擎產生漏洞事實；LLM 只負責
 
 1. 安全分數放在 `src/smart_contract_audit/scoring/`，輸入只接受 normalized findings、confidence、report review status、finding review status 與 benchmark 權重，輸出固定 0–100。
 2. benchmark 放在 `eval/public_benchmark/`，保存 manifest、預期 labels、分析結果與回歸門檻；公開樣本不混入 RAG 訓練語料。
-3. 工具擴充先走 adapter 層，Slither 與 Mythril 都轉成同一個 `Finding` schema，避免前端與報告格式分裂。
+3. 工具擴充先走 adapter 層，Slither、Mythril 與 Echidna 都轉成同一個 `Finding` schema，避免前端與報告格式分裂。
 4. CI gate 只阻擋新增高危 finding 或 benchmark 命中率下降，避免因既有歷史風險造成團隊無法合併修復 PR。
 
 ## Phase 1：信任層
@@ -88,15 +88,15 @@ Verification：`uv run pytest tests/test_detector_expansion.py`、benchmark supp
 
 Task 05：接入 Mythril/Echidna 作外部工具層。
 
-Acceptance criteria：2026-05-04 已完成 v0，`--external-tool mythril --external-tool echidna` 會把外部工具摘要寫入 `external_tool_results`；v1 再把 Mythril issue 轉成正式 `Finding` 並做去重。
+Acceptance criteria：2026-05-04 已完成 v2，`--external-tool mythril --external-tool echidna` 會把外部工具摘要寫入 `external_tool_results`；Mythril issue 與 Echidna failed/falsified property 會轉成正式 `Finding`、寫入 SQLite trace，並與 Slither 同類型同檔案重疊行號 finding 去重。
 
 Verification：`uv run pytest tests/test_external_tools.py tests/test_analyzer.py`。
 
 Task 06：支援 Forge/Hardhat 真實 build。
 
-Acceptance criteria：偵測 `foundry.toml`、`hardhat.config.*` 後優先使用專案原生 build；失敗時保留目前 solc fallback 並把原因寫入 `analysis_metadata.errors`。
+Acceptance criteria：2026-05-04 已完成 v3，偵測 `foundry.toml`、`hardhat.config.*` 後優先使用專案原生 build；成功時 Slither 使用專案框架，失敗或工具缺失時保留 solc fallback 並把原因寫入 `analysis_metadata.errors`。`eval/run_public_project_builds.py` 會 clone pinned repo、初始化 submodules、安裝 npm dependencies、處理 Hardhat 自訂 artifacts/cache 路徑；10 repo pinned manifest 實測 `10/10` analyzer 與 `10/10` native build。
 
-Verification：10 個公開專案中 9 個能完成分析；`uv run pytest tests/test_project_input.py`。
+Verification：`uv run pytest tests/test_project_input.py tests/test_slither.py tests/test_public_project_builds.py` 已通過；`uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0` 已通過。
 
 ## Phase 3：工作流層
 
@@ -116,7 +116,7 @@ Task 09：歷史比較與審計報告模板。
 
 Acceptance criteria：同一專案兩次分析可輸出 diff；Markdown/PDF 模板包含摘要、分數、finding、修復狀態、trace id、工具版本。
 
-Verification：`uv run scsa compare <old-report.json> <new-report.json>`；PPT/Markdown package integrity 通過。
+Verification：`uv run scsa compare-reports <old-report.json> <new-report.json> --output reports/comparison.md`；Markdown/JSON report schema validation 通過。
 
 ## Skill Mapping
 
@@ -155,8 +155,8 @@ Checkpoint C：Task 07–09 完成後，測試 PR 可看到安全分數差異、
 
 ## References
 
-- `reports-public/hf-slither20-after-fix/COMPARISON.md`
-- `public-contracts/hf-slither20/manifest.json`
+- `eval/public_benchmark/hf-slither50-v2-manifest.json`
+- `eval/public_benchmark/public-project-builds-10-manifest.json`
 - `src/smart_contract_audit/config.py`
 - `docs/design/001-project-architecture.md`
 - `docs/design/002-frontend-architecture.md`

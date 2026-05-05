@@ -29,6 +29,14 @@ class SlitherRunResult:
     warnings: list[str]
 
 
+@dataclass(frozen=True)
+class NativeBuildResult:
+    attempted: bool
+    succeeded: bool
+    tool_name: str
+    summary: str
+
+
 def detect_pragma_version(source: str) -> str | None:
     match = re.search(r"pragma\s+solidity\s+([^;]+);", source)
     if not match:
@@ -114,7 +122,7 @@ def get_slither_version() -> str | None:
     return text or None
 
 
-def run_slither(contract_path: Path, timeout_seconds: int = 90) -> SlitherRunResult:
+def run_slither(contract_path: Path, timeout_seconds: int = 300) -> SlitherRunResult:
     if shutil.which("slither") is None:
         raise SlitherRunError("slither executable not found; install with `uv sync --extra audit`.")
 
@@ -123,12 +131,35 @@ def run_slither(contract_path: Path, timeout_seconds: int = 90) -> SlitherRunRes
     except ValueError as exc:
         raise SlitherRunError(str(exc)) from exc
 
+    native_build = prepare_native_build(target, timeout_seconds)
     source = target.combined_source
-    solc_version, warnings = ensure_solc_version(detect_pragma_version(source))
+    warnings: list[str] = []
+    if native_build.attempted or native_build.summary:
+        warnings.append(native_build.summary)
+
+    if native_build.succeeded:
+        solc_version = get_system_solc_version()
+        if solc_version is None:
+            warnings.append(
+                "Framework native build completed; solc version is managed by the project."
+            )
+    else:
+        try:
+            solc_version, solc_warnings = ensure_solc_version(detect_pragma_version(source))
+        except SlitherRunError as exc:
+            if warnings:
+                raise SlitherRunError("; ".join([*warnings, str(exc)])) from exc
+            raise
+        warnings.extend(solc_warnings)
 
     raw_results = [
-        _run_slither_once(target, analysis_path, timeout_seconds)
-        for analysis_path in _analysis_paths(target)
+        _run_slither_once(
+            target,
+            analysis_path,
+            timeout_seconds,
+            force_framework_solc=not native_build.succeeded,
+        )
+        for analysis_path in _analysis_paths(target, native_build.succeeded)
     ]
 
     return SlitherRunResult(
@@ -139,14 +170,26 @@ def run_slither(contract_path: Path, timeout_seconds: int = 90) -> SlitherRunRes
     )
 
 
-def _analysis_paths(target: SolidityTarget) -> tuple[Path, ...]:
+def _analysis_paths(
+    target: SolidityTarget,
+    use_project_framework: bool = False,
+) -> tuple[Path, ...]:
+    if (
+        use_project_framework
+        and target.input_kind == "project_directory"
+        and target.project_type in {"foundry", "hardhat"}
+    ):
+        return (target.analysis_path,)
     if target.input_kind == "project_directory":
         return target.source_files
     return (target.analysis_path,)
 
 
 def _run_slither_once(
-    target: SolidityTarget, analysis_path: Path, timeout_seconds: int
+    target: SolidityTarget,
+    analysis_path: Path,
+    timeout_seconds: int,
+    force_framework_solc: bool = True,
 ) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "slither.json"
@@ -161,7 +204,11 @@ def _run_slither_once(
             str(output_path),
             "--detect",
             ",".join(SUPPORTED_DETECTORS),
-            *slither_command_args_for_target(target, execution_root),
+            *slither_command_args_for_target(
+                target,
+                execution_root,
+                force_framework_solc=force_framework_solc,
+            ),
         ]
         result = subprocess.run(
             command,
@@ -197,3 +244,102 @@ def _merge_slither_results(results: list[dict[str, Any]]) -> dict[str, Any]:
         "success": all(result.get("success", True) for result in results),
         "results": {"detectors": merged_detectors},
     }
+
+
+def prepare_native_build(
+    target: SolidityTarget,
+    timeout_seconds: int = 90,
+) -> NativeBuildResult:
+    if target.project_type not in {"foundry", "hardhat"}:
+        return NativeBuildResult(False, False, "", "")
+
+    command = _native_build_command(target)
+    if command is None:
+        return NativeBuildResult(
+            attempted=False,
+            succeeded=False,
+            tool_name=target.project_type,
+            summary=(
+                f"{target.project_type} native build tool not found; "
+                "Slither will use solc fallback."
+            ),
+        )
+
+    try:
+        result = subprocess.run(
+            command,
+            cwd=target.project_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return NativeBuildResult(
+            attempted=True,
+            succeeded=False,
+            tool_name=target.project_type,
+            summary=(
+                f"{target.project_type} native build failed before Slither; "
+                f"using solc fallback. Reason: {exc}"
+            ),
+        )
+
+    if result.returncode == 0:
+        return NativeBuildResult(
+            attempted=True,
+            succeeded=True,
+            tool_name=target.project_type,
+            summary=f"{target.project_type} native build completed before Slither.",
+        )
+
+    detail = (result.stderr or result.stdout or "").strip().splitlines()
+    reason = detail[-1] if detail else f"exit code {result.returncode}"
+    return NativeBuildResult(
+        attempted=True,
+        succeeded=False,
+        tool_name=target.project_type,
+        summary=(
+            f"{target.project_type} native build failed before Slither; "
+            f"using solc fallback. Reason: {reason}"
+        ),
+    )
+
+
+def _native_build_command(target: SolidityTarget) -> list[str] | None:
+    if target.project_type == "foundry":
+        forge = shutil.which("forge")
+        return [forge, "build", "--root", str(target.project_root)] if forge else None
+    if target.project_type == "hardhat":
+        npm_script = _hardhat_npm_script_command(target.project_root)
+        if npm_script is not None:
+            return npm_script
+        hardhat = target.project_root / "node_modules" / ".bin" / "hardhat"
+        if hardhat.exists():
+            return [str(hardhat), "compile"]
+        npx = shutil.which("npx")
+        return [npx, "--no-install", "hardhat", "compile"] if npx else None
+    return None
+
+
+def _hardhat_npm_script_command(project_root: Path) -> list[str] | None:
+    npm = shutil.which("npm")
+    if npm is None:
+        return None
+    package_path = project_root / "package.json"
+    if not package_path.exists():
+        return None
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    scripts = package.get("scripts", {})
+    if not isinstance(scripts, dict):
+        return None
+    compile_script = scripts.get("compile")
+    if isinstance(compile_script, str) and "hardhat" in compile_script:
+        return [npm, "run", "compile"]
+    build_script = scripts.get("build")
+    if isinstance(build_script, str) and "hardhat" in build_script and "compile" in build_script:
+        return [npm, "run", "build"]
+    return None

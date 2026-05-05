@@ -42,11 +42,11 @@ graph TD
 | Agent | 使用 skill | 操作邊界 | 輸出證據 |
 |---|---|---|---|
 | Orchestrator | arch-design, design, autoplan, dev | 將缺口拆成可執行任務，分派 agent，合併結果 | docs/skill-graph.md、docs/handoff.md |
-| Solidity Security Agent | solidity-security, cso, investigate | 擴充 detector mapping、審查漏洞分類、分析 Slither raw output | tests/test_slither.py、reports-slither/*.json |
+| Solidity Security Agent | solidity-security, cso, investigate | 擴充 detector mapping、審查漏洞分類、分析 Slither raw output | tests/test_slither.py、tests/test_public_project_builds.py |
 | RAG Data Agent | rag-implementation, embedding-strategies, hybrid-search-implementation, graphify | 維護 chunks、索引、召回測試與圖譜更新 | data/dataset_v1.0/chunks/chunks.jsonl、eval/run_eval.py |
 | LLM Eval Agent | llm-evaluation, prompt-engineering-patterns, ml-pipeline-workflow | 驗證 prompt、judge 規則、本地模型 fallback | eval/run_judge.py、tests/test_validation_and_mlx.py |
 | Python Quality Agent | python-testing-patterns, python-error-handling, python-resource-management, python-resilience, uv-package-manager | 維護 pytest、ruff、錯誤處理、資源釋放 | uv run pytest、uv run ruff check . |
-| Product Doc Agent | write-docs, document-release, elite-powerpoint-designer, huashu-design | 同步 README、handoff、產品報告來源 | README.md、docs/handoff.md、elite-product-report/src/product-report.md |
+| Product Doc Agent | write-docs, document-release | 同步 README、handoff、使用說明與驗證日誌 | README.md、docs/handoff.md、docs/reference/001-validation-procedure-log.md |
 | QA Agent | qa, e2e, benchmark, health | 跑端到端、記憶體、UI 與回歸驗證 | tests/test_e2e.py、/usr/bin/time -l output |
 | Release Agent | review, handoff, ship, github-actions-templates | 在有 git 邊界時做 diff review、CI、PR、交付 | .github/workflows/ci.yml、review report |
 
@@ -98,7 +98,7 @@ flowchart LR
 | P0 done | CI 已自動跑 eval/run_eval.py 與 eval/run_judge.py | GitHub Actions 已新增兩個 eval step，本地命令需通過 |
 | P1 done | 同目錄 Solidity import resolution 已納入 | 新增多檔 fixture，uv run pytest tests/test_slither.py 通過 |
 | P1 done | 本機 MLX 4bit 模型已完成 `mlx-lm` 載入 probe | `uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json` 記錄 `load_succeeded=true`、峰值 RSS 661,520,384 bytes |
-| P2 done | Graph artifact 已接入專案常規文件 | `uv run python scripts/build_skill_graph.py` 產生 graphify-out/graph.json、GRAPH_REPORT.md、graph.html |
+| P2 done | Graph artifact 可由本機命令重建 | `uv run python scripts/build_skill_graph.py` 產生本機 `graphify-out/`，該目錄不追蹤到 GitHub |
 
 ## 最小執行協議
 
@@ -112,4 +112,4 @@ flowchart LR
 uv run python scripts/build_skill_graph.py
 ```
 
-該命令使用標準庫產生 `graphify-out/graph.json`、`graphify-out/GRAPH_REPORT.md`、`graphify-out/graph.html`，避免簡報輸出與 node_modules 污染圖譜；若要改用外部 `graphify` CLI，安裝前需先確認。
+該命令使用標準庫產生本機 `graphify-out/`，避免 node_modules 與快取污染圖譜；若要改用外部 `graphify` CLI，安裝前需先確認。

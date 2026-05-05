@@ -29,6 +29,7 @@ Open `http://127.0.0.1:5173`. The React UI sends analysis requests to `http://12
 ## Main Features
 
 - Input support: single `.sol` files, Foundry projects, Hardhat projects, and generic Solidity projects with nested imports.
+- Project build support: Foundry/Hardhat native builds run before Slither; the public build harness initializes submodules, installs npm dependencies, and handles custom Hardhat artifacts/cache paths.
 - Static analysis: Slither detector mapping for reentrancy, access control, unchecked external calls, delegatecall, array length manipulation, oracle issues, price manipulation, privilege escalation, and upgrade risk.
 - Report quality: local and external judge adapters score report completeness on a 0-5 scale.
 - Security score: `security_score_v2` returns a 0-100 contract risk score based on severity, confidence, finding review status, partial analysis state, and business logic review requirements.
@@ -46,6 +47,7 @@ uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30
+uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
 ```
 
 ## Public Benchmark
@@ -60,6 +62,10 @@ Validated on 2026-05-04:
 - Vulnerable average score: `47.70`
 - Safe minus vulnerable score gap: `45.05`
 
+## Public Project Build Validation
+
+`eval/run_public_project_builds.py` reads `eval/public_benchmark/public-project-builds-10-manifest.json` by default. Validated on 2026-05-04: 10 pinned public repos reached `10/10` analyzer success and `10/10` native build success.
+
 ## GitHub Actions
 
 The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit button in GitHub Actions. It accepts a Solidity file or project directory, runs `scsa analyze`, and uploads the generated reports as the `scsa-reports` artifact. When `baseline_report` is provided, it also writes `comparison.md` and can fail on new severity 3 findings or a configurable score drop.
@@ -70,6 +76,7 @@ The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit bu
 uv run ruff check .
 uv run pytest
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30
+uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
 cd frontend && npm run test && npm run build
 ```
 
