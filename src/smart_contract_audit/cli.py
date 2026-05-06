@@ -14,6 +14,7 @@ from .report_compare import (
     render_comparison_markdown,
 )
 from .trace.lookup import lookup_trace, trace_dashboard
+from .zero_g.proof_package import attach_zero_g_proof, build_proof_package
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -67,6 +68,25 @@ def main(argv: list[str] | None = None) -> None:
     compare.add_argument("--output", type=Path)
     compare.add_argument("--fail-on-high-added", action="store_true")
     compare.add_argument("--fail-on-score-drop", type=float)
+
+    zero_g_package = subparsers.add_parser(
+        "0g-package",
+        help="Create a 0G audit proof package for a JSON report.",
+    )
+    zero_g_package.add_argument("report", type=Path)
+    zero_g_package.add_argument("--out-dir", type=Path, default=Path("reports-0g"))
+    zero_g_package.add_argument("--project-name", default="SCSA 0G Audit Proof")
+    zero_g_package.add_argument(
+        "--track",
+        default="Track 1: Agentic Infrastructure & OpenClaw Lab",
+    )
+
+    zero_g_attach_proof = subparsers.add_parser(
+        "0g-attach-proof",
+        help="Attach 0G proof metadata to an audit JSON report.",
+    )
+    zero_g_attach_proof.add_argument("report", type=Path)
+    zero_g_attach_proof.add_argument("proof", type=Path)
 
     mlx_probe = subparsers.add_parser("mlx-probe", help="Record MLX load/fallback status.")
     mlx_probe.add_argument("--model-path")
@@ -138,6 +158,34 @@ def main(argv: list[str] | None = None) -> None:
             fail_on_score_drop=args.fail_on_score_drop,
         ):
             raise SystemExit(2)
+    elif args.command == "0g-package":
+        result = build_proof_package(
+            report_path=args.report,
+            output_dir=args.out_dir,
+            project_name=args.project_name,
+            track=args.track,
+        )
+        print(
+            json.dumps(
+                {
+                    "contract_id": result.contract_id,
+                    "output_dir": str(result.output_dir),
+                    "proof_json": str(result.proof_json),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+    elif args.command == "0g-attach-proof":
+        proof = json.loads(args.proof.read_text(encoding="utf-8"))
+        report = attach_zero_g_proof(args.report, proof)
+        print(
+            json.dumps(
+                {"proof": str(args.proof.resolve()), "report": str(report.resolve())},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     elif args.command == "mlx-probe":
         discovered_paths = []
         model_path = args.model_path
