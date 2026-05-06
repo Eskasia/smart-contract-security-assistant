@@ -32,7 +32,7 @@ from .slither_runner import SlitherRunError, SlitherRunResult, run_slither
 from .trace.store import TraceStore
 from .validation.validator import validate_report
 
-SlitherRunner = Callable[[Path], SlitherRunResult]
+SlitherRunner = Callable[..., SlitherRunResult]
 ExternalToolRunner = Callable[[Path, Path, tuple[str, ...], int], list[ExternalToolResult]]
 
 
@@ -47,6 +47,7 @@ def analyze_contract(
     external_tools: tuple[str, ...] = (),
     external_timeout_seconds: int = 60,
     external_tool_runner: ExternalToolRunner = run_external_tools,
+    native_build_policy: str = "trusted",
 ) -> AnalysisReport:
     started = time.perf_counter()
     errors: list[str] = []
@@ -97,7 +98,10 @@ def analyze_contract(
 
         try:
             assert context.target is not None
-            slither_result = slither_runner(context.target.input_path)
+            slither_result = slither_runner(
+                context.target.input_path,
+                native_build_policy=native_build_policy,
+            )
             raw_slither = slither_result.raw_json
             solc_version = slither_result.solc_version
             slither_version = slither_result.slither_version

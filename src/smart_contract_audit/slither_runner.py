@@ -122,7 +122,11 @@ def get_slither_version() -> str | None:
     return text or None
 
 
-def run_slither(contract_path: Path, timeout_seconds: int = 300) -> SlitherRunResult:
+def run_slither(
+    contract_path: Path,
+    timeout_seconds: int = 300,
+    native_build_policy: str = "trusted",
+) -> SlitherRunResult:
     if shutil.which("slither") is None:
         raise SlitherRunError("slither executable not found; install with `uv sync --extra audit`.")
 
@@ -131,7 +135,7 @@ def run_slither(contract_path: Path, timeout_seconds: int = 300) -> SlitherRunRe
     except ValueError as exc:
         raise SlitherRunError(str(exc)) from exc
 
-    native_build = prepare_native_build(target, timeout_seconds)
+    native_build = prepare_native_build(target, timeout_seconds, native_build_policy)
     source = target.combined_source
     warnings: list[str] = []
     if native_build.attempted or native_build.summary:
@@ -249,7 +253,22 @@ def _merge_slither_results(results: list[dict[str, Any]]) -> dict[str, Any]:
 def prepare_native_build(
     target: SolidityTarget,
     timeout_seconds: int = 90,
+    native_build_policy: str = "trusted",
 ) -> NativeBuildResult:
+    if native_build_policy not in {"trusted", "disabled"}:
+        return NativeBuildResult(
+            attempted=False,
+            succeeded=False,
+            tool_name=target.project_type,
+            summary=f"Unsupported native build policy: {native_build_policy}.",
+        )
+    if native_build_policy == "disabled":
+        return NativeBuildResult(
+            attempted=False,
+            succeeded=False,
+            tool_name=target.project_type,
+            summary="Native build disabled by policy.",
+        )
     if target.project_type not in {"foundry", "hardhat"}:
         return NativeBuildResult(False, False, "", "")
 

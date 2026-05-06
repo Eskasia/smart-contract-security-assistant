@@ -32,6 +32,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     analyze.add_argument("--model-path")
     analyze.add_argument(
+        "--native-build-policy",
+        choices=["trusted", "disabled"],
+        default="trusted",
+    )
+    analyze.add_argument(
         "--external-tool",
         action="append",
         choices=["mythril", "echidna"],
@@ -86,6 +91,11 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument("--api-token")
     api.add_argument("--cors-origin", default="http://127.0.0.1:5173")
     api.add_argument("--max-request-bytes", type=int, default=1_048_576)
+    api.add_argument(
+        "--native-build-policy",
+        choices=["trusted", "disabled"],
+        default="trusted",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "analyze":
@@ -98,6 +108,7 @@ def main(argv: list[str] | None = None) -> None:
             model_path=args.model_path,
             external_tools=tuple(args.external_tool),
             external_timeout_seconds=args.external_timeout_seconds,
+            native_build_policy=args.native_build_policy,
         )
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     elif args.command == "clean-reports":
@@ -171,4 +182,5 @@ def main(argv: list[str] | None = None) -> None:
             api_token=args.api_token,
             cors_origin=args.cors_origin,
             max_request_bytes=args.max_request_bytes,
+            native_build_policy=args.native_build_policy,
         )

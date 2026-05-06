@@ -23,6 +23,7 @@ AnalysisEvent = dict[str, Any]
 AnalyzerFn = Callable[..., AnalysisReport]
 
 RAG_MODES = {"quality", "balanced", "fast", "fallback"}
+NATIVE_BUILD_POLICIES = {"trusted", "disabled"}
 REVIEW_STATUSES = {"pending_human_review", "approved", "rejected", "blocked"}
 MAX_REVIEW_NOTE_LENGTH = 2_000
 
@@ -39,6 +40,7 @@ class ApiConfig:
     api_token: str | None = None
     cors_origin: str = "http://127.0.0.1:5173"
     max_request_bytes: int = 1_048_576
+    native_build_policy: str = "trusted"
 
     def resolved_trace_db(self) -> Path:
         return self.trace_db or self.output_dir / "analysis_trace.sqlite"
@@ -52,6 +54,7 @@ class AnalysisJob:
     rag_mode: str
     dataset_chunks: str | None
     model_path: str | None
+    native_build_policy: str
     message: str | None = None
     report_id: str | None = None
     contract_id: str | None = None
@@ -86,7 +89,11 @@ class AnalysisJobManager:
         self._jobs: dict[str, _JobRecord] = {}
 
     def create_job(self, payload: dict[str, Any]) -> AnalysisJob:
-        request = _parse_create_analysis(payload, self.config.input_root)
+        request = _parse_create_analysis(
+            payload,
+            self.config.input_root,
+            self.config.native_build_policy,
+        )
         analysis_id = f"analysis_{uuid.uuid4().hex[:12]}"
         job = AnalysisJob(analysis_id=analysis_id, status="queued", **request)
         response_job = replace(job)
@@ -149,6 +156,7 @@ class AnalysisJobManager:
                 dataset_chunks=Path(job.dataset_chunks) if job.dataset_chunks else None,
                 rag_mode=job.rag_mode,
                 model_path=job.model_path,
+                native_build_policy=job.native_build_policy,
             )
             write_json_report(report, output_dir / f"{report.contract_id}.json")
             write_markdown_report(report, output_dir / f"{report.contract_id}.md")
@@ -481,6 +489,7 @@ def run_api_server(
     api_token: str | None = None,
     cors_origin: str = "http://127.0.0.1:5173",
     max_request_bytes: int = 1_048_576,
+    native_build_policy: str = "trusted",
 ) -> None:
     server = create_api_server(
         host=host,
@@ -492,6 +501,7 @@ def run_api_server(
             api_token=api_token,
             cors_origin=cors_origin,
             max_request_bytes=max_request_bytes,
+            native_build_policy=native_build_policy,
         ),
     )
     try:
@@ -503,6 +513,7 @@ def run_api_server(
 def _parse_create_analysis(
     payload: dict[str, Any],
     input_root: Path | None = None,
+    default_native_build_policy: str = "trusted",
 ) -> dict[str, Any]:
     input_path = payload.get("input_path")
     if not isinstance(input_path, str) or not input_path.strip():
@@ -525,11 +536,16 @@ def _parse_create_analysis(
     if model_path is not None and not isinstance(model_path, str):
         raise ValueError("model_path must be a string or null.")
 
+    native_build_policy = payload.get("native_build_policy", default_native_build_policy)
+    if native_build_policy not in NATIVE_BUILD_POLICIES:
+        raise ValueError("native_build_policy must be one of: disabled, trusted.")
+
     return {
         "input_path": input_path,
         "rag_mode": rag_mode,
         "dataset_chunks": dataset_chunks,
         "model_path": model_path,
+        "native_build_policy": str(native_build_policy),
     }
 
 

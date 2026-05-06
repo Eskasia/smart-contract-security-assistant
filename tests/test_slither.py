@@ -145,6 +145,59 @@ def test_slither_uses_successful_native_foundry_build(
     assert "foundry native build completed before Slither." in result.warnings
 
 
+def test_slither_can_disable_native_build_for_untrusted_projects(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = tmp_path / "foundry"
+    source_dir = project / "src"
+    source_dir.mkdir(parents=True)
+    (project / "foundry.toml").write_text('[profile.default]\nsrc = "src"\n', encoding="utf-8")
+    (source_dir / "Vault.sol").write_text(
+        "pragma solidity ^0.8.19;\ncontract Vault {}\n",
+        encoding="utf-8",
+    )
+    commands: list[list[str]] = []
+
+    def fake_which(name: str) -> str | None:
+        return {"forge": "forge", "slither": "slither", "solc": "solc"}.get(name)
+
+    def fake_run(
+        command: list[str],
+        check: bool = False,
+        capture_output: bool = True,
+        text: bool = True,
+        timeout: int = 15,
+        cwd: Path | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        if command[0] == "solc":
+            return subprocess.CompletedProcess(command, 0, stdout="Version: 0.8.34", stderr="")
+        if command[:2] == ["slither", "--version"]:
+            return subprocess.CompletedProcess(command, 0, stdout="0.11.5", stderr="")
+        if command[0] == "slither":
+            output_path = Path(command[command.index("--json") + 1])
+            output_path.write_text(
+                '{"success": true, "results": {"detectors": []}}',
+                encoding="utf-8",
+            )
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr("smart_contract_audit.slither_runner.shutil.which", fake_which)
+    monkeypatch.setattr("smart_contract_audit.slither_runner.subprocess.run", fake_run)
+
+    result = run_slither(project, native_build_policy="disabled")
+
+    assert not any(command[0] == "forge" for command in commands)
+    assert any(
+        "--compile-force-framework" in command
+        for command in commands
+        if command[0] == "slither"
+    )
+    assert "Native build disabled by policy." in result.warnings
+
+
 def test_hardhat_native_build_prefers_package_compile_script(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
