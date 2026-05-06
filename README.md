@@ -67,14 +67,16 @@ uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 
 本地可重現路徑會產生審計報告、建立 0G proof package、用 dry-run 產生 `submission-proof.json`，再把 proof metadata 回寫到 report；live 0G 上傳與註冊需先設定環境變數並部署 registry。
 
 ```bash
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
-uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
+mkdir -p reports
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json
+REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')
+uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 cd integrations/0g
 npm install
-npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
-npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
+npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run
+npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"
 cd ../..
-uv run scsa 0g-attach-proof reports/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
+uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
 Live 路徑需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先執行 `npm run deploy`，把輸出的 registry address 設為 `ZERO_G_REGISTRY_ADDRESS` 後再執行 `npm run upload -- ...` 與 `npm run register -- ...`。

@@ -26,14 +26,16 @@ flowchart LR
 
 ```bash
 uv sync --extra audit --dev
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
-uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
+mkdir -p reports
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json
+REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')
+uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 cd integrations/0g
 npm install
-npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
-npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
+npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run
+npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"
 cd ../..
-uv run scsa 0g-attach-proof reports/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
+uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
 The local path above uses dry-run proof data. Live 0G upload and registration require the environment variables below, `npm run deploy`, then setting `ZERO_G_REGISTRY_ADDRESS` to the printed registry address in the local shell before running live upload and register commands.

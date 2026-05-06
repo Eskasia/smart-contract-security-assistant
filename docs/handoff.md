@@ -49,7 +49,7 @@ Public project build validation——`eval/run_public_project_builds.py` 預設�
 
 Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
 
-0G proof package——`uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；本地驗證用 `cd integrations/0g && npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run && npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json`。Live proof 仍需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先 `npm run deploy`，再設定 `ZERO_G_REGISTRY_ADDRESS` 後執行 live upload/register；`explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`。
+0G proof package——`uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json` 後用 `REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')` 取得實際報告 id；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；本地驗證用 `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`。Live proof 仍需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先 `npm run deploy`，再設定 `ZERO_G_REGISTRY_ADDRESS` 後執行 live upload/register；`explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`。
 
 ## 驗證結果
 

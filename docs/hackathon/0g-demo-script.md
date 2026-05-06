@@ -29,7 +29,10 @@ Point out the finding list, security score, vulnerable code, remediation diff, a
 Show:
 
 ```bash
-uv run scsa 0g-package reports-api/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
+mkdir -p reports
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json
+REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')
+uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 ```
 
 Open the generated `audit-proof.json` and show `report_sha256`, `security_score`, and `findings_count`.
@@ -41,8 +44,8 @@ Local dry-run proof:
 ```bash
 cd integrations/0g
 npm install
-npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
-npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
+npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run
+npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
 Live recording after funding the deployer key:
@@ -50,10 +53,10 @@ Live recording after funding the deployer key:
 ```bash
 npm run deploy
 export ZERO_G_REGISTRY_ADDRESS="0x..."
-npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
-npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
+npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json"
+npm run register -- "../../reports-0g/$REPORT_ID/submission-proof.json"
 cd ../..
-uv run scsa 0g-attach-proof reports-api/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
+uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
 Open `submission-proof.json` and show `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
