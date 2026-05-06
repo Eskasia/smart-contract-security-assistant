@@ -194,6 +194,122 @@ def test_http_api_rejects_invalid_payload_and_review_status(tmp_path: Path) -> N
         thread.join(timeout=3)
 
 
+def test_http_api_requires_token_when_configured(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol"},
+            expect_error=401,
+        )
+        assert error["error"]["code"] == "UNAUTHORIZED"
+
+        created = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol", "rag_mode": "slow"},
+            headers={"Authorization": "Bearer dev-token"},
+            expect_error=422,
+        )
+        assert created["error"]["code"] == "VALIDATION_ERROR"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_rejects_oversized_json_body(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", max_request_bytes=8),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol"},
+            expect_error=413,
+        )
+        assert error["error"]["code"] == "REQUEST_TOO_LARGE"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_rejects_input_outside_allowed_root(tmp_path: Path) -> None:
+    allowed = tmp_path / "allowed"
+    outside = tmp_path / "outside" / "Vault.sol"
+    allowed.mkdir()
+    outside.parent.mkdir()
+    outside.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", input_root=allowed),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(outside)},
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "input_root" in error["error"]["message"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_uses_configured_cors_origin(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(
+            output_dir=tmp_path / "reports",
+            cors_origin="http://127.0.0.1:5173",
+        ),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        request = urllib.request.Request(
+            f"{base_url}/api/analyses",
+            method="OPTIONS",
+            headers={"Origin": "http://127.0.0.1:5173"},
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            assert response.headers["Access-Control-Allow-Origin"] == "http://127.0.0.1:5173"
+            assert response.headers["Vary"] == "Origin"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 def _finding() -> Finding:
     return Finding(
         finding_id="f_001",
@@ -224,13 +340,17 @@ def _json_request(
     method: str = "GET",
     payload: dict[str, Any] | None = None,
     expect_error: int | None = None,
+    headers: dict[str, str] | None = None,
 ) -> Any:
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    request_headers = {"Content-Type": "application/json"}
+    if headers:
+        request_headers.update(headers)
     request = urllib.request.Request(
         url,
         data=data,
         method=method,
-        headers={"Content-Type": "application/json"},
+        headers=request_headers,
     )
     try:
         with urllib.request.urlopen(request, timeout=5) as response:

@@ -27,10 +27,18 @@ REVIEW_STATUSES = {"pending_human_review", "approved", "rejected", "blocked"}
 MAX_REVIEW_NOTE_LENGTH = 2_000
 
 
+class RequestBodyTooLarge(ValueError):
+    pass
+
+
 @dataclass(frozen=True)
 class ApiConfig:
     output_dir: Path = Path("reports-api")
     trace_db: Path | None = None
+    input_root: Path | None = None
+    api_token: str | None = None
+    cors_origin: str = "http://127.0.0.1:5173"
+    max_request_bytes: int = 1_048_576
 
     def resolved_trace_db(self) -> Path:
         return self.trace_db or self.output_dir / "analysis_trace.sqlite"
@@ -78,7 +86,7 @@ class AnalysisJobManager:
         self._jobs: dict[str, _JobRecord] = {}
 
     def create_job(self, payload: dict[str, Any]) -> AnalysisJob:
-        request = _parse_create_analysis(payload)
+        request = _parse_create_analysis(payload, self.config.input_root)
         analysis_id = f"analysis_{uuid.uuid4().hex[:12]}"
         job = AnalysisJob(analysis_id=analysis_id, status="queued", **request)
         response_job = replace(job)
@@ -207,6 +215,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self) -> None:
+        if not self._authorize_request():
+            return
         path = _path_parts(self.path)
         if path != ["api", "analyses"]:
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
@@ -214,6 +224,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         try:
             payload = self._read_json_body()
             job = self.server.manager.create_job(payload)
+        except RequestBodyTooLarge as exc:
+            self._send_request_too_large_response(exc)
+            return
         except ValueError as exc:
             self._send_error_response(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -224,6 +237,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self._send_json(job.to_dict(), status=HTTPStatus.ACCEPTED)
 
     def do_GET(self) -> None:
+        if not self._authorize_request():
+            return
         parsed = urlparse(self.path)
         path = [unquote(part) for part in parsed.path.strip("/").split("/") if part]
         query = parse_qs(parsed.query)
@@ -244,6 +259,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
 
     def do_PATCH(self) -> None:
+        if not self._authorize_request():
+            return
         path = _path_parts(self.path)
         if len(path) == 4 and path[:2] == ["api", "reports"] and path[3] == "review":
             self._patch_review(path[2])
@@ -260,6 +277,15 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format: str, *args: Any) -> None:
         return
+
+    def _authorize_request(self) -> bool:
+        token = self.server.config.api_token
+        if not token:
+            return True
+        if self.headers.get("Authorization", "") == f"Bearer {token}":
+            return True
+        self._send_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API token.")
+        return False
 
     def _get_analysis(self, analysis_id: str) -> None:
         job = self.server.manager.get_job(analysis_id)
@@ -311,6 +337,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         try:
             payload = self._read_json_body()
             review_status = _parse_review_status(payload)
+        except RequestBodyTooLarge as exc:
+            self._send_request_too_large_response(exc)
+            return
         except ValueError as exc:
             self._send_error_response(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -339,6 +368,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         try:
             payload = self._read_json_body()
             review_status, review_note = _parse_finding_review(payload)
+        except RequestBodyTooLarge as exc:
+            self._send_request_too_large_response(exc)
+            return
         except ValueError as exc:
             self._send_error_response(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -380,6 +412,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError as exc:
             raise ValueError("Invalid Content-Length.") from exc
+        if length > self.server.config.max_request_bytes:
+            raise RequestBodyTooLarge("Request body exceeds max_request_bytes.")
         if length <= 0:
             return {}
         raw = self.rfile.read(length)
@@ -412,8 +446,18 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             error["details"] = details
         self._send_json({"error": error}, status=status)
 
+    def _send_request_too_large_response(self, exc: RequestBodyTooLarge) -> None:
+        self._send_error_response(
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            "REQUEST_TOO_LARGE",
+            str(exc),
+        )
+
     def _send_common_headers(self) -> None:
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self.server.config.cors_origin
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
         self.send_header("X-Content-Type-Options", "nosniff")
 
 
@@ -433,18 +477,37 @@ def run_api_server(
     port: int = 8787,
     output_dir: Path = Path("reports-api"),
     trace_db: Path | None = None,
+    input_root: Path | None = None,
+    api_token: str | None = None,
+    cors_origin: str = "http://127.0.0.1:5173",
+    max_request_bytes: int = 1_048_576,
 ) -> None:
-    server = create_api_server(host=host, port=port, config=ApiConfig(output_dir, trace_db))
+    server = create_api_server(
+        host=host,
+        port=port,
+        config=ApiConfig(
+            output_dir=output_dir,
+            trace_db=trace_db,
+            input_root=input_root,
+            api_token=api_token,
+            cors_origin=cors_origin,
+            max_request_bytes=max_request_bytes,
+        ),
+    )
     try:
         server.serve_forever()
     finally:
         server.server_close()
 
 
-def _parse_create_analysis(payload: dict[str, Any]) -> dict[str, Any]:
+def _parse_create_analysis(
+    payload: dict[str, Any],
+    input_root: Path | None = None,
+) -> dict[str, Any]:
     input_path = payload.get("input_path")
     if not isinstance(input_path, str) or not input_path.strip():
         raise ValueError("input_path must be a non-empty string.")
+    input_path = _validate_allowed_input_path(input_path, input_root)
 
     rag_mode = payload.get("rag_mode", "balanced")
     if rag_mode not in RAG_MODES:
@@ -468,6 +531,16 @@ def _parse_create_analysis(payload: dict[str, Any]) -> dict[str, Any]:
         "dataset_chunks": dataset_chunks,
         "model_path": model_path,
     }
+
+
+def _validate_allowed_input_path(input_path: str, input_root: Path | None) -> str:
+    resolved = Path(input_path).expanduser().resolve()
+    if input_root is None:
+        return str(resolved)
+    root = input_root.expanduser().resolve()
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"input_path must be inside input_root: {root}")
+    return str(resolved)
 
 
 def _parse_review_status(payload: dict[str, Any]) -> str:

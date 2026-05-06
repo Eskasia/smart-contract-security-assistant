@@ -82,6 +82,10 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument("--port", type=int, default=8787)
     api.add_argument("--out-dir", type=Path, default=Path("reports-api"))
     api.add_argument("--trace-db", type=Path)
+    api.add_argument("--input-root", type=Path)
+    api.add_argument("--api-token")
+    api.add_argument("--cors-origin", default="http://127.0.0.1:5173")
+    api.add_argument("--max-request-bytes", type=int, default=1_048_576)
 
     args = parser.parse_args(argv)
     if args.command == "analyze":
@@ -163,4 +167,8 @@ def main(argv: list[str] | None = None) -> None:
             port=args.port,
             output_dir=args.out_dir,
             trace_db=args.trace_db,
+            input_root=args.input_root,
+            api_token=args.api_token,
+            cors_origin=args.cors_origin,
+            max_request_bytes=args.max_request_bytes,
         )
