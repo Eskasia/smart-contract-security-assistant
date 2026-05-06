@@ -1,23 +1,23 @@
 ---
 title: "使用說明書"
-description: "說明安裝、分析、trace 查詢、MLX probe、Web UI 與輸出檔案。"
+description: "說明安裝、分析、API 加固、trace 查詢、MLX probe、Web UI 與輸出檔案。"
 category: "guides"
 number: "001"
 status: current
 services: ["src/smart_contract_audit", "data/dataset_v1.0", "eval"]
 related: ["design/001", "reference/001"]
-last_modified: "2026-05-04"
+last_modified: "2026-05-06"
 ---
 
 # 001 — 使用說明書
 
 ## Status
 
-current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-04 本地驗證結果核對。
+current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-06 本地驗證結果核對。
 
 ## Summary
 
-本文件是專案操作手冊，覆蓋安裝、單檔或專案級 Solidity 分析、trace 查詢、MLX probe、資料清理與 Web UI。當前穩定入口是 CLI：`scsa analyze`。
+本文件是專案操作手冊，覆蓋安裝、單檔或專案級 Solidity 分析、API 加固、native build policy、trace 查詢、MLX probe、資料清理與 Web UI。當前穩定入口是 CLI：`scsa analyze`。
 
 ## 前置條件
 
@@ -54,8 +54,25 @@ uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 | `--dataset-chunks` | 指定 RAG chunk JSONL，預設 `data/dataset_v1.0/chunks/chunks.jsonl` |
 | `--rag-mode` | 可選 `quality`、`balanced`、`fast`、`fallback`，預設 `balanced` |
 | `--model-path` | 指定 MLX 模型路徑；未指定時可走 deterministic fallback |
+| `--native-build-policy` | 可選 `trusted` 或 `disabled`；`disabled` 會略過 Foundry/Hardhat build scripts 並用 Slither/solc fallback |
 
-輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 會先嘗試原生 build，失敗時回退 Slither/solc 並寫入錯誤原因；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
+輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 在 `trusted` 模式會先嘗試原生 build，失敗時回退 Slither/solc 並寫入錯誤原因；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
+
+## HTTP API 加固啟動
+
+```bash
+uv run scsa api \
+  --host 127.0.0.1 \
+  --port 8787 \
+  --out-dir reports-api \
+  --input-root "$PWD" \
+  --api-token dev-token \
+  --cors-origin http://127.0.0.1:5173 \
+  --max-request-bytes 1048576 \
+  --native-build-policy disabled
+```
+
+`--native-build-policy disabled` 會略過未信任 Foundry/Hardhat 專案的 build scripts，改用 Slither/solc fallback；前端設定 API token 後會改用 polling，因為瀏覽器 EventSource 無法帶 Authorization header。
 
 ## 報告狀態
 
@@ -85,10 +102,10 @@ Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed
 ## Public Benchmark
 
 ```bash
-uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5
 ```
 
-此命令預設讀取 `eval/public_benchmark/hf-slither50-v2-manifest.json`，目前固定 50 份 Hugging Face Slither 標註樣本；2026-05-04 實測支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`，輸出寫入 `reports-public/benchmark/summary.json`。
+此命令預設讀取 `eval/public_benchmark/hf-slither50-v2-manifest.json`，目前固定 50 份 Hugging Face Slither 標註樣本；2026-05-06 實測支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`，precision `0.8621`，recall `1.0`，F1 `0.9259`，輸出寫入 `reports-public/benchmark/summary.json`。
 
 ## External Tools
 
@@ -131,10 +148,11 @@ uv run python scripts/validate_chunks.py <output-chunks.jsonl> --max-unknown-rat
 
 ```bash
 uv sync --extra audit --extra web --dev
-uv run scsa web --host 127.0.0.1 --port 7860
+uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled
+cd frontend && npm run dev
 ```
 
-Web UI 是可選展示入口；核心流程仍以 CLI 與測試驗證為準。
+React/Vite Web UI 是主要審查工作台；Gradio 入口仍可用 `uv run scsa web --host 127.0.0.1 --port 7860` 啟動。
 
 ## 常見問題
 

@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-05-04。
+更新日期：2026-05-06。
 
 ## 已完成內容
 
@@ -21,6 +21,10 @@
 - 2026-05-04 已新增 `eval/run_public_project_builds.py` 與 `eval/public_benchmark/public-project-builds-10-manifest.json`，可用 10 個 pinned public repos 自動 clone 或讀 local path，初始化 submodules、安裝 npm dependencies、支援 Hardhat 自訂 artifacts/cache 路徑，輸出 analyzer success rate、native build success rate、`forge`/`npx` 可用性與 blocker 統計；本機實測達 `10/10` analyzer 與 `10/10` native build。
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
 - 2026-05-04 已新增英文版 `README.en.md`。
+- 2026-05-06 已新增 HTTP API 邊界加固：bearer token、`input_root`、request body limit、固定 CORS origin 與 CLI 啟動參數。
+- 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
+- 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
+- 2026-05-06 public benchmark 已新增 confusion matrix、precision、recall 與 F1 指標。
 
 ## 技術核心
 
@@ -32,19 +36,30 @@ MLX——Apple Silicon 本地推理 runtime，本專案以 4-bit 權重量化估
 
 Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG chunks、prompt、LLM output、報告品質 judge score、token usage、partial 狀態、review status 與 review note，用於除錯與報告回溯；`scsa trace-dashboard` 可列出 trace id、dataset version、model version、review status。
 
-HTTP API——本機 stdlib `ThreadingHTTPServer`，入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
+HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
 
 Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
 
 External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，未安裝時結果為 `skipped`。
 
-Native build preflight——Foundry/Hardhat 專案分析前先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback。
+Native build preflight——Foundry/Hardhat 專案在 `trusted` 模式先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback；`disabled` 模式略過 build scripts，適合未信任 public repo。
 
 Public project build validation——`eval/run_public_project_builds.py` 預設讀取 `eval/public_benchmark/public-project-builds-10-manifest.json`；`--preflight-only` 不 clone 即回報 framework 分布與缺失工具，完整模式會 clone、初始化 submodules、安裝 npm dependencies、處理 Hardhat 自訂 artifacts/cache 路徑並產出 `public_project_builds_summary.json`，可用 `--min-analyzer-success-rate` 與 `--min-native-build-success-rate` 設門檻。
 
 Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
 
 ## 驗證結果
+
+2026-05-06 本地驗證結果：
+
+```text
+uv run ruff check .                     all checks passed
+uv run pytest                           75 passed, 2 warnings
+npm run test                            8 passed
+npm run build                           completed
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, score_gap = 45.05, precision = 0.8621, recall = 1.0, f1 = 0.9259
+uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+```
 
 2026-05-04 本地驗證結果：
 
@@ -82,9 +97,9 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 
 1. 先跑 `uv sync --extra audit --dev` 與 `uv run pytest`。
 2. 再跑 `uv run pytest tests/test_slither.py tests/test_project_input.py` 確認 Slither/solc 串接與專案級 import 解析。
-3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
+3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
 
-前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
+前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
 
 自主迭代架構：`docs/skill-graph.md` 記錄 skill graph、多 agent 分工、缺口排序、驗證命令與文件更新規則。
 圖譜產物：`uv run python scripts/build_skill_graph.py` 產生本機 `graphify-out/`，該目錄不追蹤到 GitHub。
