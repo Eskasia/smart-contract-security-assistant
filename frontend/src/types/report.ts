@@ -18,6 +18,18 @@ export type FindingReviewStatus =
 export type RagMode = "quality" | "balanced" | "fast" | "fallback";
 export type NativeBuildPolicy = "trusted" | "disabled";
 
+export interface ZeroGProof {
+  storage_root_hash: string;
+  storage_tx_hash: string;
+  registry_address: string;
+  registry_tx_hash: string;
+  explorer_links: {
+    storage_tx?: string;
+    registry?: string;
+    registration_tx?: string;
+  };
+}
+
 export interface Location {
   file: string;
   function: string | null;
@@ -71,6 +83,7 @@ export interface AnalysisMetadata {
   entry_path?: string;
   project_root?: string;
   source_files_count?: number;
+  zero_g_proof?: ZeroGProof;
   errors: string[];
 }
 

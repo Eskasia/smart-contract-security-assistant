@@ -17,6 +17,8 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "智能合約安全分析助理" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "開始分析" })).toBeInTheDocument();
     expect(await screen.findByText(/合約 10679f2de6b7/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "0G Proof" })).toBeInTheDocument();
+    expect(screen.getByText(/0x1111\.\.\./)).toBeInTheDocument();
   });
 
   it("switches the interface language", async () => {
