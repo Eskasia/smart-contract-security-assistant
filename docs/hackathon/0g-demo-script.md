@@ -35,7 +35,7 @@ REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-
 uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 ```
 
-Open the generated `audit-proof.json` and show `report_sha256`, `security_score`, and `findings_count`.
+Open the generated `audit-proof.json` and show `report.sha256`, `report.security_score`, and `report.findings_count`.
 
 ## Scene 4 - Create proof and show live path, 45 seconds
 
