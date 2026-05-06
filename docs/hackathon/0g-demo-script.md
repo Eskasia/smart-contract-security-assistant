@@ -34,33 +34,32 @@ uv run scsa 0g-package reports-api/vulnerablevault.json --out-dir reports-0g --p
 
 Open the generated `audit-proof.json` and show `report_sha256`, `security_score`, and `findings_count`.
 
-## Scene 4 - Upload and register on 0G, 45 seconds
+## Scene 4 - Create proof and show live path, 45 seconds
 
-Show:
+Local dry-run proof:
 
 ```bash
 cd integrations/0g
 npm install
-npm run deploy
-export ZERO_G_REGISTRY_ADDRESS=""
 npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
 npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
 ```
 
-For the live recording, replace the dry-run commands with:
+Live recording after funding the deployer key:
 
 ```bash
+npm run deploy
+export ZERO_G_REGISTRY_ADDRESS="0x..."
 npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
 npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
 cd ../..
 uv run scsa 0g-attach-proof reports-api/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
 ```
 
-Paste the registry address printed by `npm run deploy` into `ZERO_G_REGISTRY_ADDRESS` before running the live `npm run register`.
-
 Open `submission-proof.json` and show `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
 
 ## Scene 5 - Verification close, 15 seconds
 
 Return to the frontend and show the 0G Proof panel with storage root, registry address, and Explorer links.
-Say: "The audit report is reproducible locally and verifiable on 0G."
+For dry-run recording, say: "The audit report is reproducible locally and prepared for 0G verification."
+For live recording after upload/register, say: "The audit report is reproducible locally and verifiable on 0G."
