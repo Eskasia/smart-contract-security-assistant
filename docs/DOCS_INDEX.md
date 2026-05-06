@@ -1,6 +1,6 @@
 # Docs Index
 
-Generated at: 2026-05-06
+Generated at: 2026-05-07
 
 | Category | # | Status | Name | Description | Last Modified | Path |
 |---|---|---|---|---|---|---|
@@ -12,3 +12,4 @@ Generated at: 2026-05-06
 | review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-06 | `docs/review_checklist.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-06 本地驗證命令、結果、產物與剩餘限制。 | 2026-05-06 | `docs/reference/001-validation-procedure-log.md` |
 | superpowers | 001 | draft | Security Hardening and Trust Optimization Implementation Plan | 給 Codex 執行 API 邊界、native build policy、benchmark trust metrics 的逐步計劃。 | 2026-05-06 | `docs/superpowers/plans/2026-05-06-security-hardening-trust-optimization.md` |
+| superpowers | 002 | draft | 0G APAC Hackathon Adaptation Implementation Plan | 將專案改造成符合 0G APAC Hackathon 提交規格的逐步開發計劃。 | 2026-05-07 | `docs/superpowers/plans/2026-05-07-0g-apac-hackathon-adaptation.md` |
