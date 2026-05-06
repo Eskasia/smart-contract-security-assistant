@@ -16,6 +16,7 @@ export type FindingReviewStatus =
   | "fixed";
 
 export type RagMode = "quality" | "balanced" | "fast" | "fallback";
+export type NativeBuildPolicy = "trusted" | "disabled";
 
 export interface Location {
   file: string;
@@ -126,6 +127,8 @@ export interface UserSettings {
   ragMode: RagMode;
   datasetChunks: string;
   modelPath: string;
+  nativeBuildPolicy: NativeBuildPolicy;
+  apiToken: string;
   diffMode: "inline" | "split";
   leftColumnWidth: number;
   locale: "zh" | "en";

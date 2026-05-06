@@ -111,6 +111,8 @@ export const defaultSettings: UserSettings = {
   ragMode: "fallback",
   datasetChunks: "data/dataset_v1.0/chunks/chunks.jsonl",
   modelPath: "",
+  nativeBuildPolicy: "disabled",
+  apiToken: "",
   diffMode: "inline",
   leftColumnWidth: 280,
   locale: "zh",

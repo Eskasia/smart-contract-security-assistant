@@ -8,10 +8,34 @@ import type {
 } from "../types/api";
 import type { AnalysisReport, TraceFinding } from "../types/report";
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+function persistedApiToken(): string {
+  try {
+    const raw = window.localStorage.getItem("sca_settings_v1");
+    if (!raw) return "";
+    const parsed = JSON.parse(raw) as {
+      state?: { settings?: { apiToken?: unknown } };
+    };
+    const token = parsed.state?.settings?.apiToken;
+    return typeof token === "string" ? token.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+function authorizationHeader(apiToken?: string): Record<string, string> {
+  const token = (apiToken ?? persistedApiToken()).trim();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function requestJson<T>(
+  path: string,
+  init?: RequestInit,
+  apiToken?: string,
+): Promise<T> {
   const response = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
+      ...authorizationHeader(apiToken),
       ...init?.headers,
     },
     ...init,
@@ -25,11 +49,14 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function createAnalysis(payload: CreateAnalysisRequest): Promise<AnalysisJob> {
+export function createAnalysis(
+  payload: CreateAnalysisRequest,
+  apiToken?: string,
+): Promise<AnalysisJob> {
   return requestJson<AnalysisJob>("/api/analyses", {
     method: "POST",
     body: JSON.stringify(payload),
-  });
+  }, apiToken);
 }
 
 export function getAnalysis(analysisId: string): Promise<AnalysisJob> {

@@ -8,6 +8,7 @@ import type { RagMode } from "../types/report";
 import { usePersistedSettings } from "../hooks/usePersistedSettings";
 
 const ragModes: RagMode[] = ["quality", "balanced", "fast", "fallback"];
+const nativeBuildPolicies = ["trusted", "disabled"] as const;
 
 export function InputPanel() {
   const { settings, updateSettings } = usePersistedSettings();
@@ -42,9 +43,10 @@ export function InputPanel() {
         rag_mode: settings.ragMode,
         dataset_chunks: settings.datasetChunks,
         model_path: settings.modelPath.trim() ? settings.modelPath : null,
-      });
+        native_build_policy: settings.nativeBuildPolicy,
+      }, settings.apiToken);
       setJob(job);
-      setConnectionMode("sse");
+      setConnectionMode(settings.apiToken.trim() ? "polling" : "sse");
     } catch {
       loadDemo();
       setValidationMessage(t("apiFallback"));
@@ -143,6 +145,36 @@ export function InputPanel() {
           <input
             value={settings.modelPath}
             onChange={(event) => updateSettings({ modelPath: event.currentTarget.value })}
+            placeholder={t("optional")}
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">{t("nativeBuildPolicy")}</span>
+          <select
+            value={settings.nativeBuildPolicy}
+            onChange={(event) =>
+              updateSettings({
+                nativeBuildPolicy: event.currentTarget.value as typeof settings.nativeBuildPolicy,
+              })
+            }
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          >
+            {nativeBuildPolicies.map((policy) => (
+              <option key={policy} value={policy}>
+                {t(policy === "disabled" ? "safeFallback" : "trustedProjectBuild")}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">{t("apiToken")}</span>
+          <input
+            type="password"
+            value={settings.apiToken}
+            onChange={(event) => updateSettings({ apiToken: event.currentTarget.value })}
             placeholder={t("optional")}
             className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
           />

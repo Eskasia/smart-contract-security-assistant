@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { getAnalysis, getReport } from "../lib/api";
 import { isTerminalStatus } from "../lib/status";
-import { useAnalysisStore } from "../store/analysisStore";
+import { useAnalysisStore, useSettingsStore } from "../store/analysisStore";
 import type { AnalysisEvent } from "../types/api";
 
 export function useAnalysisStream(analysisId: string | null) {
@@ -10,6 +10,7 @@ export function useAnalysisStream(analysisId: string | null) {
   const setReport = useAnalysisStore((state) => state.setReport);
   const setConnectionMode = useAnalysisStore((state) => state.setConnectionMode);
   const appendFindingToken = useAnalysisStore((state) => state.appendFindingToken);
+  const apiToken = useSettingsStore((state) => state.settings.apiToken);
 
   useEffect(() => {
     if (!analysisId) return undefined;
@@ -36,6 +37,14 @@ export function useAnalysisStream(analysisId: string | null) {
         }
       }, 1000);
     };
+
+    if (apiToken.trim()) {
+      startPolling();
+      return () => {
+        cancelled = true;
+        if (pollingTimer) window.clearInterval(pollingTimer);
+      };
+    }
 
     const eventSource = new EventSource(`/api/analyses/${analysisId}/stream`);
     setConnectionMode("sse");
@@ -77,5 +86,5 @@ export function useAnalysisStream(analysisId: string | null) {
       eventSource.close();
       if (pollingTimer) window.clearInterval(pollingTimer);
     };
-  }, [analysisId, appendFindingToken, setConnectionMode, setJob, setReport]);
+  }, [analysisId, apiToken, appendFindingToken, setConnectionMode, setJob, setReport]);
 }

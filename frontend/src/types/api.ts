@@ -3,6 +3,7 @@ import type {
   AnalysisStatus,
   Finding,
   FindingReviewStatus,
+  NativeBuildPolicy,
   RagMode,
   ReviewStatus,
 } from "./report";
@@ -12,6 +13,7 @@ export interface CreateAnalysisRequest {
   rag_mode: RagMode;
   dataset_chunks: string;
   model_path: string | null;
+  native_build_policy: NativeBuildPolicy;
 }
 
 export interface AnalysisJob {
