@@ -31,5 +31,6 @@ elite-product-report/
 public-contracts/*
 !public-contracts/hf-slither50-v2/
 !public-contracts/hf-slither50-v2/**
+public-projects/
 eval/public_benchmark/manifest.json
 eval/public_benchmark/hf-slither50-manifest.json
