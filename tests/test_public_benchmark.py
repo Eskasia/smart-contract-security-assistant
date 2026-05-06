@@ -6,6 +6,7 @@ import pytest
 from smart_contract_audit.evaluation.public_benchmark import (
     PublicBenchmarkFailure,
     run_benchmark,
+    summarize_public_benchmark_results,
 )
 
 
@@ -110,6 +111,45 @@ def test_public_benchmark_fails_when_score_gap_is_too_small(tmp_path: Path) -> N
             min_supported_hit_rate=0.0,
             min_score_gap=30.0,
         )
+
+
+def test_public_benchmark_summary_includes_confusion_metrics() -> None:
+    results = [
+        {
+            "external_class": "safe",
+            "detected_supported_labels": [],
+            "expected_supported_labels": [],
+        },
+        {
+            "external_class": "safe",
+            "detected_supported_labels": ["reentrancy"],
+            "expected_supported_labels": [],
+        },
+        {
+            "external_class": "vulnerable",
+            "detected_supported_labels": ["reentrancy"],
+            "expected_supported_labels": ["reentrancy"],
+        },
+        {
+            "external_class": "vulnerable",
+            "detected_supported_labels": [],
+            "expected_supported_labels": ["reentrancy"],
+        },
+    ]
+
+    summary = summarize_public_benchmark_results(results)
+
+    assert summary["confusion_matrix"] == {
+        "true_positive": 1,
+        "true_negative": 1,
+        "false_positive": 1,
+        "false_negative": 1,
+    }
+    assert summary["classification_metrics"] == {
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+    }
 
 
 def _write_report(

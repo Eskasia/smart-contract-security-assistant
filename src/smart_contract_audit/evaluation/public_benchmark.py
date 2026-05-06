@@ -26,6 +26,9 @@ def run_benchmark(
     rag_mode: str = "fallback",
     min_supported_hit_rate: float = 0.0,
     min_score_gap: float | None = None,
+    min_precision: float = 0.0,
+    min_recall: float = 0.0,
+    min_f1: float = 0.0,
 ) -> dict[str, Any]:
     cases = json.loads(manifest_path.read_text(encoding="utf-8"))
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -48,6 +51,10 @@ def run_benchmark(
             f"average_score_gap_safe_minus_vulnerable {score_gap:.2f} "
             f"is below {min_score_gap:.2f}"
         )
+    metrics = summary["classification_metrics"]
+    _enforce_min_metric(metrics, "precision", min_precision)
+    _enforce_min_metric(metrics, "recall", min_recall)
+    _enforce_min_metric(metrics, "f1", min_f1)
     return summary
 
 
@@ -98,6 +105,38 @@ def _load_or_analyze_report(
     return report.to_dict()
 
 
+def summarize_public_benchmark_results(results: list[dict[str, Any]]) -> dict[str, Any]:
+    true_positive = true_negative = false_positive = false_negative = 0
+    for result in results:
+        expected_vulnerable = result.get("external_class") == "vulnerable"
+        detected_vulnerable = bool(result.get("detected_supported_labels"))
+        if expected_vulnerable and detected_vulnerable:
+            true_positive += 1
+        elif expected_vulnerable and not detected_vulnerable:
+            false_negative += 1
+        elif not expected_vulnerable and detected_vulnerable:
+            false_positive += 1
+        else:
+            true_negative += 1
+
+    precision = _safe_ratio(true_positive, true_positive + false_positive)
+    recall = _safe_ratio(true_positive, true_positive + false_negative)
+    f1 = _safe_ratio(2 * precision * recall, precision + recall)
+    return {
+        "confusion_matrix": {
+            "true_positive": true_positive,
+            "true_negative": true_negative,
+            "false_positive": false_positive,
+            "false_negative": false_negative,
+        },
+        "classification_metrics": {
+            "precision": round(precision, 4),
+            "recall": round(recall, 4),
+            "f1": round(f1, 4),
+        },
+    }
+
+
 def _summarize_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     label_totals: dict[str, dict[str, int]] = {}
     expected_occurrences = 0
@@ -118,6 +157,7 @@ def _summarize_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     )
     score_groups = _score_groups(results)
     score_gap = _score_gap(score_groups)
+    trust_metrics = summarize_public_benchmark_results(results)
     return {
         "cases": len(results),
         "successful_analyzer_runs": sum(
@@ -134,9 +174,21 @@ def _summarize_results(results: list[dict[str, Any]]) -> dict[str, Any]:
         "supported_hit_rate": supported_hit_rate,
         "score_groups": score_groups,
         "average_score_gap_safe_minus_vulnerable": score_gap,
+        **trust_metrics,
         "label_totals": label_totals,
         "results": results,
     }
+
+
+def _safe_ratio(numerator: float, denominator: float) -> float:
+    return numerator / denominator if denominator else 0.0
+
+
+def _enforce_min_metric(metrics: dict[str, float], name: str, threshold: float) -> None:
+    if metrics[name] < threshold:
+        raise PublicBenchmarkFailure(
+            f"{name} {metrics[name]:.4f} is below {threshold:.4f}"
+        )
 
 
 def _score_groups(results: list[dict[str, Any]]) -> dict[str, dict[str, float | int]]:

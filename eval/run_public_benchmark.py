@@ -23,6 +23,9 @@ def main() -> None:
     )
     parser.add_argument("--min-supported-hit-rate", type=float, default=0.0)
     parser.add_argument("--min-score-gap", type=float)
+    parser.add_argument("--min-precision", type=float, default=0.0)
+    parser.add_argument("--min-recall", type=float, default=0.0)
+    parser.add_argument("--min-f1", type=float, default=0.0)
     args = parser.parse_args()
 
     summary = run_benchmark(
@@ -31,6 +34,9 @@ def main() -> None:
         rag_mode=args.rag_mode,
         min_supported_hit_rate=args.min_supported_hit_rate,
         min_score_gap=args.min_score_gap,
+        min_precision=args.min_precision,
+        min_recall=args.min_recall,
+        min_f1=args.min_f1,
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
