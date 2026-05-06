@@ -128,7 +128,7 @@ const output = {
     ...(proof.zero_g?.explorer_links ?? {}),
     storage_tx: `${txBase}${storageTxHash}`,
     registration_tx: `${txBase}${registryTxHash}`,
-    registry_address: `${addressBase}${registryAddress}`,
+    registry: `${addressBase}${registryAddress}`,
   },
   artifact: {
     source_file: inputPath,

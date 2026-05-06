@@ -8,7 +8,7 @@
     "verify-proof": "node scripts/verify-submission-proof.mjs"
   },
   "dependencies": {
-    "@0gfoundation/0g-storage-ts-sdk": "^0.4.0",
+    "@0gfoundation/0g-storage-ts-sdk": "^1.2.9",
     "ethers": "^6.13.0"
   }
 }

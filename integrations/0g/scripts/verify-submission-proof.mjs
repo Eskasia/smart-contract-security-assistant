@@ -53,6 +53,6 @@ const txBase = normalizeBaseUrl(TX_BASE);
 const addressBase = normalizeBaseUrl(ADDRESS_BASE);
 requireLink(proof, "storage_tx", `${txBase}${proof.storage_tx_hash}`);
 requireLink(proof, "registration_tx", `${txBase}${proof.registry_tx_hash}`);
-requireLink(proof, "registry_address", `${addressBase}${proof.registry_address}`);
+requireLink(proof, "registry", `${addressBase}${proof.registry_address}`);
 
 console.log(JSON.stringify({ ok: true, proof: inputPath }, null, 2));
