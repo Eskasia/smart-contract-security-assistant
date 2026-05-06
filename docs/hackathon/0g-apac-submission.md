@@ -7,7 +7,7 @@ Project name: SCSA 0G Audit Proof
 One-sentence description: AI-assisted Solidity audit reports prepared for verifiable 0G Storage persistence and 0G Chain proof.
 
 Short summary:
-SCSA 0G Audit Proof analyzes Solidity contracts with Slither, RAG, deterministic scoring, and traceable report generation. It prepares each audit result as a hash-stable proof artifact for pending 0G Storage upload and pending 0G Chain registration. Judges can inspect the product flow locally now, then verify on-chain activity after the registry address, storage root, and transaction links are filled.
+SCSA 0G Audit Proof analyzes Solidity contracts with Slither, RAG, deterministic scoring, and traceable report generation. It prepares each audit result as a hash-stable proof artifact for pending 0G Storage upload and pending 0G Chain registration. Judges can inspect the product flow locally now, then verify on-chain activity after live registry, storage, and transaction fields are filled.
 
 Track: Track 1 - Agentic Infrastructure & OpenClaw Lab
 
@@ -31,9 +31,25 @@ Proof registration transaction:
 
 Proof registration explorer link:
 
+`submission-proof.json` shape:
+
+```json
+{
+  "storage_root_hash": "",
+  "storage_tx_hash": "",
+  "registry_address": "",
+  "registry_tx_hash": "",
+  "explorer_links": {
+    "storage_tx": "",
+    "registry": "",
+    "registration_tx": ""
+  }
+}
+```
+
 ## Public X Post
 
-SCSA 0G Audit Proof turns Solidity security scans into pending verifiable audit artifacts for 0G Storage and 0G Chain registration.
+SCSA 0G Audit Proof turns Solidity security scans into verifiable audit artifacts for 0G Storage and 0G Chain registration.
 
 Demo:
 

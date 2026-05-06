@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-05-06。
+更新日期：2026-05-07。
 
 ## 已完成內容
 
@@ -25,6 +25,7 @@
 - 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
 - 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
 - 2026-05-06 public benchmark 已新增 confusion matrix、precision、recall 與 F1 指標。
+- 2026-05-07 已新增 0G hackathon proof flow：`scsa 0g-package` 產生 `audit-proof.json`，`integrations/0g` 提供 Storage upload、registry deploy/register 與 proof verify scripts，`scsa 0g-attach-proof` 可把 `submission-proof.json` 回寫到 report metadata，前端右欄可顯示 0G Proof panel；live deployment 欄位仍為 pending。
 
 ## 技術核心
 
@@ -47,6 +48,8 @@ Native build preflight——Foundry/Hardhat 專案在 `trusted` 模式先跑 `fo
 Public project build validation——`eval/run_public_project_builds.py` 預設讀取 `eval/public_benchmark/public-project-builds-10-manifest.json`；`--preflight-only` 不 clone 即回報 framework 分布與缺失工具，完整模式會 clone、初始化 submodules、安裝 npm dependencies、處理 Hardhat 自訂 artifacts/cache 路徑並產出 `public_project_builds_summary.json`，可用 `--min-analyzer-success-rate` 與 `--min-native-build-success-rate` 設門檻。
 
 Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
+
+0G proof package——`uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；`cd integrations/0g && npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json && npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json` 產生 live proof，`explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`。
 
 ## 驗證結果
 

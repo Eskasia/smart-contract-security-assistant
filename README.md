@@ -62,6 +62,23 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
 ```
 
+## 0G Hackathon Proof Package
+
+以下命令會產生本地審計報告、建立 0G proof package、上傳 proof artifact、註冊 proof，再把 `submission-proof.json` 回寫到 report metadata；live 0G 地址與 tx hash 仍待實際部署後填入。
+
+```bash
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
+uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
+cd integrations/0g
+npm install
+npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
+npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
+cd ../..
+uv run scsa 0g-attach-proof reports/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
+```
+
+`submission-proof.json` 的 `explorer_links` 使用 `storage_tx`、`registry`、`registration_tx` 三個 key。
+
 ## 目前範圍
 
 - 輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 預設先嘗試原生 build，`--native-build-policy disabled` 會略過 build scripts 並使用 Slither/solc fallback；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。

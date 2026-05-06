@@ -60,6 +60,23 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run python eval/run_public_project_builds.py --preflight-only
 ```
 
+## 0G Hackathon Proof Package
+
+These commands generate the local audit report, build the 0G proof package, upload the proof artifact, register the proof, and attach `submission-proof.json` back to report metadata. Live 0G addresses and transaction hashes remain pending until deployment.
+
+```bash
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
+uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
+cd integrations/0g
+npm install
+npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
+npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
+cd ../..
+uv run scsa 0g-attach-proof reports/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
+```
+
+`submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`.
+
 ## Public Benchmark
 
 The default public benchmark reads `eval/public_benchmark/hf-slither50-v2-manifest.json`, which contains 50 Solidity 0.8-compatible samples from `mwritescode/slither-audited-smart-contracts`.

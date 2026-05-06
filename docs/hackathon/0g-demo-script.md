@@ -40,13 +40,17 @@ Show:
 
 ```bash
 cd integrations/0g
+npm install
+npm run deploy
 npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
 npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
+cd ../..
+uv run scsa 0g-attach-proof reports-api/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
 ```
 
-Open the 0G Explorer transaction link and the registry contract address.
+Open `submission-proof.json` and show `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
 
 ## Scene 5 - Verification close, 15 seconds
 
-Return to the frontend and show the 0G Proof panel with storage root, registry address, and Explorer link.
+Return to the frontend and show the 0G Proof panel with storage root, registry address, and Explorer links.
 Say: "The audit report is reproducible locally and verifiable on 0G."
