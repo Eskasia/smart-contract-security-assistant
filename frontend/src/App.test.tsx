@@ -9,6 +9,7 @@ import { useAnalysisStore } from "./store/analysisStore";
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
+    useAnalysisStore.getState().loadDemo();
   });
 
   it("renders the audit workbench", async () => {
@@ -17,8 +18,28 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "智能合約安全分析助理" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "開始分析" })).toBeInTheDocument();
     expect(await screen.findByText(/合約 10679f2de6b7/)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "0G Proof" })).not.toBeInTheDocument();
+  });
+
+  it("renders dry-run 0G proof details when report metadata contains a proof", async () => {
+    useAnalysisStore.getState().setReport({
+      ...demoReport,
+      analysis_metadata: {
+        ...demoReport.analysis_metadata,
+        zero_g_proof: {
+          storage_root_hash: "0xabababababababababababababababababababababababababababababababab",
+          storage_tx_hash: "dry-run-only",
+          registry_address: "pending-live-registry",
+          registry_tx_hash: "pending-live-registration",
+          explorer_links: {},
+        },
+      },
+    });
+    render(<App />);
+
     expect(screen.getByRole("heading", { name: "0G Proof" })).toBeInTheDocument();
-    expect(screen.getByText(/0x1111\.\.\./)).toBeInTheDocument();
+    expect(screen.getByText("dry-run-only")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Storage tx" })).not.toBeInTheDocument();
   });
 
   it("switches the interface language", async () => {

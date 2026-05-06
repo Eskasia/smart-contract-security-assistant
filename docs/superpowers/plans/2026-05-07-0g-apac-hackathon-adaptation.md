@@ -8,6 +8,8 @@
 
 **Tech Stack:** Python stdlib, pytest, existing `scsa` CLI, React/Vite frontend, Node.js ESM scripts, `@0gfoundation/0g-storage-ts-sdk`, `ethers`, Solidity registry contract.
 
+Fixture rule: any `0x11` / `0x22` / `0x33` / `0x44` values in this plan are local tests only and must never be presented as live 0G proof.
+
 ---
 
 ## Competition Fit
@@ -337,10 +339,7 @@ def test_attach_zero_g_proof_adds_metadata(tmp_path: Path) -> None:
         "storage_tx_hash": "0x" + "22" * 32,
         "registry_address": "0x" + "33" * 20,
         "registry_tx_hash": "0x" + "44" * 32,
-        "explorer_links": {
-            "registry": "https://www.0gscan.com/address/0x3333333333333333333333333333333333333333",
-            "registration_tx": "https://www.0gscan.com/tx/0x4444444444444444444444444444444444444444444444444444444444444444",
-        },
+        "explorer_links": {},
     }
 
     output = attach_zero_g_proof(report, proof)
@@ -543,10 +542,7 @@ def test_cli_0g_attach_proof_updates_report(tmp_path: Path, capsys) -> None:
                 "storage_tx_hash": "0x" + "22" * 32,
                 "registry_address": "0x" + "33" * 20,
                 "registry_tx_hash": "0x" + "44" * 32,
-                "explorer_links": {
-                    "registry": "https://www.0gscan.com/address/0x3333333333333333333333333333333333333333",
-                    "registration_tx": "https://www.0gscan.com/tx/0x4444444444444444444444444444444444444444444444444444444444444444",
-                },
+                "explorer_links": {},
             }
         ),
         encoding="utf-8",
@@ -1044,10 +1040,10 @@ git commit -m "feat: add 0g chain proof registry"
 Append to `frontend/src/App.test.tsx`:
 
 ```tsx
-it("renders 0G proof links when report metadata contains zero_g_proof", async () => {
+it("renders dry-run 0G proof details when report metadata contains zero_g_proof", async () => {
   render(<App />);
   expect(await screen.findByText(/0G Proof/i)).toBeInTheDocument();
-  expect(await screen.findByText(/0x1111/i)).toBeInTheDocument();
+  expect(await screen.findByText(/dry-run-only/i)).toBeInTheDocument();
 });
 ```
 
@@ -1107,21 +1103,17 @@ In `frontend/src/components/RightRail.tsx`, read `report.analysis_metadata.zero_
 ) : null}
 ```
 
-- [ ] **Step 4: Add demo proof data**
+- [ ] **Step 4: Add dry-run proof test data**
 
-In `frontend/src/data/demoReport.ts`, add:
+Keep `frontend/src/data/demoReport.ts` without default proof data. In frontend tests, inject this fixture only when asserting the 0G Proof panel:
 
 ```ts
 zero_g_proof: {
-  storage_root_hash: "0x1111111111111111111111111111111111111111111111111111111111111111",
-  storage_tx_hash: "0x2222222222222222222222222222222222222222222222222222222222222222",
-  registry_address: "0x3333333333333333333333333333333333333333",
-  registry_tx_hash: "0x4444444444444444444444444444444444444444444444444444444444444444",
-  explorer_links: {
-    storage_tx: "https://www.0gscan.com/tx/0x2222222222222222222222222222222222222222222222222222222222222222",
-    registry: "https://www.0gscan.com/address/0x3333333333333333333333333333333333333333",
-    registration_tx: "https://www.0gscan.com/tx/0x4444444444444444444444444444444444444444444444444444444444444444"
-  }
+  storage_root_hash: "0xabababababababababababababababababababababababababababababababab",
+  storage_tx_hash: "dry-run-only",
+  registry_address: "pending-live-registry",
+  registry_tx_hash: "pending-live-registration",
+  explorer_links: {}
 }
 ```
 

@@ -124,19 +124,6 @@ export const demoReport: AnalysisReport = {
     entry_path: "tests/contracts/VulnerableVault.sol",
     project_root: "",
     source_files_count: 1,
-    zero_g_proof: {
-      storage_root_hash: "0x111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000",
-      storage_tx_hash: "0x22223333444455556666777788889999aaaabbbbccccddddeeeeffff00001111",
-      registry_address: "0x3333444455556666777788889999aaaabbbbcccc",
-      registry_tx_hash: "0x444455556666777788889999aaaabbbbccccddddeeeeffff0000111122223333",
-      explorer_links: {
-        storage_tx:
-          "https://www.0gscan.com/tx/0x22223333444455556666777788889999aaaabbbbccccddddeeeeffff00001111",
-        registry: "https://www.0gscan.com/address/0x3333444455556666777788889999aaaabbbbcccc",
-        registration_tx:
-          "https://www.0gscan.com/tx/0x444455556666777788889999aaaabbbbccccddddeeeeffff0000111122223333",
-      },
-    },
     errors: ["Using system solc 0.8.34 for pragma-compatible 0.8.19."],
   },
 };
