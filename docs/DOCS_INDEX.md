@@ -1,6 +1,6 @@
 # Docs Index
 
-Generated at: 2026-05-04
+Generated at: 2026-05-06
 
 | Category | # | Status | Name | Description | Last Modified | Path |
 |---|---|---|---|---|---|---|
@@ -11,3 +11,4 @@ Generated at: 2026-05-04
 | readme | 001 | current | English README | 面向 GitHub 使用者的英文安裝、功能、benchmark 與 Actions 說明。 | 2026-05-04 | `README.en.md` |
 | review | 001 | current | Review Checklist | 記錄 git baseline、CI、project input、corpus、detector、report 與 judge 審查門檻。 | 2026-05-04 | `docs/review_checklist.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-04-30 本地驗證命令、結果、產物與剩餘限制。 | 2026-04-30 | `docs/reference/001-validation-procedure-log.md` |
+| superpowers | 001 | draft | Security Hardening and Trust Optimization Implementation Plan | 給 Codex 執行 API 邊界、native build policy、benchmark trust metrics 的逐步計劃。 | 2026-05-06 | `docs/superpowers/plans/2026-05-06-security-hardening-trust-optimization.md` |
