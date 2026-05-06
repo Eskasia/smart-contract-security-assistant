@@ -124,7 +124,7 @@ def test_single_file_input_does_not_include_sibling_contracts(tmp_path: Path) ->
     report = analyze_contract(
         contract,
         output_dir=tmp_path / "reports",
-        slither_runner=lambda _: SlitherRunResult(
+        slither_runner=lambda _, native_build_policy="trusted": SlitherRunResult(
             raw_json={"results": {"detectors": []}},
             solc_version="0.8.19",
             slither_version="0.11.5",
@@ -138,7 +138,7 @@ def test_analyze_project_directory_records_input_metadata(tmp_path: Path) -> Non
     project = Path("tests/fixtures/solidity_projects/foundry")
     runner_inputs = []
 
-    def fake_slither(path: Path) -> SlitherRunResult:
+    def fake_slither(path: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
         runner_inputs.append(path)
         return SlitherRunResult(
             raw_json={

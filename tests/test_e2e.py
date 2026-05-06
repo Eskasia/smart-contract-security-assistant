@@ -36,7 +36,7 @@ def test_e2e_timeout_marks_partial(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     ticks = iter([0.0, 116.0, 116.1, 116.2])
     monkeypatch.setattr("smart_contract_audit.analyzer.time.perf_counter", lambda: next(ticks))
 
-    def fake_slither(_: Path) -> SlitherRunResult:
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
         return SlitherRunResult(
             raw_json={
                 "results": {

@@ -42,7 +42,7 @@ def test_analyze_contract_with_fake_slither(tmp_path: Path) -> None:
         chunks_path,
     )
 
-    def fake_slither(_: Path) -> SlitherRunResult:
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
         return SlitherRunResult(
             raw_json={
                 "results": {
@@ -108,7 +108,7 @@ def test_analyze_contract_adds_mythril_findings_to_formal_report(tmp_path: Path)
         encoding="utf-8",
     )
 
-    def fake_slither(_: Path) -> SlitherRunResult:
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
         return SlitherRunResult(
             raw_json={"results": {"detectors": []}},
             solc_version="0.8.19",
@@ -178,7 +178,7 @@ def test_analyze_contract_adds_echidna_failures_to_formal_report(tmp_path: Path)
         encoding="utf-8",
     )
 
-    def fake_slither(_: Path) -> SlitherRunResult:
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
         return SlitherRunResult(
             raw_json={"results": {"detectors": []}},
             solc_version="0.8.19",
