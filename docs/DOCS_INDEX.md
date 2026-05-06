@@ -11,7 +11,7 @@ Generated at: 2026-05-07
 | hackathon | 001 | draft | 0G APAC Submission Draft | HackQuest fields, 0G proof links, X post copy, and final checklist. | 2026-05-07 | `docs/hackathon/0g-apac-submission.md` |
 | hackathon | 002 | draft | 0G Demo Script | 3-minute demo run-of-show for frontend, proof package, 0G Storage, and 0G Chain. | 2026-05-07 | `docs/hackathon/0g-demo-script.md` |
 | readme | 001 | current | English README | 面向 GitHub 使用者的英文安裝、API 加固、功能、benchmark 與 Actions 說明。 | 2026-05-06 | `README.en.md` |
-| review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-06 | `docs/review_checklist.md` |
-| reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-06 本地驗證命令、結果、產物與剩餘限制。 | 2026-05-06 | `docs/reference/001-validation-procedure-log.md` |
+| review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、0G proof、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-07 | `docs/review_checklist.md` |
+| reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-07 本地驗證命令、結果、產物與剩餘限制。 | 2026-05-07 | `docs/reference/001-validation-procedure-log.md` |
 | superpowers | 001 | draft | Security Hardening and Trust Optimization Implementation Plan | 給 Codex 執行 API 邊界、native build policy、benchmark trust metrics 的逐步計劃。 | 2026-05-06 | `docs/superpowers/plans/2026-05-06-security-hardening-trust-optimization.md` |
 | superpowers | 002 | draft | 0G APAC Hackathon Adaptation Implementation Plan | 將專案改造成符合 0G APAC Hackathon 提交規格的逐步開發計劃。 | 2026-05-07 | `docs/superpowers/plans/2026-05-07-0g-apac-hackathon-adaptation.md` |
