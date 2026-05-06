@@ -33,6 +33,12 @@ function requireLink(proof, key, expected) {
   }
 }
 
+function rejectLegacyLink(proof, key) {
+  if (Object.hasOwn(proof.explorer_links ?? {}, key)) {
+    throw new Error(`Legacy explorer link is not supported: ${key}`);
+  }
+}
+
 const inputPath = process.argv[2];
 if (!inputPath || !existsSync(inputPath)) {
   throw new Error("Usage: node scripts/verify-submission-proof.mjs <submission-proof.json>");
@@ -51,6 +57,7 @@ requireArtifactField(proof, "contract_id");
 
 const txBase = normalizeBaseUrl(TX_BASE);
 const addressBase = normalizeBaseUrl(ADDRESS_BASE);
+rejectLegacyLink(proof, "registry_address");
 requireLink(proof, "storage_tx", `${txBase}${proof.storage_tx_hash}`);
 requireLink(proof, "registration_tx", `${txBase}${proof.registry_tx_hash}`);
 requireLink(proof, "registry", `${addressBase}${proof.registry_address}`);

@@ -43,6 +43,11 @@ function getContractId(proof) {
   return proof?.report?.contract_id ?? proof?.contract_id ?? null;
 }
 
+function normalizedExplorerLinks(proof) {
+  const { registry_address: _legacyRegistryAddress, ...links } = proof.zero_g?.explorer_links ?? {};
+  return links;
+}
+
 async function uploadToZeroG(inputPath) {
   const [{ Indexer, ZgFile }, { ethers }] = await Promise.all([
     import("@0gfoundation/0g-storage-ts-sdk"),
@@ -125,7 +130,7 @@ const output = {
   registry_address: registryAddress,
   registry_tx_hash: registryTxHash,
   explorer_links: {
-    ...(proof.zero_g?.explorer_links ?? {}),
+    ...normalizedExplorerLinks(proof),
     storage_tx: `${txBase}${storageTxHash}`,
     registration_tx: `${txBase}${registryTxHash}`,
     registry: `${addressBase}${registryAddress}`,
