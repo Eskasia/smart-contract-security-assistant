@@ -62,18 +62,20 @@ uv run python eval/run_public_project_builds.py --preflight-only
 
 ## 0G Hackathon Proof Package
 
-These commands generate the local audit report, build the 0G proof package, upload the proof artifact, register the proof, and attach `submission-proof.json` back to report metadata. Live 0G addresses and transaction hashes remain pending until deployment.
+The local reproducible path generates the audit report, builds the 0G proof package, creates `submission-proof.json` with dry-run data, and attaches proof metadata back to the report. Live 0G upload and registration require environment variables plus a deployed registry.
 
 ```bash
 uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
 uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 cd integrations/0g
 npm install
-npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
-npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
+npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
+npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
 cd ../..
 uv run scsa 0g-attach-proof reports/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
 ```
+
+Live mode requires `ZERO_G_RPC_URL`, `ZERO_G_PRIVATE_KEY`, and `ZERO_G_STORAGE_INDEXER_RPC`; run `npm run deploy`, export the printed registry address as `ZERO_G_REGISTRY_ADDRESS`, then run `npm run upload -- ...` and `npm run register -- ...`.
 
 `submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`.
 

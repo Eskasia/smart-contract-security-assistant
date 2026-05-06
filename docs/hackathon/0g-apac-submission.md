@@ -49,7 +49,7 @@ Proof registration explorer link:
 
 ## Public X Post
 
-SCSA 0G Audit Proof turns Solidity security scans into verifiable audit artifacts for 0G Storage and 0G Chain registration.
+SCSA 0G Audit Proof turns Solidity security scans into audit artifacts prepared for pending verifiable 0G Storage and 0G Chain registration.
 
 Demo:
 

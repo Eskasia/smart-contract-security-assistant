@@ -42,11 +42,21 @@ Show:
 cd integrations/0g
 npm install
 npm run deploy
+export ZERO_G_REGISTRY_ADDRESS=""
+npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run
+npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json
+```
+
+For the live recording, replace the dry-run commands with:
+
+```bash
 npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json
 npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json
 cd ../..
 uv run scsa 0g-attach-proof reports-api/vulnerablevault.json reports-0g/vulnerablevault/submission-proof.json
 ```
+
+Paste the registry address printed by `npm run deploy` into `ZERO_G_REGISTRY_ADDRESS` before running the live `npm run register`.
 
 Open `submission-proof.json` and show `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
 
