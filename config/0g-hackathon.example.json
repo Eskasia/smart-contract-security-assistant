@@ -1,0 +1,14 @@
+{
+  "project_name": "SCSA 0G Audit Proof",
+  "track": "Track 1: Agentic Infrastructure & OpenClaw Lab",
+  "chain": {
+    "name": "0G Mainnet",
+    "rpc_url_env": "ZERO_G_RPC_URL",
+    "expected_chain_id": 16661,
+    "explorer_address_base_url": "https://www.0gscan.com/address/",
+    "explorer_tx_base_url": "https://www.0gscan.com/tx/"
+  },
+  "storage": {
+    "indexer_rpc_env": "ZERO_G_STORAGE_INDEXER_RPC"
+  }
+}
