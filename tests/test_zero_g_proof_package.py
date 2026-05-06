@@ -47,14 +47,38 @@ def test_build_proof_package_writes_stable_manifest(tmp_path: Path) -> None:
     assert proof["project_name"] == "SCSA 0G Audit Proof"
     assert proof["track"] == "Track 1: Agentic Infrastructure & OpenClaw Lab"
     assert proof["report"]["contract_id"] == "vulnerablevault"
+    assert proof["report"]["file_name"] == "vulnerablevault.json"
     assert proof["report"]["sha256"] == sha256_file(report)
     assert proof["report"]["security_score"] == 68.9
     assert proof["report"]["findings_count"] == 1
+    assert proof["created_at"].startswith("1970-01-01T")
     assert proof["zero_g"]["storage_root_hash"] is None
     assert proof["zero_g"]["storage_tx_hash"] is None
     assert proof["zero_g"]["registry_address"] is None
     assert proof["zero_g"]["registry_tx_hash"] is None
     assert proof["zero_g"]["explorer_links"] == {}
+
+
+def test_build_proof_package_is_reproducible_across_output_dirs(tmp_path: Path) -> None:
+    report = tmp_path / "vulnerablevault.json"
+    _write_report(report)
+
+    first = build_proof_package(
+        report_path=report,
+        output_dir=tmp_path / "reports-a",
+        project_name="SCSA 0G Audit Proof",
+        track="Track 1: Agentic Infrastructure & OpenClaw Lab",
+    )
+    second = build_proof_package(
+        report_path=report,
+        output_dir=tmp_path / "reports-b",
+        project_name="SCSA 0G Audit Proof",
+        track="Track 1: Agentic Infrastructure & OpenClaw Lab",
+    )
+
+    assert first.proof_json.read_text(encoding="utf-8") == second.proof_json.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_build_proof_package_rejects_path_like_contract_id(tmp_path: Path) -> None:

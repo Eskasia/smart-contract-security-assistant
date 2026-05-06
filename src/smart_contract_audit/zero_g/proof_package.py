@@ -4,7 +4,6 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,17 +38,18 @@ def build_proof_package(
     target_dir = output_dir / contract_id
     target_dir.mkdir(parents=True, exist_ok=True)
     proof_path = target_dir / "audit-proof.json"
+    report_sha256 = sha256_file(report_path)
 
     proof = {
-        "created_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
+        "created_at": _stable_created_at(report_sha256),
         "project_name": project_name,
         "report": {
             "contract_id": contract_id,
+            "file_name": report_path.name,
             "findings_count": _findings_count(report),
             "overall_status": report.get("overall_status"),
-            "path": str(report_path),
             "security_score": _security_score(report),
-            "sha256": sha256_file(report_path),
+            "sha256": report_sha256,
             "trace_id": _analysis_metadata(report).get("analysis_trace_id"),
         },
         "schema_version": "scsa_0g_proof_v1",
@@ -97,6 +97,13 @@ def _contract_id(report: dict[str, Any], report_path: Path) -> str:
     if not SAFE_CONTRACT_ID.fullmatch(contract_id) or contract_id in {".", ".."}:
         raise ValueError("contract_id must be a safe relative path segment.")
     return contract_id
+
+
+def _stable_created_at(report_sha256: str) -> str:
+    seconds = int(report_sha256[:8], 16) % 86_400
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"1970-01-01T{hours:02d}:{minutes:02d}:{secs:02d}+00:00"
 
 
 def _analysis_metadata(report: dict[str, Any]) -> dict[str, Any]:
