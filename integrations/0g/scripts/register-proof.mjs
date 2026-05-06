@@ -69,14 +69,14 @@ function securityScoreBps(proof) {
   if (proof.report?.security_score !== undefined) {
     return scoreToBps(proof.report.security_score, "report.security_score");
   }
-  return 0;
+  return 10000;
 }
 
 function reportHash(proof) {
   if (proof.report?.sha256 !== undefined) {
     return requireSha256(proof.report.sha256, "report.sha256");
   }
-  return requireSha256(proof.artifact?.sha256, "artifact.sha256");
+  return requireSha256(proof.artifact?.report_sha256, "artifact.report_sha256");
 }
 
 function compileRegistryAbi() {

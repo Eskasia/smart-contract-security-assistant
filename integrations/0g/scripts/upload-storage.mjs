@@ -43,6 +43,14 @@ function getContractId(proof) {
   return proof?.report?.contract_id ?? proof?.contract_id ?? null;
 }
 
+function reportSha256(proof) {
+  return proof?.report?.sha256 ?? null;
+}
+
+function securityScore(proof) {
+  return proof?.report?.security_score ?? null;
+}
+
 function normalizedExplorerLinks(proof) {
   const { registry_address: _legacyRegistryAddress, ...links } = proof.zero_g?.explorer_links ?? {};
   return links;
@@ -139,6 +147,8 @@ const output = {
     source_file: inputPath,
     file_name: basename(inputPath),
     sha256: artifactSha256,
+    report_sha256: reportSha256(proof),
+    security_score: securityScore(proof),
     schema_version: proof.schema_version,
     contract_id: getContractId(proof),
   },
