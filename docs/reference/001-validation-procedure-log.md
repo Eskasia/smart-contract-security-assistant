@@ -35,7 +35,7 @@ current；本日誌記錄 2026-05-07 本輪驗證命令，並保留 2026-04-30 �
 | 程序 | 命令 | 結果 |
 |---|---|---|
 | Lint | `uv run ruff check .` | `All checks passed!` |
-| Unit + integration tests | `uv run pytest` | `80 passed, 2 warnings in 21.78s` |
+| Unit + integration tests | `uv run pytest` | `81 passed, 2 warnings in 20.76s` |
 | Frontend tests | `cd frontend && npm run test` | `3 files`, `8 passed` |
 | Frontend build | `cd frontend && npm run build` | build completed |
 | RAG recall eval | `uv run python eval/run_eval.py` | 2026-05-01：`cases=8`, `recall_at_k=1.0` |
