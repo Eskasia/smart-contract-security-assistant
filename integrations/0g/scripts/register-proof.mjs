@@ -48,20 +48,23 @@ function requireAddress(value, label) {
 }
 
 function scoreToBps(value, label) {
-  const score = Number(value);
-  if (!Number.isFinite(score) || score < 0 || score > 100) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 100) {
     throw new Error(`${label} must be a number from 0 to 100`);
   }
-  return Math.round(score * 100);
+  return Math.round(value * 100);
 }
 
 function securityScoreBps(proof) {
   if (proof.artifact?.security_score_bps !== undefined && proof.artifact.security_score_bps !== null) {
-    const bps = Number(proof.artifact.security_score_bps);
-    if (!Number.isInteger(bps) || bps < 0 || bps > 10000) {
+    if (
+      typeof proof.artifact.security_score_bps !== "number" ||
+      !Number.isInteger(proof.artifact.security_score_bps) ||
+      proof.artifact.security_score_bps < 0 ||
+      proof.artifact.security_score_bps > 10000
+    ) {
       throw new Error("artifact.security_score_bps must be an integer from 0 to 10000");
     }
-    return bps;
+    return proof.artifact.security_score_bps;
   }
   if (proof.artifact?.security_score !== undefined && proof.artifact.security_score !== null) {
     return scoreToBps(proof.artifact.security_score, "artifact.security_score");
@@ -73,10 +76,14 @@ function securityScoreBps(proof) {
 }
 
 function reportHash(proof) {
-  if (proof.report?.sha256 !== undefined) {
-    return requireSha256(proof.report.sha256, "report.sha256");
+  const artifactHash = requireSha256(proof.artifact?.report_sha256, "artifact.report_sha256");
+  if (proof.report?.sha256 !== undefined && proof.report.sha256 !== null) {
+    const reportHashValue = requireSha256(proof.report.sha256, "report.sha256");
+    if (reportHashValue !== artifactHash) {
+      throw new Error("report.sha256 must match artifact.report_sha256");
+    }
   }
-  return requireSha256(proof.artifact?.report_sha256, "artifact.report_sha256");
+  return artifactHash;
 }
 
 function compileRegistryAbi() {
