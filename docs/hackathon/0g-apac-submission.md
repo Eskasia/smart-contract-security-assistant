@@ -35,6 +35,7 @@ Proof registration explorer link:
 
 ```json
 {
+  "proof_mode": "live_registered",
   "storage_root_hash": "",
   "storage_tx_hash": "",
   "registry_address": "",
@@ -46,6 +47,8 @@ Proof registration explorer link:
   }
 }
 ```
+
+Dry-run proof uses `proof_mode: "dry_run"` and an empty `explorer_links` object.
 
 ## Public X Post
 

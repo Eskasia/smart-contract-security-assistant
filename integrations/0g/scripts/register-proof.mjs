@@ -112,6 +112,9 @@ if (!existsSync(inputPath)) {
 }
 
 const proof = JSON.parse(readFileSync(inputPath, "utf-8"));
+if (proof.proof_mode !== "storage_uploaded" && proof.proof_mode !== "live_registered") {
+  throw new Error("submission proof must come from live upload; dry-run proofs cannot be registered");
+}
 const hashToRegister = reportHash(proof);
 const storageRoot = requireHash(proof.storage_root_hash, "storage_root_hash");
 const storageTxHash = requireHash(proof.storage_tx_hash, "storage_tx_hash");
@@ -131,6 +134,7 @@ const txBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_TX_BASE ?? DEFAULT_T
 const addressBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? DEFAULT_ADDRESS_BASE);
 const updated = {
   ...proof,
+  proof_mode: "live_registered",
   registry_address: registryAddress,
   registry_tx_hash: registryTxHash,
   explorer_links: {

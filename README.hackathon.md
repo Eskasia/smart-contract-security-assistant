@@ -38,7 +38,7 @@ cd ../..
 uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
-The local path above uses dry-run proof data. Live 0G upload and registration require the environment variables below, `npm run deploy`, then setting `ZERO_G_REGISTRY_ADDRESS` to the printed registry address in the local shell before running live upload and register commands.
+The local path above uses dry-run proof data and leaves `explorer_links` empty. Live 0G upload and registration require the environment variables below, `npm run deploy`, then setting `ZERO_G_REGISTRY_ADDRESS` to the printed registry address in the local shell before running live upload, register, and verify commands.
 
 ## Live 0G Environment
 
@@ -73,4 +73,4 @@ Proof registration transaction:
 
 Proof registration explorer link:
 
-Expected `submission-proof.json` link keys: `storage_tx`, `registry`, `registration_tx`.
+Expected live registered `submission-proof.json` link keys: `storage_tx`, `registry`, `registration_tx`. Expected dry-run link keys: none.

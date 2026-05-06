@@ -62,7 +62,7 @@ uv run python eval/run_public_project_builds.py --preflight-only
 
 ## 0G Hackathon Proof Package
 
-The local reproducible path generates the audit report, builds the 0G proof package, creates `submission-proof.json` with dry-run data, and attaches proof metadata back to the report. Live 0G upload and registration require environment variables plus a deployed registry.
+The local reproducible path generates the audit report, builds the 0G proof package, creates `submission-proof.json` with dry-run data, and attaches proof metadata back to the report. Dry-run proof does not emit 0GScan links. Live 0G upload and registration require environment variables plus a deployed registry.
 
 ```bash
 mkdir -p reports
@@ -77,9 +77,9 @@ cd ../..
 uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
-Live mode requires `ZERO_G_RPC_URL`, `ZERO_G_PRIVATE_KEY`, and `ZERO_G_STORAGE_INDEXER_RPC`; run `npm run deploy`, export the printed registry address as `ZERO_G_REGISTRY_ADDRESS`, then run `npm run upload -- ...` and `npm run register -- ...`.
+Live mode requires `ZERO_G_RPC_URL`, `ZERO_G_PRIVATE_KEY`, and `ZERO_G_STORAGE_INDEXER_RPC`; run `npm run deploy`, export the printed registry address as `ZERO_G_REGISTRY_ADDRESS`, then run `npm run upload -- ...`, `npm run register -- ...`, and `npm run verify-proof -- ...`.
 
-`submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`.
+Live registered `submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`; dry-run `explorer_links` must be empty.
 
 ## Public Benchmark
 

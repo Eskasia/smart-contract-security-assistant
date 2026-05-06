@@ -113,8 +113,8 @@ def test_attach_zero_g_proof_adds_metadata(tmp_path: Path) -> None:
         "registry_address": "0x" + "33" * 20,
         "registry_tx_hash": "0x" + "44" * 32,
         "explorer_links": {
-            "registry": "https://www.0gscan.com/address/0x3333333333333333333333333333333333333333",
-            "registration_tx": "https://www.0gscan.com/tx/0x4444444444444444444444444444444444444444444444444444444444444444",
+            "registry": "https://example.invalid/0g-registry-test",
+            "registration_tx": "https://example.invalid/0g-registration-test",
         },
     }
 

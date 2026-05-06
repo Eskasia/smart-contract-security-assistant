@@ -12,7 +12,7 @@
 | API boundary | Token auth、`input_root`、body limit 與 non-wildcard CORS 測試通過 |
 | Native build safety | Untrusted API mode 使用 `--native-build-policy disabled`；trusted CLI mode 保留 native build support |
 | 0G proof package | `scsa 0g-package` 產生 stable `audit-proof.json`，含 report hash、score、finding count、trace id；contract id 不能逃出 output directory |
-| 0G Storage dry-run | `integrations/0g` 可用 `npm run upload -- <audit-proof.json> --dry-run` 產生 `submission-proof.json` 並通過 `npm run verify-proof` |
+| 0G Storage dry-run | `integrations/0g` 可用 `npm run upload -- <audit-proof.json> --dry-run` 產生 `proof_mode=dry_run`、空 `explorer_links` 的 `submission-proof.json`，並通過 `npm run verify-proof` |
 | 0G Chain registry | `AuditProofRegistry` owner-only；`register-proof.mjs` 嚴格驗證 report hash、storage root、registry address、score bps 與 explorer link key |
 | Hackathon submission | `README.hackathon.md`、demo script、X post copy、pending live proof fields 與 reproduction steps 完整 |
 | Public project build validation | local manifest summary、native build threshold、commit ref checkout、10 repo manifest pinning、preflight missing tools、dependency install fallback 有單元測試覆蓋；10 pinned public repos 達 `10/10` analyzer 與 `10/10` native build |

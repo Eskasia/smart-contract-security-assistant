@@ -17,7 +17,7 @@ current；本日誌記錄 2026-05-07 本輪驗證命令，並保留 2026-04-30 �
 
 ## Summary
 
-本輪驗證覆蓋 lint、pytest、前端測試/build、0G proof package、0G Storage dry-run、proof verifier、report proof attach、API boundary、native build policy 與 benchmark trust metrics。結論：核心 Python 流程、專案級 Solidity 輸入、API 加固、0G 本地 proof 流程、報告治理與文件產物可重建；live 0G deploy/register 仍需 funded key 與 registry address。
+本輪驗證覆蓋 lint、pytest、前端測試/build、0G proof package、0G Storage dry-run、proof verifier、report proof attach、API boundary、native build policy 與 benchmark trust metrics。結論：核心 Python 流程、專案級 Solidity 輸入、API 加固、0G 本地 proof 流程、報告治理與文件產物可重建；dry-run proof 不產生 0GScan links，live 0G deploy/register 仍需 funded key 與 registry address。
 
 ## Environment
 
@@ -35,8 +35,8 @@ current；本日誌記錄 2026-05-07 本輪驗證命令，並保留 2026-04-30 �
 | 程序 | 命令 | 結果 |
 |---|---|---|
 | Lint | `uv run ruff check .` | `All checks passed!` |
-| Unit + integration tests | `uv run pytest` | `81 passed, 2 warnings in 20.76s` |
-| Frontend tests | `cd frontend && npm run test` | `3 files`, `8 passed` |
+| Unit + integration tests | `uv run pytest` | `81 passed, 2 warnings in 21.95s` |
+| Frontend tests | `cd frontend && npm run test` | `3 files`, `9 passed` |
 | Frontend build | `cd frontend && npm run build` | build completed |
 | RAG recall eval | `uv run python eval/run_eval.py` | 2026-05-01：`cases=8`, `recall_at_k=1.0` |
 | Judge eval | `uv run python eval/run_judge.py` | 2026-05-01：`cases=4`, `local_average_judge_score=5.0`, `external_average_judge_score=5.0` |
@@ -44,9 +44,9 @@ current；本日誌記錄 2026-05-07 本輪驗證命令，並保留 2026-04-30 �
 | Public project build harness | `uv run pytest tests/test_public_project_builds.py` | `8 passed`；local manifest summary、native build threshold、commit ref checkout、10 repo manifest pinning、preflight missing tools、dependency install fallback 均通過 |
 | HTTP API boundary | `uv run pytest tests/test_http_api.py -q` | `6 passed`；token auth、`input_root`、body limit、CORS origin 均通過 |
 | Native build policy | `uv run pytest tests/test_slither.py -q` | `7 passed`；`disabled` 模式略過 native build 並保留 Slither/solc fallback |
-| 0G proof package tests | `uv run pytest tests/test_cli_zero_g.py tests/test_zero_g_proof_package.py -q` | `5 passed`；CLI、proof hash、metadata attach 與 contract id path safety 通過 |
+| 0G proof package tests | `uv run pytest tests/test_cli_zero_g.py tests/test_zero_g_proof_package.py -q` | `6 passed`；CLI、proof hash、metadata attach、reproducibility 與 contract id path safety 通過 |
 | 0G integration install | `cd integrations/0g && npm install` | install completed；npm audit 回報 `2 low`, `3 high` dependency vulnerabilities |
-| 0G local proof pipeline | `uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json`；`REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')`；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"`；repeat package to `reports-0g-repeat` and compare `shasum -a 256`; `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`；`cd ../.. && uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"` | generated reproducible `audit-proof.json`; repeated proof hash matched across output dirs; dry-run `storage_root_hash` verified; `submission-proof.json` verified; proof attached to `reports/latest-analysis.json` |
+| 0G local proof pipeline | `uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json`；`REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')`；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"`；repeat package to `reports-0g-repeat` and compare `shasum -a 256`; `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`；assert `proof_mode=dry_run` and `explorer_links={}`；`cd ../.. && uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"` | generated reproducible `audit-proof.json`; repeated proof hash matched across output dirs; dry-run `storage_root_hash` verified; dry-run `explorer_links` empty; `submission-proof.json` verified; proof attached to `reports/latest-analysis.json` |
 | Public benchmark | `uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5` | `cases=50`, `supported_hit_rate=1.0`, `average_score_gap_safe_minus_vulnerable=45.05`, `precision=0.8621`, `recall=1.0`, `f1=0.9259` |
 | Public project build preflight | `uv run python eval/run_public_project_builds.py --preflight-only` | `cases=10`, `forge=true`, `npx=true`, `missing_required_tools=[]` |
 | Enhanced report | `uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir <tmp> --rag-mode fallback` | 2026-05-01：Markdown 含第 11–16 行 vulnerable code、AI remediation code、judge `5.00/5`、tokens `680/300/980` |

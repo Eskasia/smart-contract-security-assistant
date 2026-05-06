@@ -60,8 +60,7 @@ def test_zero_g_attach_proof_command_updates_report(
     _write_report(report)
     proof_payload = {
         "explorer_links": {
-            "registration_tx": "https://www.0gscan.com/tx/0x"
-            + "44" * 32,
+            "registration_tx": "https://example.invalid/0g-registration-test",
         },
         "registry_address": "0x" + "33" * 20,
         "registry_tx_hash": "0x" + "44" * 32,

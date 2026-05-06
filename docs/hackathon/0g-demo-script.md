@@ -37,7 +37,7 @@ uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --proje
 
 Open the generated `audit-proof.json` and show `report.sha256`, `report.security_score`, and `report.findings_count`.
 
-## Scene 4 - Create proof and show live path, 45 seconds
+## Scene 4 - Create local proof and show live path, 45 seconds
 
 Local dry-run proof:
 
@@ -59,10 +59,10 @@ cd ../..
 uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
-Open `submission-proof.json` and show `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
+For dry-run recording, open `submission-proof.json` and show `proof_mode: dry_run`, `storage_root_hash`, `storage_tx_hash: dry-run-only`, `registry_address: pending-live-registry`, and empty `explorer_links`.
+For live recording, open `submission-proof.json` after `npm run register` and show `proof_mode: live_registered`, `storage_root_hash`, `storage_tx_hash`, `registry_address`, `registry_tx_hash`, and `explorer_links.storage_tx`, `explorer_links.registry`, `explorer_links.registration_tx`.
 
 ## Scene 5 - Verification close, 15 seconds
 
-Return to the frontend and show the 0G Proof panel with storage root, registry address, and Explorer links.
-For dry-run recording, say: "The audit report is reproducible locally and prepared for 0G verification."
-For live recording after upload/register, say: "The audit report is reproducible locally and verifiable on 0G."
+For dry-run recording, return to the frontend and show the 0G Proof panel without Explorer links. Say: "The audit report is reproducible locally and prepared for 0G verification."
+For live recording after upload/register, return to the frontend and show the 0G Proof panel with storage root, registry address, and Explorer links. Say: "The audit report is reproducible locally and verifiable on 0G."

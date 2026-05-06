@@ -742,13 +742,15 @@ if (dryRun) {
 }
 
 const txBase = process.env.ZERO_G_EXPLORER_TX_BASE ?? "https://www.0gscan.com/tx/";
+const proofMode = dryRun ? "dry_run" : "storage_uploaded";
 const output = {
   ...proof.zero_g,
   storage_root_hash: storageRootHash,
-  storage_tx_hash: storageTxHash,
-  registry_address: proof.zero_g.registry_address,
-  registry_tx_hash: proof.zero_g.registry_tx_hash,
-  explorer_links: {
+  storage_tx_hash: dryRun ? "dry-run-only" : storageTxHash,
+  registry_address: dryRun ? "pending-live-registry" : (proof.zero_g.registry_address ?? "pending-live-registry"),
+  registry_tx_hash: dryRun ? "pending-live-registration" : (proof.zero_g.registry_tx_hash ?? "pending-live-registration"),
+  proof_mode: proofMode,
+  explorer_links: dryRun ? {} : {
     ...(proof.zero_g.explorer_links ?? {}),
     storage_tx: `${txBase}${storageTxHash}`,
   },
@@ -791,7 +793,11 @@ if (missing.length > 0) {
   throw new Error(`Missing proof fields: ${missing.join(", ")}`);
 }
 
-if (!proof.explorer_links?.storage_tx || !proof.explorer_links?.registration_tx) {
+if (proof.proof_mode === "dry_run" && Object.keys(proof.explorer_links ?? {}).length !== 0) {
+  throw new Error("Dry-run proof must not include explorer links");
+}
+
+if (proof.proof_mode === "live_registered" && (!proof.explorer_links?.storage_tx || !proof.explorer_links?.registration_tx)) {
   throw new Error("Missing storage_tx or registration_tx explorer link");
 }
 
@@ -1249,7 +1255,7 @@ Add a 2026-05-07 entry to `docs/reference/001-validation-procedure-log.md`:
 
 ```markdown
 | 0G proof package | `uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` | generated `audit-proof.json` |
-| 0G dry-run proof | `cd integrations/0g && npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run && npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json` | proof verified |
+| 0G dry-run proof | `cd integrations/0g && npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json --dry-run && npm run verify-proof -- ../../reports-0g/vulnerablevault/submission-proof.json` | proof verified; `proof_mode=dry_run`; no explorer links |
 | 0G live proof | `cd integrations/0g && npm run deploy && npm run upload -- ../../reports-0g/vulnerablevault/audit-proof.json && npm run register -- ../../reports-0g/vulnerablevault/submission-proof.json` | registry and tx links recorded in `README.hackathon.md` |
 ```
 

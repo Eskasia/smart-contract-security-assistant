@@ -64,7 +64,7 @@ uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 
 
 ## 0G Hackathon Proof Package
 
-本地可重現路徑會產生審計報告、建立 0G proof package、用 dry-run 產生 `submission-proof.json`，再把 proof metadata 回寫到 report；live 0G 上傳與註冊需先設定環境變數並部署 registry。
+本地可重現路徑會產生審計報告、建立 0G proof package、用 dry-run 產生 `submission-proof.json`，再把 proof metadata 回寫到 report；dry-run 不產生 0GScan links，live 0G 上傳與註冊需先設定環境變數並部署 registry。
 
 ```bash
 mkdir -p reports
@@ -79,9 +79,9 @@ cd ../..
 uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
-Live 路徑需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先執行 `npm run deploy`，把輸出的 registry address 設為 `ZERO_G_REGISTRY_ADDRESS` 後再執行 `npm run upload -- ...` 與 `npm run register -- ...`。
+Live 路徑需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先執行 `npm run deploy`，把輸出的 registry address 設為 `ZERO_G_REGISTRY_ADDRESS` 後再執行 `npm run upload -- ...`、`npm run register -- ...` 與 `npm run verify-proof -- ...`。
 
-`submission-proof.json` 的 `explorer_links` 使用 `storage_tx`、`registry`、`registration_tx` 三個 key。
+Live registered `submission-proof.json` 的 `explorer_links` 使用 `storage_tx`、`registry`、`registration_tx` 三個 key；dry-run `explorer_links` 必須為空。
 
 ## 目前範圍
 

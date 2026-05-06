@@ -2,9 +2,10 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
-const ZERO_HASH = `0x${"00".repeat(32)}`;
+const DRY_RUN_STORAGE_TX_HASH = "dry-run-only";
+const PENDING_REGISTRY_ADDRESS = "pending-live-registry";
+const PENDING_REGISTRY_TX_HASH = "pending-live-registration";
 const DEFAULT_TX_BASE = "https://www.0gscan.com/tx/";
-const DEFAULT_ADDRESS_BASE = "https://www.0gscan.com/address/";
 
 function env(name, fallback = undefined) {
   const value = process.env[name] ?? fallback;
@@ -117,17 +118,29 @@ if (!inputPath || !existsSync(inputPath)) {
 
 const proof = JSON.parse(readFileSync(inputPath, "utf-8"));
 const txBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_TX_BASE ?? DEFAULT_TX_BASE);
-const addressBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? DEFAULT_ADDRESS_BASE);
-const registryAddress = process.env.ZERO_G_REGISTRY_ADDRESS ?? proof.zero_g?.registry_address ?? ZERO_HASH.slice(0, 42);
-const registryTxHash = proof.zero_g?.registry_tx_hash ?? ZERO_HASH;
 let storageRootHash;
 let storageTxHash;
+let registryAddress;
+let registryTxHash;
+let proofMode;
+let explorerLinks;
 
 if (dryRun) {
   storageRootHash = `0x${sha256(inputPath)}`;
-  storageTxHash = ZERO_HASH;
+  storageTxHash = DRY_RUN_STORAGE_TX_HASH;
+  registryAddress = PENDING_REGISTRY_ADDRESS;
+  registryTxHash = PENDING_REGISTRY_TX_HASH;
+  proofMode = "dry_run";
+  explorerLinks = {};
 } else {
   ({ storageRootHash, storageTxHash } = await uploadToZeroG(inputPath));
+  registryAddress = process.env.ZERO_G_REGISTRY_ADDRESS ?? proof.zero_g?.registry_address ?? PENDING_REGISTRY_ADDRESS;
+  registryTxHash = proof.zero_g?.registry_tx_hash ?? PENDING_REGISTRY_TX_HASH;
+  proofMode = "storage_uploaded";
+  explorerLinks = {
+    ...normalizedExplorerLinks(proof),
+    storage_tx: `${txBase}${storageTxHash}`,
+  };
 }
 
 const artifactSha256 = sha256(inputPath);
@@ -137,12 +150,8 @@ const output = {
   storage_tx_hash: storageTxHash,
   registry_address: registryAddress,
   registry_tx_hash: registryTxHash,
-  explorer_links: {
-    ...normalizedExplorerLinks(proof),
-    storage_tx: `${txBase}${storageTxHash}`,
-    registration_tx: `${txBase}${registryTxHash}`,
-    registry: `${addressBase}${registryAddress}`,
-  },
+  proof_mode: proofMode,
+  explorer_links: explorerLinks,
   artifact: {
     source_file: inputPath,
     file_name: basename(inputPath),
