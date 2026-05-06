@@ -9,10 +9,15 @@ Say: "Smart contract auditors need fast triage, but generated reports are hard t
 
 ## Scene 2 - Run an audit, 50 seconds
 
-Show:
+Terminal A:
 
 ```bash
 uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled
+```
+
+Terminal B:
+
+```bash
 cd frontend && npm run dev
 ```
 

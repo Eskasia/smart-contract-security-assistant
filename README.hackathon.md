@@ -1,11 +1,11 @@
 # SCSA 0G Audit Proof
 
-SCSA 0G Audit Proof is an AI-assisted Solidity security triage assistant that produces traceable audit reports and registers proof of each report on 0G.
+SCSA 0G Audit Proof is an AI-assisted Solidity security triage assistant that produces traceable audit reports and prepares each report for pending live proof registration on 0G.
 
 ## 0G Modules Used
 
-- 0G Storage stores the audit proof JSON artifact.
-- 0G Chain stores an immutable registry event containing report hash, storage root, security score, and timestamp.
+- 0G Storage will store the audit proof JSON artifact after live deployment.
+- 0G Chain will store an immutable registry event containing report hash, storage root, security score, and timestamp after live deployment.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --nati
 uv run scsa 0g-package reports/vulnerablevault.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
 ```
 
-## 0G Live Proof
+## 0G Live Proof Pending
 
 Registry contract address:
 
