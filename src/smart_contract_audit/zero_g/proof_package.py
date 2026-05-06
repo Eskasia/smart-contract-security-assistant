@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+SAFE_CONTRACT_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
 @dataclass(frozen=True)
@@ -90,9 +93,10 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def _contract_id(report: dict[str, Any], report_path: Path) -> str:
     value = report.get("contract_id")
-    if isinstance(value, str) and value:
-        return value
-    return report_path.stem
+    contract_id = value if isinstance(value, str) and value else report_path.stem
+    if not SAFE_CONTRACT_ID.fullmatch(contract_id) or contract_id in {".", ".."}:
+        raise ValueError("contract_id must be a safe relative path segment.")
+    return contract_id
 
 
 def _analysis_metadata(report: dict[str, Any]) -> dict[str, Any]:

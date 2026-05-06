@@ -57,6 +57,29 @@ def test_build_proof_package_writes_stable_manifest(tmp_path: Path) -> None:
     assert proof["zero_g"]["explorer_links"] == {}
 
 
+def test_build_proof_package_rejects_path_like_contract_id(tmp_path: Path) -> None:
+    report = tmp_path / "escape.json"
+    payload = {
+        "contract_id": "../escape",
+        "overall_status": "finding",
+        "findings": [],
+        "analysis_metadata": {"security_score": {"score": 100.0}},
+    }
+    report.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    try:
+        build_proof_package(
+            report_path=report,
+            output_dir=tmp_path / "reports-0g",
+            project_name="SCSA 0G Audit Proof",
+            track="Track 1: Agentic Infrastructure & OpenClaw Lab",
+        )
+    except ValueError as exc:
+        assert "contract_id" in str(exc)
+    else:
+        raise AssertionError("path-like contract_id should be rejected")
+
+
 def test_attach_zero_g_proof_adds_metadata(tmp_path: Path) -> None:
     report = tmp_path / "vulnerablevault.json"
     _write_report(report)
