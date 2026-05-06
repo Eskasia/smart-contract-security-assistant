@@ -56,17 +56,17 @@ function scoreToBps(value, label) {
 }
 
 function securityScoreBps(proof) {
-  if (proof.artifact?.security_score_bps !== undefined) {
+  if (proof.artifact?.security_score_bps !== undefined && proof.artifact.security_score_bps !== null) {
     const bps = Number(proof.artifact.security_score_bps);
     if (!Number.isInteger(bps) || bps < 0 || bps > 10000) {
       throw new Error("artifact.security_score_bps must be an integer from 0 to 10000");
     }
     return bps;
   }
-  if (proof.artifact?.security_score !== undefined) {
+  if (proof.artifact?.security_score !== undefined && proof.artifact.security_score !== null) {
     return scoreToBps(proof.artifact.security_score, "artifact.security_score");
   }
-  if (proof.report?.security_score !== undefined) {
+  if (proof.report?.security_score !== undefined && proof.report.security_score !== null) {
     return scoreToBps(proof.report.security_score, "report.security_score");
   }
   return 10000;
