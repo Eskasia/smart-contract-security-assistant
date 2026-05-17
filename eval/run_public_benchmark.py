@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import date
 from pathlib import Path
 
-from smart_contract_audit.evaluation.public_benchmark import run_benchmark
+from smart_contract_audit.evaluation.public_benchmark import (
+    run_benchmark,
+    write_public_benchmark_leaderboard,
+)
 
 
 def main() -> None:
@@ -26,6 +30,8 @@ def main() -> None:
     parser.add_argument("--min-precision", type=float, default=0.0)
     parser.add_argument("--min-recall", type=float, default=0.0)
     parser.add_argument("--min-f1", type=float, default=0.0)
+    parser.add_argument("--leaderboard-output", type=Path)
+    parser.add_argument("--leaderboard-date", default=date.today().isoformat())
     args = parser.parse_args()
 
     summary = run_benchmark(
@@ -38,6 +44,12 @@ def main() -> None:
         min_recall=args.min_recall,
         min_f1=args.min_f1,
     )
+    if args.leaderboard_output:
+        write_public_benchmark_leaderboard(
+            summary,
+            args.leaderboard_output,
+            generated_date=args.leaderboard_date,
+        )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 

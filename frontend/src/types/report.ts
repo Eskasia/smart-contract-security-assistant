@@ -17,6 +17,15 @@ export type FindingReviewStatus =
 
 export type RagMode = "quality" | "balanced" | "fast" | "fallback";
 export type NativeBuildPolicy = "trusted" | "disabled";
+export type ExternalToolName = "echidna";
+export type EtherscanExplorerHost =
+  | "api.etherscan.io"
+  | "api-sepolia.etherscan.io";
+export type ImportSourceType =
+  | "local"
+  | "github_archive"
+  | "etherscan_api"
+  | "zip_base64";
 
 export interface ZeroGProof {
   storage_root_hash: string;
@@ -125,7 +134,7 @@ export interface TraceFinding {
   slither_raw: string | null;
   normalized_finding: string | null;
   rag_chunk_ids: string | null;
-  packed_prompt: string;
+  packed_prompt: string | null;
   llm_raw_output: string | null;
   schema_valid: boolean | number;
   retry_count: number;
@@ -137,10 +146,15 @@ export interface TraceFinding {
 export interface UserSettings {
   inputMode: "file" | "project";
   inputPath: string;
+  importSourceType: ImportSourceType;
+  importSourceValue: string;
+  importExplorerHost: EtherscanExplorerHost;
   ragMode: RagMode;
   datasetChunks: string;
   modelPath: string;
   nativeBuildPolicy: NativeBuildPolicy;
+  echidnaEnabled: boolean;
+  externalTimeoutSeconds: number;
   apiToken: string;
   diffMode: "inline" | "split";
   leftColumnWidth: number;

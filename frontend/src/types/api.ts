@@ -1,6 +1,8 @@
 import type {
   AnalysisReport,
   AnalysisStatus,
+  EtherscanExplorerHost,
+  ExternalToolName,
   Finding,
   FindingReviewStatus,
   NativeBuildPolicy,
@@ -14,6 +16,29 @@ export interface CreateAnalysisRequest {
   dataset_chunks: string;
   model_path: string | null;
   native_build_policy: NativeBuildPolicy;
+  external_tools?: ExternalToolName[];
+  external_timeout_seconds?: number;
+}
+
+export type CreateImportRequest =
+  | {
+      source_kind: "github_archive";
+      repository: string;
+    }
+  | {
+      source_kind: "etherscan_api";
+      contract_address: string;
+      explorer_host: EtherscanExplorerHost;
+      api_key?: string;
+    }
+  | {
+      source_kind: "zip_base64";
+      archive_base64: string;
+      archive_name?: string;
+    };
+
+export interface ImportResult {
+  input_path: string;
 }
 
 export interface AnalysisJob {

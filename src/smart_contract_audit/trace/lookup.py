@@ -6,7 +6,10 @@ from typing import Any
 
 
 def lookup_trace(
-    db_path: Path, trace_id: str, finding_id: str | None = None
+    db_path: Path,
+    trace_id: str,
+    finding_id: str | None = None,
+    include_sensitive: bool = True,
 ) -> list[dict[str, Any]]:
     query = "SELECT * FROM trace_findings WHERE trace_id = ?"
     params: list[str] = [trace_id]
@@ -17,7 +20,18 @@ def lookup_trace(
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(query, params).fetchall()
-        return [dict(row) for row in rows]
+        results = [dict(row) for row in rows]
+    if include_sensitive:
+        return results
+    return [_redact_trace_row(row) for row in results]
+
+
+def _redact_trace_row(row: dict[str, Any]) -> dict[str, Any]:
+    redacted = dict(row)
+    for key in ("slither_raw", "packed_prompt", "llm_raw_output"):
+        redacted[key] = None
+    redacted["sensitive_fields_redacted"] = True
+    return redacted
 
 
 def trace_dashboard(db_path: Path) -> list[dict[str, Any]]:

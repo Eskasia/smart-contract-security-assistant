@@ -33,13 +33,14 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The React UI sends analysis requests to `http://127.0.0.1:8787` through the Vite proxy. `--native-build-policy disabled` skips Foundry/Hardhat build scripts for untrusted projects and uses Slither/solc fallback.
+Open `http://127.0.0.1:5173`. The React UI sends import and analysis requests to `http://127.0.0.1:8787` through the Vite proxy. `--native-build-policy disabled` skips Foundry/Hardhat build scripts for untrusted projects and uses Slither/solc fallback.
 
 ## Main Features
 
-- Input support: single `.sol` files, Foundry projects, Hardhat projects, and generic Solidity projects with nested imports.
+- Input support: single `.sol` files, Foundry projects, Hardhat projects, generic Solidity projects with nested imports, GitHub archives, Etherscan API imports, and ZIP bundles.
 - Project build support: Foundry/Hardhat native builds run before Slither in trusted mode; `--native-build-policy disabled` skips build scripts for untrusted projects. The public build harness initializes submodules, installs npm dependencies, and handles custom Hardhat artifacts/cache paths.
 - Local API hardening: bearer token auth, allowed `input_root`, request body limit, non-wildcard CORS, and native build policy controls.
+- Source import hardening: `/api/imports` and `scsa import-source` stage remote sources locally, reject zip-slip, symlink entries, nested archives, unsafe redirects, oversized remote responses, and non-allowlisted hosts, then force imported paths to untrusted build mode.
 - Static analysis: Slither detector mapping for reentrancy, access control, unchecked external calls, delegatecall, array length manipulation, oracle issues, price manipulation, privilege escalation, and upgrade risk.
 - Report quality: local and external judge adapters score report completeness on a 0-5 scale.
 - Security score: `security_score_v2` returns a 0-100 contract risk score based on severity, confidence, finding review status, partial analysis state, and business logic review requirements.
@@ -52,17 +53,18 @@ Open `http://127.0.0.1:5173`. The React UI sends analysis requests to `http://12
 ```bash
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool mythril --external-tool echidna
+uv run scsa import-source --github-url https://github.com/OpenZeppelin/openzeppelin-contracts --out-dir reports-api/imports
 uv run scsa compare-reports reports/base.json reports/head.json --output reports/comparison.md --fail-on-high-added --fail-on-score-drop 10
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
-uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17
 uv run python eval/run_public_project_builds.py --preflight-only
 ```
 
 ## 0G Hackathon Proof Package
 
-The local reproducible path generates the audit report, builds the 0G proof package, creates `submission-proof.json` with dry-run data, and attaches proof metadata back to the report. Dry-run proof does not emit 0GScan links. Live 0G upload and registration require environment variables plus a deployed registry.
+The local reproducible path generates the audit report, builds the 0G proof package, creates `submission-proof.json` with dry-run data, and attaches proof metadata back to the report. Dry-run proof does not emit Explorer links. Live 0G upload and registration require environment variables plus a deployed registry.
 
 ```bash
 mkdir -p reports
@@ -77,9 +79,9 @@ cd ../..
 uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
 ```
 
-Live mode requires `ZERO_G_RPC_URL`, `ZERO_G_PRIVATE_KEY`, and `ZERO_G_STORAGE_INDEXER_RPC`; run `npm run deploy`, export the printed registry address as `ZERO_G_REGISTRY_ADDRESS`, then run `npm run upload -- ...`, `npm run register -- ...`, and `npm run verify-proof -- ...`.
+Live mode requires `ZERO_G_RPC_URL=https://evmrpc.0g.ai`, `ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai`, and a funded `ZERO_G_PRIVATE_KEY`; run `npm run deploy`, export the printed registry address as `ZERO_G_REGISTRY_ADDRESS`, then run `npm run upload -- ...`, `npm run register -- ...`, and `npm run verify-proof -- ...`.
 
-Live registered `submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`; dry-run `explorer_links` must be empty.
+Live registered `submission-proof.json` uses `storage_tx`, `registry`, and `registration_tx` under `explorer_links`, defaulting to ChainScan; dry-run `explorer_links` must be empty.
 
 ## Public Benchmark
 
@@ -104,6 +106,8 @@ Validated on 2026-05-06:
 The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit button in GitHub Actions. It accepts a Solidity file or project directory, runs `scsa analyze`, and uploads the generated reports as the `scsa-reports` artifact. When `baseline_report` is provided, it also writes `comparison.md` and can fail on new severity 3 findings or a configurable score drop.
 
 ## Validation
+
+Validated on 2026-05-17: `uv run ruff check .` passed, `uv run pytest` reached `102 passed`, frontend tests reached `32 passed`, frontend build completed, RAG recall was `1.0`, judge averages were `5.0/5.0`, public benchmark regenerated `docs/reference/002-public-benchmark-leaderboard.md`, public project preflight reported `missing_required_tools=[]`, and `git diff --check` passed.
 
 Validated on 2026-05-06: ruff passed, Python tests reached `75 passed`, frontend tests reached `8 passed`, frontend build completed, public benchmark reached precision `0.8621`, recall `1.0`, and F1 `0.9259`.
 

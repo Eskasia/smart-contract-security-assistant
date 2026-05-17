@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { ethers } from "ethers";
 import solc from "solc";
 
-const DEFAULT_ADDRESS_BASE = "https://www.0gscan.com/address/";
+const DEFAULT_CHAIN_ADDRESS_BASE = "https://chainscan.0g.ai/address/";
 
 function env(name) {
   const value = process.env[name];
@@ -48,5 +48,7 @@ if (!ethers.isAddress(address)) {
   throw new Error(`Invalid deployed registry address: ${address}`);
 }
 
-const addressBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? DEFAULT_ADDRESS_BASE);
+const addressBase = normalizeBaseUrl(
+  process.env.ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE ?? DEFAULT_CHAIN_ADDRESS_BASE,
+);
 console.log(JSON.stringify({ registry_address: address, explorer_link: `${addressBase}${address}` }, null, 2));

@@ -13,9 +13,18 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .analyzer import analyze_contract
+from .identifiers import require_safe_path_segment
 from .models import FINDING_REVIEW_STATUSES, AnalysisReport
 from .report import write_json_report, write_markdown_report
 from .scoring.security_score import compute_security_score
+from .source_import import (
+    ImportedSource,
+    ImportLimits,
+    decode_archive_base64,
+    import_explorer_source,
+    import_github_source,
+    stage_zip_archive,
+)
 from .trace.lookup import lookup_trace
 
 AnalysisStatus = str
@@ -24,8 +33,12 @@ AnalyzerFn = Callable[..., AnalysisReport]
 
 RAG_MODES = {"quality", "balanced", "fast", "fallback"}
 NATIVE_BUILD_POLICIES = {"trusted", "disabled"}
+EXTERNAL_TOOLS = {"echidna", "mythril"}
 REVIEW_STATUSES = {"pending_human_review", "approved", "rejected", "blocked"}
 MAX_REVIEW_NOTE_LENGTH = 2_000
+DEFAULT_EXTERNAL_TIMEOUT_SECONDS = 60
+MIN_EXTERNAL_TIMEOUT_SECONDS = 5
+MAX_EXTERNAL_TIMEOUT_SECONDS = 120
 
 
 class RequestBodyTooLarge(ValueError):
@@ -37,13 +50,27 @@ class ApiConfig:
     output_dir: Path = Path("reports-api")
     trace_db: Path | None = None
     input_root: Path | None = None
+    imports_dir: Path | None = None
     api_token: str | None = None
     cors_origin: str = "http://127.0.0.1:5173"
     max_request_bytes: int = 1_048_576
+    max_import_files: int = 128
+    max_import_bytes: int = 5_000_000
+    max_import_single_file_bytes: int = 1_000_000
     native_build_policy: str = "trusted"
 
     def resolved_trace_db(self) -> Path:
         return self.trace_db or self.output_dir / "analysis_trace.sqlite"
+
+    def resolved_imports_dir(self) -> Path:
+        return self.imports_dir or self.output_dir / "imports"
+
+    def import_limits(self) -> ImportLimits:
+        return ImportLimits(
+            max_files=self.max_import_files,
+            max_total_bytes=self.max_import_bytes,
+            max_single_file_bytes=self.max_import_single_file_bytes,
+        )
 
 
 @dataclass
@@ -55,6 +82,8 @@ class AnalysisJob:
     dataset_chunks: str | None
     model_path: str | None
     native_build_policy: str
+    external_tools: tuple[str, ...]
+    external_timeout_seconds: int
     message: str | None = None
     report_id: str | None = None
     contract_id: str | None = None
@@ -92,6 +121,7 @@ class AnalysisJobManager:
         request = _parse_create_analysis(
             payload,
             self.config.input_root,
+            self.config.resolved_imports_dir(),
             self.config.native_build_policy,
         )
         analysis_id = f"analysis_{uuid.uuid4().hex[:12]}"
@@ -156,6 +186,8 @@ class AnalysisJobManager:
                 dataset_chunks=Path(job.dataset_chunks) if job.dataset_chunks else None,
                 rag_mode=job.rag_mode,
                 model_path=job.model_path,
+                external_tools=job.external_tools,
+                external_timeout_seconds=job.external_timeout_seconds,
                 native_build_policy=job.native_build_policy,
             )
             write_json_report(report, output_dir / f"{report.contract_id}.json")
@@ -219,30 +251,33 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.NO_CONTENT)
         self._send_common_headers()
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
         self.end_headers()
 
     def do_POST(self) -> None:
         if not self._authorize_request():
             return
         path = _path_parts(self.path)
-        if path != ["api", "analyses"]:
-            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
-            return
         try:
             payload = self._read_json_body()
-            job = self.server.manager.create_job(payload)
+            if path == ["api", "analyses"]:
+                job = self.server.manager.create_job(payload)
+                self._send_json(job.to_dict(), status=HTTPStatus.ACCEPTED)
+                return
+            if path == ["api", "imports"]:
+                imported = self._create_import(payload)
+                self._send_json(imported.to_dict(), status=HTTPStatus.CREATED)
+                return
+            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
         except RequestBodyTooLarge as exc:
             self._send_request_too_large_response(exc)
-            return
         except ValueError as exc:
             self._send_error_response(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
                 "VALIDATION_ERROR",
                 str(exc),
             )
-            return
-        self._send_json(job.to_dict(), status=HTTPStatus.ACCEPTED)
+        return
 
     def do_GET(self) -> None:
         if not self._authorize_request():
@@ -324,7 +359,15 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             return
 
     def _get_report(self, contract_id: str) -> None:
-        report = _read_report(self.server.config.output_dir, contract_id)
+        try:
+            report = _read_report(self.server.config.output_dir, contract_id)
+        except ValueError as exc:
+            self._send_error_response(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_ERROR",
+                str(exc),
+            )
+            return
         if report is None:
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
             return
@@ -339,7 +382,14 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
                 "Trace database not found.",
             )
             return
-        self._send_json(lookup_trace(trace_db, trace_id, finding_id))
+        self._send_json(
+            lookup_trace(
+                trace_db,
+                trace_id,
+                finding_id,
+                include_sensitive=False,
+            )
+        )
 
     def _patch_review(self, contract_id: str) -> None:
         try:
@@ -356,7 +406,15 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             )
             return
 
-        report = _read_report(self.server.config.output_dir, contract_id)
+        try:
+            report = _read_report(self.server.config.output_dir, contract_id)
+        except ValueError as exc:
+            self._send_error_response(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_ERROR",
+                str(exc),
+            )
+            return
         if report is None:
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
             return
@@ -387,7 +445,15 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             )
             return
 
-        report = _read_report(self.server.config.output_dir, contract_id)
+        try:
+            report = _read_report(self.server.config.output_dir, contract_id)
+        except ValueError as exc:
+            self._send_error_response(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_ERROR",
+                str(exc),
+            )
+            return
         if report is None:
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
             return
@@ -432,6 +498,62 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         if not isinstance(payload, dict):
             raise ValueError("Request body must be a JSON object.")
         return payload
+
+    def _create_import(self, payload: dict[str, Any]) -> ImportedSource:
+        source_kind = payload.get("source_kind")
+        if source_kind not in {"zip_base64", "github_archive", "etherscan_api"}:
+            raise ValueError(
+                "source_kind must be one of: etherscan_api, github_archive, zip_base64."
+            )
+
+        destination_root = self.server.config.resolved_imports_dir()
+        destination_root.mkdir(parents=True, exist_ok=True)
+        limits = self.server.config.import_limits()
+
+        if source_kind == "zip_base64":
+            archive_base64 = payload.get("archive_base64")
+            if not isinstance(archive_base64, str) or not archive_base64.strip():
+                raise ValueError("archive_base64 must be a non-empty base64 string.")
+            archive_bytes = decode_archive_base64(archive_base64)
+            archive_name = payload.get("archive_name", "import.zip")
+            if archive_name is None:
+                archive_name = "import.zip"
+            if not isinstance(archive_name, str):
+                raise ValueError("archive_name must be a string or null.")
+            return stage_zip_archive(
+                archive_bytes,
+                destination_root,
+                import_name=Path(archive_name).stem or "import",
+                source_kind="zip_base64",
+                limits=limits,
+            )
+
+        if source_kind == "github_archive":
+            url = payload.get("repository")
+            if not isinstance(url, str) or not url.strip():
+                raise ValueError("repository must be a non-empty string.")
+            return import_github_source(
+                url,
+                destination_root,
+                limits=limits,
+            )
+
+        api_host = payload.get("explorer_host")
+        address = payload.get("contract_address")
+        api_key = payload.get("api_key")
+        if not isinstance(api_host, str) or not api_host.strip():
+            raise ValueError("explorer_host must be a non-empty string.")
+        if not isinstance(address, str) or not address.strip():
+            raise ValueError("contract_address must be a non-empty string.")
+        if api_key is not None and not isinstance(api_key, str):
+            raise ValueError("api_key must be a string or null.")
+        return import_explorer_source(
+            api_host=api_host,
+            address=address,
+            destination_root=destination_root,
+            api_key=api_key,
+            limits=limits,
+        )
 
     def _send_json(self, payload: Any, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -486,9 +608,13 @@ def run_api_server(
     output_dir: Path = Path("reports-api"),
     trace_db: Path | None = None,
     input_root: Path | None = None,
+    imports_dir: Path | None = None,
     api_token: str | None = None,
     cors_origin: str = "http://127.0.0.1:5173",
     max_request_bytes: int = 1_048_576,
+    max_import_files: int = 128,
+    max_import_bytes: int = 5_000_000,
+    max_import_single_file_bytes: int = 1_000_000,
     native_build_policy: str = "trusted",
 ) -> None:
     server = create_api_server(
@@ -498,9 +624,13 @@ def run_api_server(
             output_dir=output_dir,
             trace_db=trace_db,
             input_root=input_root,
+            imports_dir=imports_dir,
             api_token=api_token,
             cors_origin=cors_origin,
             max_request_bytes=max_request_bytes,
+            max_import_files=max_import_files,
+            max_import_bytes=max_import_bytes,
+            max_import_single_file_bytes=max_import_single_file_bytes,
             native_build_policy=native_build_policy,
         ),
     )
@@ -513,12 +643,13 @@ def run_api_server(
 def _parse_create_analysis(
     payload: dict[str, Any],
     input_root: Path | None = None,
+    import_root: Path | None = None,
     default_native_build_policy: str = "trusted",
 ) -> dict[str, Any]:
     input_path = payload.get("input_path")
     if not isinstance(input_path, str) or not input_path.strip():
         raise ValueError("input_path must be a non-empty string.")
-    input_path = _validate_allowed_input_path(input_path, input_root)
+    input_path, imported_source = _validate_allowed_input_path(input_path, input_root, import_root)
 
     rag_mode = payload.get("rag_mode", "balanced")
     if rag_mode not in RAG_MODES:
@@ -539,6 +670,15 @@ def _parse_create_analysis(
     native_build_policy = payload.get("native_build_policy", default_native_build_policy)
     if native_build_policy not in NATIVE_BUILD_POLICIES:
         raise ValueError("native_build_policy must be one of: disabled, trusted.")
+    if default_native_build_policy == "disabled" and native_build_policy == "trusted":
+        raise ValueError("native_build_policy cannot override server disabled policy.")
+    if imported_source:
+        native_build_policy = "disabled"
+
+    external_tools = _parse_external_tools(payload.get("external_tools"))
+    external_timeout_seconds = _parse_external_timeout_seconds(
+        payload.get("external_timeout_seconds", DEFAULT_EXTERNAL_TIMEOUT_SECONDS)
+    )
 
     return {
         "input_path": input_path,
@@ -546,17 +686,58 @@ def _parse_create_analysis(
         "dataset_chunks": dataset_chunks,
         "model_path": model_path,
         "native_build_policy": str(native_build_policy),
+        "external_tools": external_tools,
+        "external_timeout_seconds": external_timeout_seconds,
     }
 
 
-def _validate_allowed_input_path(input_path: str, input_root: Path | None) -> str:
+def _validate_allowed_input_path(
+    input_path: str,
+    input_root: Path | None,
+    import_root: Path | None,
+) -> tuple[str, bool]:
     resolved = Path(input_path).expanduser().resolve()
+    resolved_import_root = import_root.expanduser().resolve() if import_root is not None else None
+    imported_source = (
+        resolved_import_root is not None and resolved.is_relative_to(resolved_import_root)
+    )
     if input_root is None:
-        return str(resolved)
-    root = input_root.expanduser().resolve()
-    if not resolved.is_relative_to(root):
-        raise ValueError(f"input_path must be inside input_root: {root}")
-    return str(resolved)
+        return str(resolved), imported_source
+    allowed_roots = [input_root.expanduser().resolve()]
+    if resolved_import_root is not None:
+        allowed_roots.append(resolved_import_root)
+    if any(resolved.is_relative_to(root) for root in allowed_roots):
+        return str(resolved), imported_source
+    message = f"input_path must be inside input_root: {allowed_roots[0]}"
+    if resolved_import_root is not None:
+        message = f"{message} or imports_dir: {resolved_import_root}"
+    raise ValueError(message)
+
+
+def _parse_external_tools(value: Any) -> tuple[str, ...]:
+    if value in (None, []):
+        return ()
+    if not isinstance(value, list):
+        raise ValueError("external_tools must be an array of tool names.")
+
+    parsed: list[str] = []
+    seen: set[str] = set()
+    for raw_tool in value:
+        if not isinstance(raw_tool, str):
+            raise ValueError("external_tools entries must be strings.")
+        tool = raw_tool.strip().lower()
+        if tool not in EXTERNAL_TOOLS:
+            raise ValueError("external_tools must contain only: echidna, mythril.")
+        if tool not in seen:
+            seen.add(tool)
+            parsed.append(tool)
+    return tuple(parsed)
+
+
+def _parse_external_timeout_seconds(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError("external_timeout_seconds must be an integer.")
+    return max(MIN_EXTERNAL_TIMEOUT_SECONDS, min(MAX_EXTERNAL_TIMEOUT_SECONDS, value))
 
 
 def _parse_review_status(payload: dict[str, Any]) -> str:
@@ -593,22 +774,31 @@ def _path_parts(path: str) -> list[str]:
 
 
 def _read_report(output_dir: Path, contract_id: str) -> dict[str, Any] | None:
-    report_path = output_dir / f"{contract_id}.json"
+    report_path = _report_path(output_dir, contract_id, ".json")
     if not report_path.exists():
         return None
     return json.loads(report_path.read_text(encoding="utf-8"))
 
 
 def _write_report_dict(output_dir: Path, contract_id: str, report: dict[str, Any]) -> None:
-    report_path = output_dir / f"{contract_id}.json"
+    report_path = _report_path(output_dir, contract_id, ".json")
     report_path.write_text(
         json.dumps(report, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    markdown_path = output_dir / f"{contract_id}.md"
+    markdown_path = _report_path(output_dir, contract_id, ".md")
     if not markdown_path.exists():
         return
     _sync_markdown_report(markdown_path, report)
+
+
+def _report_path(output_dir: Path, contract_id: str, suffix: str) -> Path:
+    safe_contract_id = require_safe_path_segment(contract_id, "contract_id")
+    output_root = output_dir.resolve()
+    report_path = (output_root / f"{safe_contract_id}{suffix}").resolve()
+    if not report_path.is_relative_to(output_root):
+        raise ValueError("contract_id must resolve inside output_dir.")
+    return report_path
 
 
 def _update_report_finding_review(

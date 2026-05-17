@@ -1,8 +1,13 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
-const TX_BASE = process.env.ZERO_G_EXPLORER_TX_BASE ?? "https://www.0gscan.com/tx/";
-const ADDRESS_BASE = process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? "https://www.0gscan.com/address/";
+const TX_BASE = process.env.ZERO_G_CHAIN_EXPLORER_TX_BASE ?? "https://chainscan.0g.ai/tx/";
+const ADDRESS_BASE =
+  process.env.ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE ?? "https://chainscan.0g.ai/address/";
+const EXPECTED_CHAIN_ID = Number(process.env.ZERO_G_EXPECTED_CHAIN_ID ?? "16661");
 const HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
+const SHA256_PATTERN = /^[0-9a-fA-F]{64}$/;
 const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const DRY_RUN_STORAGE_TX_HASH = "dry-run-only";
 const PENDING_REGISTRY_ADDRESS = "pending-live-registry";
@@ -10,6 +15,10 @@ const PENDING_REGISTRY_TX_HASH = "pending-live-registration";
 
 function normalizeBaseUrl(value) {
   return value.endsWith("/") ? value : `${value}/`;
+}
+
+function sha256(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
 function requireField(proof, key, pattern = null) {
@@ -26,6 +35,31 @@ function requireArtifactField(proof, key) {
   const value = proof.artifact?.[key];
   if (typeof value !== "string" || value.length === 0) {
     throw new Error(`Missing artifact field: ${key}`);
+  }
+}
+
+function requireArtifactPath(proof, proofPath) {
+  const value = proof.artifact?.source_file;
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error("Missing artifact field: source_file");
+  }
+  if (existsSync(value)) {
+    return value;
+  }
+  const relativeToProof = join(dirname(proofPath), value);
+  if (existsSync(relativeToProof)) {
+    return relativeToProof;
+  }
+  throw new Error(`artifact.source_file does not exist: ${value}`);
+}
+
+function requireArtifactSha256(proof, proofPath) {
+  const value = proof.artifact?.sha256;
+  if (typeof value !== "string" || !SHA256_PATTERN.test(value)) {
+    throw new Error("Invalid artifact field: sha256");
+  }
+  if (sha256(requireArtifactPath(proof, proofPath)) !== value.toLowerCase()) {
+    throw new Error("artifact.sha256 does not match artifact.source_file");
   }
 }
 
@@ -68,15 +102,20 @@ requireArtifactField(proof, "file_name");
 requireArtifactField(proof, "sha256");
 requireArtifactField(proof, "schema_version");
 requireArtifactField(proof, "contract_id");
+requireArtifactSha256(proof, inputPath);
 
 rejectLegacyLink(proof, "registry_address");
 
 if (proof.proof_mode === "dry_run") {
+  requireLiteral(proof, "storage_root_hash", `0x${proof.artifact.sha256}`);
   requireLiteral(proof, "storage_tx_hash", DRY_RUN_STORAGE_TX_HASH);
   requireLiteral(proof, "registry_address", PENDING_REGISTRY_ADDRESS);
   requireLiteral(proof, "registry_tx_hash", PENDING_REGISTRY_TX_HASH);
   requireNoExplorerLinks(proof);
 } else if (proof.proof_mode === "live_registered") {
+  if (proof.chain_id !== EXPECTED_CHAIN_ID) {
+    throw new Error(`chain_id must be ${EXPECTED_CHAIN_ID}`);
+  }
   requireField(proof, "storage_tx_hash", HASH_PATTERN);
   requireField(proof, "registry_address", ADDRESS_PATTERN);
   requireField(proof, "registry_tx_hash", HASH_PATTERN);

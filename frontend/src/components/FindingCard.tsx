@@ -30,6 +30,10 @@ const findingReviewLabelKeys: Record<FindingReviewStatus, TranslationKey> = {
   fixed: "fixed",
 };
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export const FindingCard = memo(function FindingCard({
   finding,
   selected,
@@ -43,8 +47,10 @@ export const FindingCard = memo(function FindingCard({
 }) {
   const { t } = useTranslation();
   const diffMode = useSettingsStore((state) => state.settings.diffMode);
+  const apiToken = useSettingsStore((state) => state.settings.apiToken);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
   const contractId = useAnalysisStore((state) => state.report.contract_id);
+  const connectionMode = useAnalysisStore((state) => state.connectionMode);
   const setReport = useAnalysisStore((state) => state.setReport);
   const updateFindingReview = useAnalysisStore((state) => state.updateFindingReview);
   const vulnerableCode = finding.vulnerable_code ?? "";
@@ -68,21 +74,32 @@ export const FindingCard = memo(function FindingCard({
 
   const saveFindingReview = useCallback(async () => {
     try {
-      const response = await patchFindingReview(contractId, finding.finding_id, {
-        review_status: reviewDraft,
-        review_note: reviewNote,
-      });
+      const response = await patchFindingReview(
+        contractId,
+        finding.finding_id,
+        {
+          review_status: reviewDraft,
+          review_note: reviewNote,
+        },
+        apiToken,
+      );
       setReport(response.report);
       setReviewMessage(t("saved"));
-    } catch {
-      updateFindingReview(finding.finding_id, reviewDraft, reviewNote);
-      setReviewMessage(t("savedLocally"));
+    } catch (error) {
+      if (connectionMode === "demo") {
+        updateFindingReview(finding.finding_id, reviewDraft, reviewNote);
+        setReviewMessage(t("savedLocally"));
+      } else {
+        setReviewMessage(t("saveFailed", { message: errorMessage(error) }));
+      }
     }
   }, [
+    connectionMode,
     contractId,
     finding.finding_id,
     reviewDraft,
     reviewNote,
+    apiToken,
     setReport,
     t,
     updateFindingReview,
@@ -97,6 +114,8 @@ export const FindingCard = memo(function FindingCard({
       <button
         type="button"
         onClick={() => onSelect(finding.finding_id)}
+        aria-current={selected ? "true" : undefined}
+        aria-pressed={selected}
         className="flex w-full items-start justify-between gap-3 text-left"
       >
         <div className="min-w-0">
@@ -164,7 +183,7 @@ export const FindingCard = memo(function FindingCard({
           <Save className="h-4 w-4" aria-hidden="true" />
           <span>{t("save")}</span>
         </button>
-        <p className="min-h-5 text-xs text-slate-600 md:col-span-3" aria-live="polite">
+        <p className="min-h-5 text-xs text-slate-600 md:col-span-3" role="status">
           {reviewMessage}
         </p>
       </div>
@@ -177,7 +196,7 @@ export const FindingCard = memo(function FindingCard({
           <CodeBlock code={vulnerableCode} />
         </section>
 
-        <section aria-live="polite" aria-labelledby={`${finding.finding_id}-explanation`}>
+        <section aria-labelledby={`${finding.finding_id}-explanation`}>
           <h3 id={`${finding.finding_id}-explanation`} className="mb-2 text-sm font-semibold text-slate-900">
             {t("aiExplanation")}
           </h3>

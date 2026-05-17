@@ -1,9 +1,12 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { ethers } from "ethers";
 import solc from "solc";
 
-const DEFAULT_TX_BASE = "https://www.0gscan.com/tx/";
-const DEFAULT_ADDRESS_BASE = "https://www.0gscan.com/address/";
+const DEFAULT_CHAIN_TX_BASE = "https://chainscan.0g.ai/tx/";
+const DEFAULT_CHAIN_ADDRESS_BASE = "https://chainscan.0g.ai/address/";
+const DEFAULT_EXPECTED_CHAIN_ID = 16661n;
 const HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const SHA256_PATTERN = /^[0-9a-fA-F]{64}$/;
 
@@ -19,6 +22,10 @@ function normalizeBaseUrl(value) {
   return value.endsWith("/") ? value : `${value}/`;
 }
 
+function sha256(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
 function requireHash(value, label) {
   if (typeof value !== "string" || !HASH_PATTERN.test(value)) {
     throw new Error(`${label} must be a 0x-prefixed 32-byte hex string`);
@@ -31,6 +38,34 @@ function requireSha256(value, label) {
     throw new Error(`${label} must be a 64-character sha256 hex string`);
   }
   return `0x${value}`;
+}
+
+function requireSha256Hex(value, label) {
+  return requireSha256(value, label).slice(2).toLowerCase();
+}
+
+function requireArtifactPath(proof, proofPath) {
+  const sourceFile = proof.artifact?.source_file;
+  if (typeof sourceFile !== "string" || sourceFile.length === 0) {
+    throw new Error("artifact.source_file is required");
+  }
+  if (existsSync(sourceFile)) {
+    return sourceFile;
+  }
+  const relativeToProof = join(dirname(proofPath), sourceFile);
+  if (existsSync(relativeToProof)) {
+    return relativeToProof;
+  }
+  throw new Error(`artifact.source_file does not exist: ${sourceFile}`);
+}
+
+function verifyArtifactSha256(proof, proofPath) {
+  const artifactPath = requireArtifactPath(proof, proofPath);
+  const expected = requireSha256Hex(proof.artifact?.sha256, "artifact.sha256");
+  const actual = sha256(artifactPath);
+  if (actual !== expected) {
+    throw new Error("artifact.sha256 does not match artifact.source_file");
+  }
 }
 
 function requireContractId(value) {
@@ -86,6 +121,31 @@ function reportHash(proof) {
   return artifactHash;
 }
 
+function expectedChainId() {
+  const raw = process.env.ZERO_G_EXPECTED_CHAIN_ID;
+  if (raw === undefined || raw === "") {
+    return DEFAULT_EXPECTED_CHAIN_ID;
+  }
+  try {
+    const parsed = BigInt(raw);
+    if (parsed <= 0n) {
+      throw new Error();
+    }
+    return parsed;
+  } catch {
+    throw new Error("ZERO_G_EXPECTED_CHAIN_ID must be a positive integer");
+  }
+}
+
+async function requireExpectedChain(provider) {
+  const expected = expectedChainId();
+  const network = await provider.getNetwork();
+  if (network.chainId !== expected) {
+    throw new Error(`ZERO_G_RPC_URL chain id ${network.chainId} does not match expected ${expected}`);
+  }
+  return network.chainId;
+}
+
 function compileRegistryAbi() {
   const source = readFileSync(new URL("../contracts/AuditProofRegistry.sol", import.meta.url), "utf-8");
   const input = {
@@ -115,6 +175,7 @@ const proof = JSON.parse(readFileSync(inputPath, "utf-8"));
 if (proof.proof_mode !== "storage_uploaded" && proof.proof_mode !== "live_registered") {
   throw new Error("submission proof must come from live upload; dry-run proofs cannot be registered");
 }
+verifyArtifactSha256(proof, inputPath);
 const hashToRegister = reportHash(proof);
 const storageRoot = requireHash(proof.storage_root_hash, "storage_root_hash");
 const storageTxHash = requireHash(proof.storage_tx_hash, "storage_tx_hash");
@@ -124,17 +185,23 @@ const registryAddress = requireAddress(env("ZERO_G_REGISTRY_ADDRESS"), "ZERO_G_R
 
 const abi = compileRegistryAbi();
 const provider = new ethers.JsonRpcProvider(env("ZERO_G_RPC_URL"));
+const chainId = await requireExpectedChain(provider);
 const wallet = new ethers.Wallet(env("ZERO_G_PRIVATE_KEY"), provider);
 const registry = new ethers.Contract(registryAddress, abi, wallet);
 const tx = await registry.registerProof(hashToRegister, storageRoot, scoreBps, contractId, storageTxHash);
 const receipt = await tx.wait();
 const registryTxHash = requireHash(receipt.hash ?? tx.hash, "registry_tx_hash");
 
-const txBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_TX_BASE ?? DEFAULT_TX_BASE);
-const addressBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? DEFAULT_ADDRESS_BASE);
+const txBase = normalizeBaseUrl(
+  process.env.ZERO_G_CHAIN_EXPLORER_TX_BASE ?? DEFAULT_CHAIN_TX_BASE,
+);
+const addressBase = normalizeBaseUrl(
+  process.env.ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE ?? DEFAULT_CHAIN_ADDRESS_BASE,
+);
 const updated = {
   ...proof,
   proof_mode: "live_registered",
+  chain_id: Number(chainId),
   registry_address: registryAddress,
   registry_tx_hash: registryTxHash,
   explorer_links: {

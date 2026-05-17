@@ -13,6 +13,12 @@ from .report_compare import (
     comparison_should_fail,
     render_comparison_markdown,
 )
+from .source_import import (
+    ImportLimits,
+    import_explorer_source,
+    import_github_source,
+    import_local_archive,
+)
 from .trace.lookup import lookup_trace, trace_dashboard
 from .zero_g.proof_package import attach_zero_g_proof, build_proof_package
 
@@ -45,6 +51,21 @@ def main(argv: list[str] | None = None) -> None:
         help="Run optional external tools and attach their summaries to the report.",
     )
     analyze.add_argument("--external-timeout-seconds", type=int, default=60)
+
+    import_source = subparsers.add_parser(
+        "import-source",
+        help="Stage remote or local Solidity sources into a safe local directory.",
+    )
+    import_source_group = import_source.add_mutually_exclusive_group(required=True)
+    import_source_group.add_argument("--zip-file", type=Path)
+    import_source_group.add_argument("--github-url")
+    import_source_group.add_argument("--etherscan-api-host")
+    import_source.add_argument("--address")
+    import_source.add_argument("--api-key")
+    import_source.add_argument("--out-dir", type=Path, default=Path("reports-api/imports"))
+    import_source.add_argument("--max-files", type=int, default=128)
+    import_source.add_argument("--max-total-bytes", type=int, default=5_000_000)
+    import_source.add_argument("--max-single-file-bytes", type=int, default=1_000_000)
 
     clean = subparsers.add_parser("clean-reports", help="Extract and chunk raw reports into JSONL.")
     clean.add_argument("raw_reports_dir", type=Path)
@@ -111,6 +132,10 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument("--api-token")
     api.add_argument("--cors-origin", default="http://127.0.0.1:5173")
     api.add_argument("--max-request-bytes", type=int, default=1_048_576)
+    api.add_argument("--imports-dir", type=Path)
+    api.add_argument("--max-import-files", type=int, default=128)
+    api.add_argument("--max-import-bytes", type=int, default=5_000_000)
+    api.add_argument("--max-import-single-file-bytes", type=int, default=1_000_000)
     api.add_argument(
         "--native-build-policy",
         choices=["trusted", "disabled"],
@@ -131,6 +156,35 @@ def main(argv: list[str] | None = None) -> None:
             native_build_policy=args.native_build_policy,
         )
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    elif args.command == "import-source":
+        limits = ImportLimits(
+            max_files=args.max_files,
+            max_total_bytes=args.max_total_bytes,
+            max_single_file_bytes=args.max_single_file_bytes,
+        )
+        if args.zip_file is not None:
+            imported = import_local_archive(
+                archive_path=args.zip_file,
+                destination_root=args.out_dir,
+                limits=limits,
+            )
+        elif args.github_url is not None:
+            imported = import_github_source(
+                args.github_url,
+                args.out_dir,
+                limits=limits,
+            )
+        else:
+            if not args.address:
+                raise SystemExit("--address is required with --etherscan-api-host")
+            imported = import_explorer_source(
+                api_host=args.etherscan_api_host,
+                address=args.address,
+                destination_root=args.out_dir,
+                api_key=args.api_key,
+                limits=limits,
+            )
+        print(json.dumps(imported.to_dict(), ensure_ascii=False, indent=2))
     elif args.command == "clean-reports":
         chunks = []
         for path in sorted(args.raw_reports_dir.iterdir()):
@@ -230,5 +284,9 @@ def main(argv: list[str] | None = None) -> None:
             api_token=args.api_token,
             cors_origin=args.cors_origin,
             max_request_bytes=args.max_request_bytes,
+            imports_dir=args.imports_dir,
+            max_import_files=args.max_import_files,
+            max_import_bytes=args.max_import_bytes,
+            max_import_single_file_bytes=args.max_import_single_file_bytes,
             native_build_policy=args.native_build_policy,
         )

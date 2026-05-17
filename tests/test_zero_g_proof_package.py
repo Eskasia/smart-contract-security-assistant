@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 from smart_contract_audit.zero_g.proof_package import (
@@ -124,3 +126,52 @@ def test_attach_zero_g_proof_adds_metadata(tmp_path: Path) -> None:
     assert output.read_text(encoding="utf-8").endswith("\n")
     updated = json.loads(output.read_text(encoding="utf-8"))
     assert updated["analysis_metadata"]["zero_g_proof"] == proof
+
+
+def test_zero_g_dry_run_verify_recomputes_artifact_hash(tmp_path: Path) -> None:
+    node = shutil.which("node")
+    if node is None:
+        return
+
+    report = tmp_path / "vulnerablevault.json"
+    _write_report(report)
+    result = build_proof_package(
+        report_path=report,
+        output_dir=tmp_path / "reports-0g",
+        project_name="SCSA 0G Audit Proof",
+        track="Track 1: Agentic Infrastructure & OpenClaw Lab",
+    )
+    repo_root = Path(__file__).resolve().parents[1]
+    upload_script = repo_root / "integrations/0g/scripts/upload-storage.mjs"
+    verify_script = repo_root / "integrations/0g/scripts/verify-submission-proof.mjs"
+
+    subprocess.run(
+        [node, str(upload_script), str(result.proof_json), "--dry-run"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    submission_proof = result.output_dir / "submission-proof.json"
+    subprocess.run(
+        [node, str(verify_script), str(submission_proof)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    result.proof_json.write_text(
+        result.proof_json.read_text(encoding="utf-8").replace(
+            "SCSA 0G Audit Proof",
+            "Tampered Proof",
+        ),
+        encoding="utf-8",
+    )
+    failed = subprocess.run(
+        [node, str(verify_script), str(submission_proof)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert failed.returncode != 0
+    assert "artifact.sha256" in failed.stderr

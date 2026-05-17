@@ -11,6 +11,7 @@ export function ReportHeader() {
   const { t } = useTranslation();
   const report = useAnalysisStore((state) => state.report);
   const connectionMode = useAnalysisStore((state) => state.connectionMode);
+  const analysisError = useAnalysisStore((state) => state.analysisError);
   const metadata = report.analysis_metadata;
 
   return (
@@ -62,6 +63,14 @@ export function ReportHeader() {
           <span className="truncate">slither {metadata.slither_version ?? "unknown"}</span>
         </div>
       </div>
+      {analysisError && (
+        <p
+          className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+          role="status"
+        >
+          {t("analysisStatusFailed", { message: analysisError })}
+        </p>
+      )}
     </header>
   );
 }

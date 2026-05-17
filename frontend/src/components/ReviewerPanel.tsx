@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { patchReviewStatus } from "../lib/api";
 import { useTranslation, type TranslationKey } from "../lib/i18n";
-import { useAnalysisStore } from "../store/analysisStore";
+import { useAnalysisStore, useSettingsStore } from "../store/analysisStore";
 import type { ReviewStatus } from "../types/report";
 import { Metric } from "./Metric";
 
@@ -15,25 +15,48 @@ const statusLabelKeys: Record<ReviewStatus, TranslationKey> = {
   blocked: "blocked",
 };
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export function ReviewerPanel() {
   const { t } = useTranslation();
   const report = useAnalysisStore((state) => state.report);
+  const connectionMode = useAnalysisStore((state) => state.connectionMode);
+  const setReport = useAnalysisStore((state) => state.setReport);
   const updateReviewStatus = useAnalysisStore((state) => state.updateReviewStatus);
+  const apiToken = useSettingsStore((state) => state.settings.apiToken);
   const [draft, setDraft] = useState<ReviewStatus>(report.review_status);
   const [message, setMessage] = useState("");
+  const reportNotReady =
+    !report.analysis_metadata.analysis_trace_id ||
+    report.overall_status === "queued" ||
+    report.overall_status === "running";
 
   useEffect(() => {
     setDraft(report.review_status);
   }, [report.review_status]);
 
   async function saveReviewStatus() {
+    if (reportNotReady) {
+      setMessage(t("reportNotReady"));
+      return;
+    }
     try {
-      const response = await patchReviewStatus(report.contract_id, { review_status: draft });
-      updateReviewStatus(response.report.review_status);
+      const response = await patchReviewStatus(
+        report.contract_id,
+        { review_status: draft },
+        apiToken,
+      );
+      setReport(response.report);
       setMessage(t("saved"));
-    } catch {
-      updateReviewStatus(draft);
-      setMessage(t("savedLocally"));
+    } catch (error) {
+      if (connectionMode === "demo") {
+        updateReviewStatus(draft);
+        setMessage(t("savedLocally"));
+      } else {
+        setMessage(t("saveFailed", { message: errorMessage(error) }));
+      }
     }
   }
 
@@ -67,13 +90,14 @@ export function ReviewerPanel() {
       <button
         type="button"
         onClick={saveReviewStatus}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+        disabled={reportNotReady}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
       >
         <Save className="h-4 w-4" aria-hidden="true" />
         {t("save")}
       </button>
-      <p className="min-h-5 text-xs text-slate-600" aria-live="polite">
-        {message}
+      <p className="min-h-5 text-xs text-slate-600" role="status">
+        {message || (reportNotReady ? t("reportNotReady") : "")}
       </p>
     </section>
   );

@@ -35,7 +35,8 @@ Sources:
 
 - HackQuest 0G APAC Hackathon: https://www.hackquest.io/en/hackathons/0G-APAC-Hackathon
 - 0G Storage TypeScript SDK: https://github.com/0gfoundation/0g-storage-ts-sdk
-- 0G explorer pattern: https://www.0gscan.com/tx/0x95d14963eb1df5ad9f02c8459eb62709594eea4608bca4c6f1df49a343238609
+- 0G chain explorer pattern: https://chainscan.0g.ai/tx/0x95d14963eb1df5ad9f02c8459eb62709594eea4608bca4c6f1df49a343238609
+- 0G storage explorer: https://storagescan.0g.ai/
 
 ## File Structure
 
@@ -243,11 +244,13 @@ Create `config/0g-hackathon.example.json`:
     "name": "0G Mainnet",
     "rpc_url_env": "ZERO_G_RPC_URL",
     "expected_chain_id": 16661,
-    "explorer_address_base_url": "https://www.0gscan.com/address/",
-    "explorer_tx_base_url": "https://www.0gscan.com/tx/"
+    "explorer_address_base_url": "https://chainscan.0g.ai/address/",
+    "explorer_tx_base_url": "https://chainscan.0g.ai/tx/"
   },
   "storage": {
-    "indexer_rpc_env": "ZERO_G_STORAGE_INDEXER_RPC"
+    "indexer_rpc_env": "ZERO_G_STORAGE_INDEXER_RPC",
+    "indexer_rpc_default": "https://indexer-storage-turbo.0g.ai",
+    "storage_explorer_base_url": "https://storagescan.0g.ai/"
   }
 }
 ```
@@ -671,9 +674,10 @@ Create `integrations/0g/.env.example`:
 ```bash
 ZERO_G_RPC_URL=https://evmrpc.0g.ai
 ZERO_G_PRIVATE_KEY=
-ZERO_G_STORAGE_INDEXER_RPC=
-ZERO_G_EXPLORER_TX_BASE=https://www.0gscan.com/tx/
-ZERO_G_EXPLORER_ADDRESS_BASE=https://www.0gscan.com/address/
+ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai
+ZERO_G_CHAIN_EXPLORER_TX_BASE=https://chainscan.0g.ai/tx/
+ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE=https://chainscan.0g.ai/address/
+ZERO_G_STORAGE_EXPLORER_BASE=https://storagescan.0g.ai/
 ZERO_G_REGISTRY_ADDRESS=
 ```
 
@@ -741,7 +745,7 @@ if (dryRun) {
   storageTxHash = tx;
 }
 
-const txBase = process.env.ZERO_G_EXPLORER_TX_BASE ?? "https://www.0gscan.com/tx/";
+const txBase = process.env.ZERO_G_CHAIN_EXPLORER_TX_BASE ?? "https://chainscan.0g.ai/tx/";
 const proofMode = dryRun ? "dry_run" : "storage_uploaded";
 const output = {
   ...proof.zero_g,
@@ -946,7 +950,7 @@ const factory = new ethers.ContractFactory(contract.abi, contract.evm.bytecode.o
 const deployed = await factory.deploy();
 await deployed.waitForDeployment();
 const address = await deployed.getAddress();
-const addressBase = process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? "https://www.0gscan.com/address/";
+const addressBase = process.env.ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE ?? "https://chainscan.0g.ai/address/";
 console.log(JSON.stringify({ registry_address: address, explorer_link: `${addressBase}${address}` }, null, 2));
 ```
 
@@ -999,8 +1003,8 @@ const tx = await registry.registerProof(
   proof.storage_tx_hash
 );
 const receipt = await tx.wait();
-const txBase = process.env.ZERO_G_EXPLORER_TX_BASE ?? "https://www.0gscan.com/tx/";
-const addressBase = process.env.ZERO_G_EXPLORER_ADDRESS_BASE ?? "https://www.0gscan.com/address/";
+const txBase = process.env.ZERO_G_CHAIN_EXPLORER_TX_BASE ?? "https://chainscan.0g.ai/tx/";
+const addressBase = process.env.ZERO_G_CHAIN_EXPLORER_ADDRESS_BASE ?? "https://chainscan.0g.ai/address/";
 const updated = {
   ...proof,
   registry_address: registryAddress,
@@ -1189,12 +1193,12 @@ After live deployment and registration, update `docs/hackathon/0g-apac-submissio
 
 ```markdown
 Registry contract address: 0x...
-Registry explorer link: https://www.0gscan.com/address/0x...
+Registry explorer link: https://chainscan.0g.ai/address/0x...
 Storage root hash: 0x...
 Storage upload transaction: 0x...
-Storage explorer link: https://www.0gscan.com/tx/0x...
+Storage explorer link: https://storagescan.0g.ai/<storage-root-or-transaction>
 Proof registration transaction: 0x...
-Proof registration explorer link: https://www.0gscan.com/tx/0x...
+Proof registration explorer link: https://chainscan.0g.ai/tx/0x...
 ```
 
 The committed values must be real mainnet values from the final run.

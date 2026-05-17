@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import { formatLocation } from "../lib/format";
 import { useTranslation } from "../lib/i18n";
 import { useAnalysisStore } from "../store/analysisStore";
 import { Metric } from "./Metric";
@@ -27,6 +28,11 @@ export function TracePanel() {
         <p className="mt-1 break-words text-xs text-slate-600">
           {report.analysis_metadata.analysis_trace_id}
         </p>
+        {selectedFinding ? (
+          <p className="mt-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-700 lg:hidden">
+            {selectedFinding.vulnerability_type} · {formatLocation(selectedFinding.location)}
+          </p>
+        ) : null}
       </div>
 
       <dl className="grid grid-cols-2 gap-3">

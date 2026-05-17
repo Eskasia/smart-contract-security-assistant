@@ -28,6 +28,7 @@ deck-smart-contract-security-assistant/
 huashu-redesign/
 huashu-product-report/
 elite-product-report/
+submission/
 public-contracts/*
 !public-contracts/hf-slither50-v2/
 !public-contracts/hf-slither50-v2/**

@@ -5,6 +5,7 @@ import pytest
 
 from smart_contract_audit.evaluation.public_benchmark import (
     PublicBenchmarkFailure,
+    render_public_benchmark_leaderboard,
     run_benchmark,
     summarize_public_benchmark_results,
 )
@@ -150,6 +151,37 @@ def test_public_benchmark_summary_includes_confusion_metrics() -> None:
         "recall": 0.5,
         "f1": 0.5,
     }
+
+
+def test_public_benchmark_renders_leaderboard_markdown(tmp_path: Path) -> None:
+    report = tmp_path / "report.json"
+    _write_report(report, ["reentrancy"], security_score=42)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            [
+                {
+                    "case_id": "case_a",
+                    "file": "a.sol",
+                    "report_json": str(report),
+                    "external_class": "vulnerable",
+                    "supported_labels": ["reentrancy"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    summary = run_benchmark(manifest, tmp_path / "reports")
+
+    markdown = render_public_benchmark_leaderboard(
+        summary,
+        generated_date="2026-05-17",
+    )
+
+    assert "# SCSA Public Benchmark Leaderboard" in markdown
+    assert "| Supported label hit rate | 100.00% |" in markdown
+    assert "| reentrancy | 1 | 1 | 100.00% |" in markdown
+    assert "| case_a | vulnerable | reentrancy | reentrancy | - | 42.00 |" in markdown
 
 
 def _write_report(

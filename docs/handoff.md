@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-05-07。
+更新日期：2026-05-17。
 
 ## 已完成內容
 
@@ -24,7 +24,13 @@
 - 2026-05-06 已新增 HTTP API 邊界加固：bearer token、`input_root`、request body limit、固定 CORS origin 與 CLI 啟動參數。
 - 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
 - 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
-- 2026-05-06 public benchmark 已新增 confusion matrix、precision、recall 與 F1 指標。
+- 2026-05-17 已新增 report endpoint `contract_id` path segment 驗證、`native_build_policy=disabled` server-side 上限、HTTP trace sensitive field redaction、CORS `Authorization` preflight、前端 API path segment encoding，並移除 `api.ts` 對 persisted settings 內 `apiToken` 的讀取；API token 不再寫入 `localStorage`。
+- 2026-05-17 已新增前端新分析 transient state reset、trace request race guard、SSE terminal status 補抓 job/report；避免舊 findings、舊 trace 或較慢 trace response 覆寫新狀態。
+- 2026-05-17 已新增前端 live workflow 修正：pending report 狀態會同步 job queued/running/error，完成 report commit 會清空串流 explanation buffer，polling 改為單飛 `setTimeout`，submit/review API 失敗會顯示 HTTP 狀態對應的安全錯誤訊息；pending 或尚無正式 trace id 階段禁用整份 report review 儲存，`/reports/{contract_id}?finding={finding_id}` 可載入 report 並聚焦目標 finding，無效 finding query 會在 report 載入後清除；短狀態訊息已改用 `role=status`，選取 finding 會標記 `aria-current`，手機版 trace panel 會顯示目前 finding 摘要。
+- 2026-05-17 已依 Slither、Aderyn、Echidna、SmartBugs、SolidityScan、SolidityGuard、Eagle Audit 與 audit.new 競品缺口補強三項：GitHub/Etherscan/ZIP 匯入、Echidna/External tools API 與前端開關、公開 benchmark Markdown leaderboard。
+- 2026-05-17 已新增 `src/smart_contract_audit/source_import.py`、`POST /api/imports` 與 `scsa import-source`；匯入來源固定為 untrusted，分析時強制 `native_build_policy=disabled`，ZIP 會拒絕 path traversal、symlink、特殊檔、nested archive、重複正規化路徑與超量檔案，遠端來源只允許 GitHub 與 Etherscan API allowlist host，redirect target 需留在 allowlist，遠端讀取禁用環境 proxy 並有 response size cap。
+- 2026-05-17 已新增 0G proof artifact hash 驗證與 chain id gate：`upload-storage.mjs`、`register-proof.mjs` 會檢查 `ZERO_G_RPC_URL` chain id，`verify-submission-proof.mjs` 會重新計算 `artifact.source_file` sha256，dry-run proof 會驗證 `storage_root_hash` 等於 artifact hash。
+- 2026-05-17 public benchmark 已新增 `--leaderboard-output` 與 `--leaderboard-date`，可產生 `docs/reference/002-public-benchmark-leaderboard.md`；2026-05-06 已新增 confusion matrix、precision、recall 與 F1 指標。
 - 2026-05-07 已新增 0G hackathon proof flow：`scsa 0g-package` 產生 `audit-proof.json`，`integrations/0g` 提供 Storage upload、registry deploy/register 與 proof verify scripts，`scsa 0g-attach-proof` 可把 `submission-proof.json` 回寫到 report metadata，前端右欄可顯示 0G Proof panel；live deployment 欄位仍為 pending。
 
 ## 技術核心
@@ -39,9 +45,11 @@ Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG ch
 
 HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
 
+Source import——`POST /api/imports` 與 `scsa import-source` 支援 GitHub archive、Etherscan API 與 ZIP；匯入後回傳 `input_path`、`import_id`、`source_kind`、`extracted_files`、`total_bytes`、`trust_level=untrusted`，前端可直接把 `input_path` 接到 `POST /api/analyses`。匯入目錄預設為 `reports-api/imports` 或 API `output_dir/imports`，可用 `--imports-dir` 與 import size limits 調整。遠端匯入會禁用環境 proxy、在 redirect 前檢查 target host、讀取後驗證 final response URL，並在超過 `max_total_bytes + 65,536` bytes 時拒絕回應。
+
 Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
 
-External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，未安裝時結果為 `skipped`。
+External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒，未安裝時結果為 `skipped`。
 
 Native build preflight——Foundry/Hardhat 專案在 `trusted` 模式先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback；`disabled` 模式略過 build scripts，適合未信任 public repo。
 
@@ -49,9 +57,24 @@ Public project build validation——`eval/run_public_project_builds.py` 預設�
 
 Report comparison——兩份 JSON 報告的差異比較，用 finding type、detector、檔名與 line_start 作穩定 key；`--fail-on-high-added` 與 `--fail-on-score-drop` 可讓 CI 在安全回退時失敗。
 
-0G proof package——`uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json` 後用 `REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')` 取得實際報告 id；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；本地驗證用 `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`。Dry-run `proof_mode` 為 `dry_run` 且 `explorer_links` 為空；Live proof 仍需設定 `ZERO_G_RPC_URL`、`ZERO_G_PRIVATE_KEY`、`ZERO_G_STORAGE_INDEXER_RPC`，先 `npm run deploy`，再設定 `ZERO_G_REGISTRY_ADDRESS` 後執行 live upload/register/verify；live registered `explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`。
+0G proof package——`uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json` 後用 `REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')` 取得實際報告 id；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；本地驗證用 `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`。Dry-run `proof_mode` 為 `dry_run` 且 `explorer_links` 為空；Live proof 仍需 funded `ZERO_G_PRIVATE_KEY`、`ZERO_G_RPC_URL=https://evmrpc.0g.ai`、`ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai`，先 `npm run deploy`，再設定 `ZERO_G_REGISTRY_ADDRESS` 後執行 live upload/register/verify；live registered `explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`，預設指向 ChainScan。
 
 ## 驗證結果
+
+2026-05-17 前端驗證結果：
+
+```text
+uv run ruff check .        all checks passed
+uv run pytest              102 passed
+uv run python eval/run_eval.py  recall_at_k = 1.0
+uv run python eval/run_judge.py  local_average_judge_score = 5.0, external_average_judge_score = 5.0
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17  completed, leaderboard generated
+uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+cd frontend && npm run test -- --run  32 passed
+cd frontend && npm run build          completed
+git diff --check                    passed
+Chrome headless CDP + local API/Vite  live analysis, pending/failed-placeholder review disable, report/trace load, route failure empty state, invalid finding query cleanup, deep link focus, review PATCH, mobile trace summary verified
+```
 
 2026-05-06 本地驗證結果：
 
@@ -92,7 +115,7 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 
 ## 已知限制
 
-- 目前支援單檔、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 原生 build preflight 已用 10 個 pinned public repos 驗證 `10/10` analyzer 與 `10/10` native build。
+- 目前支援單檔、Foundry、Hardhat、generic nested import 專案、GitHub archive、Etherscan API 與 ZIP 匯入；匯入來源一律視為未信任，原生 build scripts 會被停用。
 - 完整 business-logic symbolic analysis 尚未納入。
 - 真實外部高階模型 API judge 需透過 `EXTERNAL_JUDGE_COMMAND` 接入；預設 external adapter 是 deterministic rule adapter；兩者分數語義皆為報告品質，不是合約安全分數。
 
@@ -100,7 +123,7 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 
 1. 先跑 `uv sync --extra audit --dev` 與 `uv run pytest`。
 2. 再跑 `uv run pytest tests/test_slither.py tests/test_project_input.py` 確認 Slither/solc 串接與專案級 import 解析。
-3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
+3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
 
 前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
 
@@ -112,4 +135,6 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 - 文件索引：`docs/DOCS_INDEX.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`
 - 專案架構書：`docs/design/001-project-architecture.md`
+- 競品導向優化計畫：`docs/design/004-competitor-optimization-plan.md`
 - 驗證程序日誌：`docs/reference/001-validation-procedure-log.md`
+- 公開 benchmark leaderboard：`docs/reference/002-public-benchmark-leaderboard.md`

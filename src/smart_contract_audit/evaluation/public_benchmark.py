@@ -58,6 +58,119 @@ def run_benchmark(
     return summary
 
 
+def render_public_benchmark_leaderboard(
+    summary: dict[str, Any],
+    *,
+    generated_date: str,
+    title: str = "SCSA Public Benchmark Leaderboard",
+) -> str:
+    metrics = summary.get("classification_metrics", {})
+    confusion = summary.get("confusion_matrix", {})
+    score_gap = summary.get("average_score_gap_safe_minus_vulnerable")
+    matched_label_occurrences = summary.get("matched_label_occurrences", 0)
+    supported_label_occurrences = summary.get("supported_label_occurrences", 0)
+    lines = [
+        f"# {title}",
+        "",
+        f"Generated: {generated_date}.",
+        "",
+        "## Headline",
+        "",
+        "| Metric | Value |",
+        "|---|---:|",
+        f"| Cases | {summary.get('cases', 0)} |",
+        f"| Analyzer successful runs | {summary.get('successful_analyzer_runs', 0)} |",
+        f"| Supported label hit rate | {_format_rate(summary.get('supported_hit_rate'))} |",
+        (
+            "| Matched label occurrences | "
+            f"{matched_label_occurrences} / {supported_label_occurrences} |"
+        ),
+        f"| Safe minus vulnerable score gap | {_format_number(score_gap)} |",
+        f"| Precision | {_format_rate(metrics.get('precision'))} |",
+        f"| Recall | {_format_rate(metrics.get('recall'))} |",
+        f"| F1 | {_format_rate(metrics.get('f1'))} |",
+        "",
+        "## Confusion Matrix",
+        "",
+        "| Class | Count |",
+        "|---|---:|",
+        f"| True positive | {confusion.get('true_positive', 0)} |",
+        f"| True negative | {confusion.get('true_negative', 0)} |",
+        f"| False positive | {confusion.get('false_positive', 0)} |",
+        f"| False negative | {confusion.get('false_negative', 0)} |",
+        "",
+        "## Label Coverage",
+        "",
+        "| Label | Matched | Expected | Hit Rate |",
+        "|---|---:|---:|---:|",
+    ]
+    label_totals = summary.get("label_totals", {})
+    for label in sorted(label_totals):
+        total = label_totals[label]
+        expected = int(total.get("expected_cases", 0))
+        matched = int(total.get("matched_cases", 0))
+        lines.append(
+            f"| {label} | {matched} | {expected} | {_format_rate(_safe_ratio(matched, expected))} |"
+        )
+    if not label_totals:
+        lines.append("| None | 0 | 0 | 0.00% |")
+
+    lines.extend(
+        [
+            "",
+            "## Case Results",
+            "",
+            "| Case | Class | Expected | Detected | Missed | Score |",
+            "|---|---|---|---|---|---:|",
+        ]
+    )
+    for result in summary.get("results", []):
+        case_row = (
+            "| {case_id} | {external_class} | {expected} | "
+            "{detected} | {missed} | {score} |"
+        )
+        lines.append(
+            case_row.format(
+                case_id=result.get("case_id", ""),
+                external_class=result.get("external_class", ""),
+                expected=", ".join(result.get("expected_supported_labels", [])) or "-",
+                detected=", ".join(result.get("detected_supported_labels", [])) or "-",
+                missed=", ".join(result.get("missed_labels", [])) or "-",
+                score=_format_number(result.get("security_score")),
+            )
+        )
+
+    scope_note = (
+        "This leaderboard reports deterministic benchmark results for the local "
+        "SCSA pipeline. It is not a replacement for manual smart-contract review, "
+        "invariant fuzzing, or formal verification."
+    )
+    lines.extend(
+        [
+            "",
+            "## Scope",
+            "",
+            scope_note,
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def write_public_benchmark_leaderboard(
+    summary: dict[str, Any],
+    output_path: Path,
+    *,
+    generated_date: str,
+) -> Path:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_public_benchmark_leaderboard(summary, generated_date=generated_date),
+        encoding="utf-8",
+    )
+    return output_path
+
+
 def _run_case(case: dict[str, Any], output_dir: Path, rag_mode: str) -> dict[str, Any]:
     report = _load_or_analyze_report(case, output_dir, rag_mode)
     expected = sorted(str(label) for label in case.get("supported_labels", []))
@@ -182,6 +295,18 @@ def _summarize_results(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _safe_ratio(numerator: float, denominator: float) -> float:
     return numerator / denominator if denominator else 0.0
+
+
+def _format_number(value: object) -> str:
+    if isinstance(value, int | float):
+        return f"{float(value):.2f}"
+    return "-"
+
+
+def _format_rate(value: object) -> str:
+    if isinstance(value, int | float):
+        return f"{float(value) * 100:.2f}%"
+    return "0.00%"
 
 
 def _enforce_min_metric(metrics: dict[str, float], name: str, threshold: float) -> None:

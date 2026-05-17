@@ -1,6 +1,8 @@
 import type {
   AnalysisJob,
   CreateAnalysisRequest,
+  CreateImportRequest,
+  ImportResult,
   PatchFindingReviewRequest,
   PatchFindingReviewResponse,
   PatchReviewRequest,
@@ -8,22 +10,28 @@ import type {
 } from "../types/api";
 import type { AnalysisReport, TraceFinding } from "../types/report";
 
-function persistedApiToken(): string {
-  try {
-    const raw = window.localStorage.getItem("sca_settings_v1");
-    if (!raw) return "";
-    const parsed = JSON.parse(raw) as {
-      state?: { settings?: { apiToken?: unknown } };
-    };
-    const token = parsed.state?.settings?.apiToken;
-    return typeof token === "string" ? token.trim() : "";
-  } catch {
-    return "";
+const statusMessages: Record<number, string> = {
+  400: "Bad request.",
+  401: "Authentication failed.",
+  403: "Access denied.",
+  404: "Resource not found.",
+  413: "Request too large.",
+  422: "Request validation failed.",
+  500: "Server error.",
+};
+
+export class ApiRequestError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`HTTP ${status}: ${statusMessages[status] ?? "Request failed."}`);
+    this.name = "ApiRequestError";
+    this.status = status;
   }
 }
 
 function authorizationHeader(apiToken?: string): Record<string, string> {
-  const token = (apiToken ?? persistedApiToken()).trim();
+  const token = (apiToken ?? "").trim();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -32,66 +40,112 @@ async function requestJson<T>(
   init?: RequestInit,
   apiToken?: string,
 ): Promise<T> {
+  const body = init?.body;
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const response = await fetch(path, {
     headers: {
-      "Content-Type": "application/json",
       ...authorizationHeader(apiToken),
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...init?.headers,
     },
     ...init,
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed: ${response.status}`);
+    throw new ApiRequestError(response.status);
   }
 
   return response.json() as Promise<T>;
+}
+
+function pathSegment(value: string): string {
+  return encodeURIComponent(value);
 }
 
 export function createAnalysis(
   payload: CreateAnalysisRequest,
   apiToken?: string,
 ): Promise<AnalysisJob> {
-  return requestJson<AnalysisJob>("/api/analyses", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }, apiToken);
+  return requestJson<AnalysisJob>(
+    "/api/analyses",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    apiToken,
+  );
 }
 
-export function getAnalysis(analysisId: string): Promise<AnalysisJob> {
-  return requestJson<AnalysisJob>(`/api/analyses/${analysisId}`);
+export function createImport(
+  payload: CreateImportRequest,
+  apiToken?: string,
+): Promise<ImportResult> {
+  return requestJson<ImportResult>(
+    "/api/imports",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    apiToken,
+  );
 }
 
-export function getReport(contractId: string): Promise<AnalysisReport> {
-  return requestJson<AnalysisReport>(`/api/reports/${contractId}`);
+export function getAnalysis(analysisId: string, apiToken?: string): Promise<AnalysisJob> {
+  return requestJson<AnalysisJob>(
+    `/api/analyses/${pathSegment(analysisId)}`,
+    undefined,
+    apiToken,
+  );
 }
 
-export function getTrace(traceId: string, findingId?: string): Promise<TraceFinding[]> {
+export function getReport(contractId: string, apiToken?: string): Promise<AnalysisReport> {
+  return requestJson<AnalysisReport>(
+    `/api/reports/${pathSegment(contractId)}`,
+    undefined,
+    apiToken,
+  );
+}
+
+export function getTrace(
+  traceId: string,
+  findingId?: string,
+  apiToken?: string,
+): Promise<TraceFinding[]> {
   const params = findingId ? `?finding_id=${encodeURIComponent(findingId)}` : "";
-  return requestJson<TraceFinding[]>(`/api/traces/${traceId}${params}`);
+  return requestJson<TraceFinding[]>(
+    `/api/traces/${pathSegment(traceId)}${params}`,
+    undefined,
+    apiToken,
+  );
 }
 
 export function patchReviewStatus(
   contractId: string,
   payload: PatchReviewRequest,
+  apiToken?: string,
 ): Promise<PatchReviewResponse> {
-  return requestJson<PatchReviewResponse>(`/api/reports/${contractId}/review`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
+  return requestJson<PatchReviewResponse>(
+    `/api/reports/${pathSegment(contractId)}/review`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    apiToken,
+  );
 }
 
 export function patchFindingReview(
   contractId: string,
   findingId: string,
   payload: PatchFindingReviewRequest,
+  apiToken?: string,
 ): Promise<PatchFindingReviewResponse> {
   return requestJson<PatchFindingReviewResponse>(
-    `/api/reports/${contractId}/findings/${findingId}/review`,
+    `/api/reports/${pathSegment(contractId)}/findings/${pathSegment(findingId)}/review`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
     },
+    apiToken,
   );
 }

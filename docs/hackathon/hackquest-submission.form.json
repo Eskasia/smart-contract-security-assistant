@@ -1,0 +1,39 @@
+{
+  "project_name": "SCSA 0G Audit Proof",
+  "one_sentence_description": "AI-assisted Solidity audit reports with verifiable 0G Storage persistence and 0G Chain proof registration.",
+  "summary": {
+    "what_it_does": "Analyzes Solidity contracts with Slither, RAG, deterministic scoring, trace evidence, and JSON/Markdown report generation.",
+    "problem_it_solves": "Makes AI-assisted smart contract audit reports easier to trust by packaging each report as a reproducible artifact, uploading it to 0G Storage, and registering proof on 0G Chain.",
+    "zero_g_components_used": [
+      "0G Storage",
+      "0G Chain"
+    ]
+  },
+  "track": "Track 1: Agentic Infrastructure & OpenClaw Lab",
+  "repository_url": "https://github.com/Eskasia/smart-contract-security-assistant",
+  "repository_visibility": "public",
+  "frontend_demo_url": "https://eskasia.github.io/smart-contract-security-assistant/",
+  "demo_video_url": "https://eskasia.github.io/smart-contract-security-assistant/scsa-usage-tutorial.mp4?v=7aa1ab4",
+  "public_x_post_url": "",
+  "zero_g_integration_proof": {
+    "network": "0G Mainnet",
+    "proof_mode": "live_registered",
+    "registry_contract_address": "",
+    "registry_explorer_link": "",
+    "storage_root_hash": "",
+    "storage_upload_transaction": "",
+    "storage_explorer_link": "",
+    "proof_registration_transaction": "",
+    "proof_registration_explorer_link": ""
+  },
+  "reviewer_notes": {
+    "local_reproduction": "See README.hackathon.md and docs/hackathon/007-judge-reproduction-guide.md.",
+    "live_proof_record": "See docs/hackathon/004-live-0g-proof-record.md after mainnet deployment.",
+    "repository_visibility_check": "GitHub CLI check on 2026-05-15 returned PUBLIC.",
+    "frontend_demo_check": "GitHub Pages URL and built JS/CSS assets returned HTTP 200 on 2026-05-15.",
+    "demo_video_check": "GitHub Pages MP4 URL returned HTTP 200 video/mp4 on 2026-05-16; final 0G proof scene still depends on live 0G deployment.",
+    "x_post_check": "Chrome check on 2026-05-16 showed X is not logged in, so public X post URL is still empty.",
+    "test_account": "Not required for local analysis.",
+    "faucet": "Not required for dry-run reproduction."
+  }
+}

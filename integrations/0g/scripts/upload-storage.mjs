@@ -5,7 +5,8 @@ import { basename, dirname, join } from "node:path";
 const DRY_RUN_STORAGE_TX_HASH = "dry-run-only";
 const PENDING_REGISTRY_ADDRESS = "pending-live-registry";
 const PENDING_REGISTRY_TX_HASH = "pending-live-registration";
-const DEFAULT_TX_BASE = "https://www.0gscan.com/tx/";
+const DEFAULT_CHAIN_TX_BASE = "https://chainscan.0g.ai/tx/";
+const DEFAULT_EXPECTED_CHAIN_ID = 16661n;
 
 function env(name, fallback = undefined) {
   const value = process.env[name] ?? fallback;
@@ -25,6 +26,31 @@ function hasArg(name) {
 
 function normalizeBaseUrl(value) {
   return value.endsWith("/") ? value : `${value}/`;
+}
+
+function expectedChainId() {
+  const raw = process.env.ZERO_G_EXPECTED_CHAIN_ID;
+  if (raw === undefined || raw === "") {
+    return DEFAULT_EXPECTED_CHAIN_ID;
+  }
+  try {
+    const parsed = BigInt(raw);
+    if (parsed <= 0n) {
+      throw new Error();
+    }
+    return parsed;
+  } catch {
+    throw new Error("ZERO_G_EXPECTED_CHAIN_ID must be a positive integer");
+  }
+}
+
+async function requireExpectedChain(provider) {
+  const expected = expectedChainId();
+  const network = await provider.getNetwork();
+  if (network.chainId !== expected) {
+    throw new Error(`ZERO_G_RPC_URL chain id ${network.chainId} does not match expected ${expected}`);
+  }
+  return network.chainId;
 }
 
 function requireFunction(value, label) {
@@ -70,6 +96,7 @@ async function uploadToZeroG(inputPath) {
   const privateKey = env("ZERO_G_PRIVATE_KEY");
   const indexerRpc = env("ZERO_G_STORAGE_INDEXER_RPC");
   const provider = new ethers.JsonRpcProvider(evmRpc);
+  const chainId = await requireExpectedChain(provider);
   const signer = new ethers.Wallet(privateKey, provider);
   const indexer = new Indexer(indexerRpc);
   const file = await ZgFile.fromFilePath(inputPath);
@@ -101,7 +128,7 @@ async function uploadToZeroG(inputPath) {
     const storageRootHash = tree.rootHash();
     requireHex(storageRootHash, "storage_root_hash");
     requireHex(storageTxHash, "storage_tx_hash");
-    return { storageRootHash, storageTxHash };
+    return { storageRootHash, storageTxHash, chainId };
   } finally {
     if (typeof file?.close === "function") {
       await file.close();
@@ -117,13 +144,16 @@ if (!inputPath || !existsSync(inputPath)) {
 }
 
 const proof = JSON.parse(readFileSync(inputPath, "utf-8"));
-const txBase = normalizeBaseUrl(process.env.ZERO_G_EXPLORER_TX_BASE ?? DEFAULT_TX_BASE);
+const txBase = normalizeBaseUrl(
+  process.env.ZERO_G_CHAIN_EXPLORER_TX_BASE ?? DEFAULT_CHAIN_TX_BASE,
+);
 let storageRootHash;
 let storageTxHash;
 let registryAddress;
 let registryTxHash;
 let proofMode;
 let explorerLinks;
+let chainId;
 
 if (dryRun) {
   storageRootHash = `0x${sha256(inputPath)}`;
@@ -133,7 +163,7 @@ if (dryRun) {
   proofMode = "dry_run";
   explorerLinks = {};
 } else {
-  ({ storageRootHash, storageTxHash } = await uploadToZeroG(inputPath));
+  ({ storageRootHash, storageTxHash, chainId } = await uploadToZeroG(inputPath));
   registryAddress = process.env.ZERO_G_REGISTRY_ADDRESS ?? proof.zero_g?.registry_address ?? PENDING_REGISTRY_ADDRESS;
   registryTxHash = proof.zero_g?.registry_tx_hash ?? PENDING_REGISTRY_TX_HASH;
   proofMode = "storage_uploaded";
@@ -151,6 +181,7 @@ const output = {
   registry_address: registryAddress,
   registry_tx_hash: registryTxHash,
   proof_mode: proofMode,
+  chain_id: chainId === undefined ? null : Number(chainId),
   explorer_links: explorerLinks,
   artifact: {
     source_file: inputPath,

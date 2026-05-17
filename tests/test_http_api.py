@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import base64
+import io
 import json
 import threading
 import time
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 from typing import Any
 
+import smart_contract_audit.http_api as http_api_module
 from smart_contract_audit.http_api import ApiConfig, create_api_server
 from smart_contract_audit.models import AnalysisMetadata, AnalysisReport, Finding, Location
+from smart_contract_audit.source_import import ImportedSource
 from smart_contract_audit.trace.lookup import trace_dashboard
 from smart_contract_audit.trace.store import TraceStore
 
@@ -114,7 +119,10 @@ def test_http_api_analysis_report_trace_review_and_sse(tmp_path: Path) -> None:
         assert report["findings"][0]["finding_id"] == "f_001"
 
         trace_rows = _json_request(f"{base_url}/api/traces/{trace_id}?finding_id=f_001")
-        assert trace_rows[0]["packed_prompt"] == "Explain reentrancy"
+        assert trace_rows[0]["packed_prompt"] is None
+        assert trace_rows[0]["slither_raw"] is None
+        assert trace_rows[0]["llm_raw_output"] is None
+        assert trace_rows[0]["sensitive_fields_redacted"] is True
 
         patched = _json_request(
             f"{base_url}/api/reports/contract_api_001/review",
@@ -169,6 +177,14 @@ def test_http_api_rejects_invalid_payload_and_review_status(tmp_path: Path) -> N
             f"{base_url}/api/analyses",
             method="POST",
             payload={"input_path": "Vault.sol", "rag_mode": "slow"},
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+
+        error = _json_request(
+            f"{base_url}/api/imports",
+            method="POST",
+            payload={"source_kind": "zip_base64"},
             expect_error=422,
         )
         assert error["error"]["code"] == "VALIDATION_ERROR"
@@ -282,6 +298,223 @@ def test_http_api_rejects_input_outside_allowed_root(tmp_path: Path) -> None:
         thread.join(timeout=3)
 
 
+def test_http_api_rejects_native_build_policy_upgrade(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(
+            output_dir=tmp_path / "reports",
+            native_build_policy="disabled",
+        ),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={
+                "input_path": str(contract),
+                "native_build_policy": "trusted",
+            },
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "native_build_policy" in error["error"]["message"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_imports_archive_and_passes_external_tool_settings(tmp_path: Path) -> None:
+    output_dir = tmp_path / "reports"
+    analyzer_calls: list[dict[str, Any]] = []
+
+    def fake_analyzer(**kwargs: Any) -> AnalysisReport:
+        analyzer_calls.append(kwargs)
+        return AnalysisReport(
+            report_version="1.0",
+            overall_status="no_finding",
+            contract_id="contract_api_002",
+            review_status="pending_human_review",
+            requires_human_review=True,
+            business_logic_review_required=False,
+            review_reason="Human review required.",
+            findings=[],
+            analysis_metadata=AnalysisMetadata(
+                dataset_version="dataset_v1",
+                model_version="fallback",
+                solc_version="0.8.34",
+                slither_version="0.11.5",
+                partial_analysis=False,
+                analysis_trace_id="trace_002",
+                context_tokens_used=1,
+                prompt_tokens=2,
+                completion_tokens=3,
+                total_tokens=5,
+                local_average_judge_score=5.0,
+                external_average_judge_score=5.0,
+                rag_mode=kwargs["rag_mode"],
+                total_duration_ms=7,
+                errors=[],
+            ),
+        )
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=output_dir),
+        analyzer=fake_analyzer,
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        imported = _json_request(
+            f"{base_url}/api/imports",
+            method="POST",
+            payload={
+                "source_kind": "zip_base64",
+                "archive_base64": base64.b64encode(
+                    _zip_bytes(
+                        {
+                            "repo-main/Vault.sol": (
+                                "pragma solidity ^0.8.19; contract Vault {}"
+                            )
+                        }
+                    )
+                ).decode("ascii"),
+            },
+        )
+        staged_path = Path(imported["input_path"])
+        assert staged_path.exists()
+        assert staged_path.is_file()
+        assert staged_path.is_relative_to(output_dir.resolve() / "imports")
+        assert imported["imported"] is True
+        assert imported["trust_level"] == "untrusted"
+
+        created = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={
+                "input_path": imported["input_path"],
+                "external_tools": ["echidna", "echidna", "mythril"],
+                "external_timeout_seconds": 999,
+                "native_build_policy": "trusted",
+            },
+        )
+        job = _wait_for_terminal_job(base_url, created["analysis_id"])
+        assert job["status"] == "no_finding"
+        assert analyzer_calls
+        assert analyzer_calls[0]["contract_path"] == staged_path
+        assert analyzer_calls[0]["external_tools"] == ("echidna", "mythril")
+        assert analyzer_calls[0]["external_timeout_seconds"] == 120
+        assert analyzer_calls[0]["native_build_policy"] == "disabled"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_imports_remote_payload_contracts(tmp_path: Path, monkeypatch) -> None:
+    output_dir = tmp_path / "reports"
+    calls: list[dict[str, Any]] = []
+
+    def fake_import_github_source(
+        repository: str,
+        destination_root: Path,
+        *,
+        limits: Any = None,
+    ) -> ImportedSource:
+        calls.append(
+            {
+                "kind": "github",
+                "repository": repository,
+                "destination_root": destination_root,
+                "limits": limits,
+            }
+        )
+        return _imported_source(destination_root, "github_archive")
+
+    def fake_import_explorer_source(
+        *,
+        api_host: str,
+        address: str,
+        destination_root: Path,
+        api_key: str | None = None,
+        limits: Any = None,
+    ) -> ImportedSource:
+        calls.append(
+            {
+                "kind": "etherscan",
+                "api_host": api_host,
+                "address": address,
+                "api_key": api_key,
+                "destination_root": destination_root,
+                "limits": limits,
+            }
+        )
+        return _imported_source(destination_root, "etherscan_api")
+
+    monkeypatch.setattr(
+        http_api_module,
+        "import_github_source",
+        fake_import_github_source,
+    )
+    monkeypatch.setattr(
+        http_api_module,
+        "import_explorer_source",
+        fake_import_explorer_source,
+    )
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=output_dir),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        github = _json_request(
+            f"{base_url}/api/imports",
+            method="POST",
+            payload={
+                "source_kind": "github_archive",
+                "repository": "https://github.com/example/audit-target",
+            },
+        )
+        etherscan = _json_request(
+            f"{base_url}/api/imports",
+            method="POST",
+            payload={
+                "source_kind": "etherscan_api",
+                "contract_address": "0x1111111111111111111111111111111111111111",
+                "explorer_host": "api.etherscan.io",
+                "api_key": "scan-token",
+            },
+        )
+
+        assert github["source_kind"] == "github_archive"
+        assert etherscan["source_kind"] == "etherscan_api"
+        assert calls[0]["repository"] == "https://github.com/example/audit-target"
+        assert calls[0]["destination_root"] == output_dir.resolve() / "imports"
+        assert calls[1]["address"] == "0x1111111111111111111111111111111111111111"
+        assert calls[1]["api_host"] == "api.etherscan.io"
+        assert calls[1]["api_key"] == "scan-token"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 def test_http_api_uses_configured_cors_origin(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
@@ -303,7 +536,36 @@ def test_http_api_uses_configured_cors_origin(tmp_path: Path) -> None:
         )
         with urllib.request.urlopen(request, timeout=5) as response:
             assert response.headers["Access-Control-Allow-Origin"] == "http://127.0.0.1:5173"
+            assert response.headers["Access-Control-Allow-Headers"] == (
+                "Authorization, Content-Type"
+            )
             assert response.headers["Vary"] == "Origin"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_rejects_path_like_report_id(tmp_path: Path) -> None:
+    output_dir = tmp_path / "reports"
+    escaped_report = tmp_path / "escape.json"
+    escaped_report.write_text(json.dumps({"contract_id": "escape"}), encoding="utf-8")
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=output_dir),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/reports/..%2Fescape",
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "contract_id" in error["error"]["message"]
     finally:
         server.shutdown()
         server.server_close()
@@ -385,3 +647,26 @@ def _read_sse_events(url: str) -> list[dict[str, Any]]:
             if event["type"] in {"done", "error"}:
                 return events
     return events
+
+
+def _zip_bytes(files: dict[str, str]) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w") as archive:
+        for name, content in files.items():
+            archive.writestr(name, content)
+    return buffer.getvalue()
+
+
+def _imported_source(destination_root: Path, source_kind: str) -> ImportedSource:
+    staging_dir = destination_root / source_kind
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    input_path = staging_dir / "Vault.sol"
+    input_path.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    return ImportedSource(
+        import_id=f"import_{source_kind}",
+        source_kind=source_kind,
+        input_path=input_path,
+        staging_dir=staging_dir,
+        extracted_files=("Vault.sol",),
+        total_bytes=input_path.stat().st_size,
+    )

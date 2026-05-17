@@ -1,23 +1,50 @@
 import { FolderOpen, Play, RotateCcw, Upload } from "lucide-react";
 import { type CSSProperties, useState } from "react";
 
-import { createAnalysis } from "../lib/api";
+import { createAnalysis, createImport } from "../lib/api";
 import { useTranslation } from "../lib/i18n";
 import { useAnalysisStore } from "../store/analysisStore";
-import type { RagMode } from "../types/report";
+import type { ExternalToolName, ImportSourceType, RagMode } from "../types/report";
 import { usePersistedSettings } from "../hooks/usePersistedSettings";
 
 const ragModes: RagMode[] = ["quality", "balanced", "fast", "fallback"];
+const importSourceTypes: ImportSourceType[] = [
+  "local",
+  "github_archive",
+  "etherscan_api",
+  "zip_base64",
+];
 const nativeBuildPolicies = ["trusted", "disabled"] as const;
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function importedMode(sourceType: ImportSourceType): "file" | "project" {
+  return sourceType === "etherscan_api" ? "file" : "project";
+}
+
+async function encodeFileBase64(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return btoa(binary);
+}
 
 export function InputPanel() {
   const { settings, updateSettings } = usePersistedSettings();
   const { t } = useTranslation();
-  const setJob = useAnalysisStore((state) => state.setJob);
-  const setConnectionMode = useAnalysisStore((state) => state.setConnectionMode);
+  const startAnalysis = useAnalysisStore((state) => state.startAnalysis);
   const loadDemo = useAnalysisStore((state) => state.loadDemo);
   const [validationMessage, setValidationMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [sourceApiKey, setSourceApiKey] = useState("");
+  const [sourceArchive, setSourceArchive] = useState<File | null>(null);
 
   async function handleSourcePreview(file: File | null) {
     if (!file) return;
@@ -34,22 +61,81 @@ export function InputPanel() {
     setValidationMessage(t("fileReady", { name: file.name, lines }));
   }
 
+  async function importSource() {
+    if (settings.importSourceType === "local") return;
+    if (settings.importSourceType === "zip_base64" && !sourceArchive) {
+      setValidationMessage(t("zipArchiveRequired"));
+      return;
+    }
+    if (settings.importSourceType !== "zip_base64" && !settings.importSourceValue.trim()) {
+      setValidationMessage(t("sourceValueRequired"));
+      return;
+    }
+
+    setIsImporting(true);
+    setValidationMessage("");
+    try {
+      const payload =
+        settings.importSourceType === "github_archive"
+          ? {
+              source_kind: "github_archive" as const,
+              repository: settings.importSourceValue.trim(),
+            }
+          : settings.importSourceType === "etherscan_api"
+            ? {
+                source_kind: "etherscan_api" as const,
+                contract_address: settings.importSourceValue.trim(),
+                explorer_host: settings.importExplorerHost,
+                api_key: sourceApiKey.trim() || undefined,
+              }
+            : {
+                source_kind: "zip_base64" as const,
+                archive_base64: await encodeFileBase64(sourceArchive as File),
+                archive_name: sourceArchive?.name,
+              };
+      const result = await createImport(
+        payload,
+        settings.apiToken,
+      );
+      updateSettings({
+        inputPath: result.input_path,
+        inputMode: importedMode(settings.importSourceType),
+        nativeBuildPolicy: "disabled",
+      });
+      setValidationMessage(t("sourceImported", { path: result.input_path }));
+    } catch (error) {
+      const message = errorMessage(error);
+      setValidationMessage(t("sourceImportFailed", { message }));
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
   async function submitAnalysis() {
     setIsSubmitting(true);
     setValidationMessage("");
     try {
-      const job = await createAnalysis({
-        input_path: settings.inputPath,
-        rag_mode: settings.ragMode,
-        dataset_chunks: settings.datasetChunks,
-        model_path: settings.modelPath.trim() ? settings.modelPath : null,
-        native_build_policy: settings.nativeBuildPolicy,
-      }, settings.apiToken);
-      setJob(job);
-      setConnectionMode(settings.apiToken.trim() ? "polling" : "sse");
-    } catch {
-      loadDemo();
-      setValidationMessage(t("apiFallback"));
+      const externalTools: ExternalToolName[] | undefined = settings.echidnaEnabled
+        ? ["echidna"]
+        : undefined;
+      const job = await createAnalysis(
+        {
+          input_path: settings.inputPath,
+          rag_mode: settings.ragMode,
+          dataset_chunks: settings.datasetChunks,
+          model_path: settings.modelPath.trim() ? settings.modelPath : null,
+          native_build_policy: settings.nativeBuildPolicy,
+          external_tools: externalTools,
+          external_timeout_seconds: externalTools
+            ? Math.max(1, Math.trunc(settings.externalTimeoutSeconds))
+            : undefined,
+        },
+        settings.apiToken,
+      );
+      startAnalysis(job, settings.apiToken.trim() ? "polling" : "sse");
+    } catch (error) {
+      const message = errorMessage(error);
+      setValidationMessage(t("analysisSubmitFailed", { message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +162,7 @@ export function InputPanel() {
           <button
             type="button"
             onClick={() => updateSettings({ inputMode: "file" })}
+            aria-pressed={settings.inputMode === "file"}
             className={`rounded px-3 py-1.5 text-sm font-medium ${settings.inputMode === "file" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
           >
             {t("fileMode")}
@@ -83,6 +170,7 @@ export function InputPanel() {
           <button
             type="button"
             onClick={() => updateSettings({ inputMode: "project" })}
+            aria-pressed={settings.inputMode === "project"}
             className={`rounded px-3 py-1.5 text-sm font-medium ${settings.inputMode === "project" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
           >
             {t("projectMode")}
@@ -104,17 +192,144 @@ export function InputPanel() {
         </label>
 
         <label className="block">
-          <span className="text-xs font-medium text-slate-600">{t("sourcePreview")}</span>
-          <div className="mt-1 flex items-center gap-2 rounded-md border border-dashed border-slate-300 bg-white px-3 py-3">
-            <Upload className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-            <input
-              type="file"
-              accept=".sol"
-              onChange={(event) => handleSourcePreview(event.currentTarget.files?.[0] ?? null)}
-              className="min-w-0 flex-1 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
-            />
-          </div>
+          <span className="text-xs font-medium text-slate-600">{t("sourceType")}</span>
+          <select
+            aria-label={t("sourceType")}
+            value={settings.importSourceType}
+            onChange={(event) =>
+              updateSettings({
+                importSourceType: event.currentTarget.value as ImportSourceType,
+              })
+            }
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          >
+            {importSourceTypes.map((sourceType) => (
+              <option key={sourceType} value={sourceType}>
+                {t(
+                  sourceType === "local"
+                    ? "localSource"
+                    : sourceType === "github_archive"
+                      ? "githubSource"
+                      : sourceType === "etherscan_api"
+                        ? "etherscanSource"
+                        : "zipSource",
+                )}
+              </option>
+            ))}
+          </select>
         </label>
+
+        {settings.importSourceType === "local" ? (
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">{t("sourcePreview")}</span>
+            <div className="mt-1 flex items-center gap-2 rounded-md border border-dashed border-slate-300 bg-white px-3 py-3">
+              <Upload className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+              <input
+                aria-label={t("sourcePreview")}
+                type="file"
+                accept=".sol"
+                onChange={(event) => handleSourcePreview(event.currentTarget.files?.[0] ?? null)}
+                className="min-w-0 flex-1 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+              />
+            </div>
+          </label>
+        ) : null}
+
+        {settings.importSourceType !== "local" ? (
+          <>
+            {settings.importSourceType === "zip_base64" ? (
+              <label className="block">
+                <span className="text-xs font-medium text-slate-600">{t("zipArchive")}</span>
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-dashed border-slate-300 bg-white px-3 py-3">
+                  <Upload className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <input
+                    aria-label={t("zipArchive")}
+                    type="file"
+                    accept=".zip,application/zip"
+                    onChange={(event) =>
+                      setSourceArchive(event.currentTarget.files?.[0] ?? null)
+                    }
+                    className="min-w-0 flex-1 text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+                  />
+                </div>
+              </label>
+            ) : (
+              <label className="block">
+                <span className="text-xs font-medium text-slate-600">
+                  {t(
+                    settings.importSourceType === "github_archive"
+                      ? "githubRepository"
+                      : "contractAddress",
+                  )}
+                </span>
+                <input
+                  aria-label={t(
+                    settings.importSourceType === "github_archive"
+                      ? "githubRepository"
+                      : "contractAddress",
+                  )}
+                  value={settings.importSourceValue}
+                  onChange={(event) =>
+                    updateSettings({ importSourceValue: event.currentTarget.value })
+                  }
+                  className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+                />
+              </label>
+            )}
+
+            {settings.importSourceType === "etherscan_api" ? (
+              <>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">
+                    {t("explorerHost")}
+                  </span>
+                  <select
+                    aria-label={t("explorerHost")}
+                    value={settings.importExplorerHost}
+                    onChange={(event) =>
+                      updateSettings({
+                        importExplorerHost: event.currentTarget.value as typeof settings.importExplorerHost,
+                      })
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+                  >
+                    <option value="api.etherscan.io">Ethereum Mainnet</option>
+                    <option value="api-sepolia.etherscan.io">Ethereum Sepolia</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">
+                    {t("sourceApiKey")}
+                  </span>
+                  <input
+                    aria-label={t("sourceApiKey")}
+                    type="password"
+                    value={sourceApiKey}
+                    onChange={(event) => setSourceApiKey(event.currentTarget.value)}
+                    placeholder={t("optional")}
+                    className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+                  />
+                </label>
+              </>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={importSource}
+              disabled={
+                isImporting ||
+                isSubmitting ||
+                (settings.importSourceType === "zip_base64"
+                  ? !sourceArchive
+                  : !settings.importSourceValue.trim())
+              }
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+            >
+              <Upload className="h-4 w-4" aria-hidden="true" />
+              {isImporting ? t("importing") : t("importSource")}
+            </button>
+          </>
+        ) : null}
 
         <label className="block">
           <span className="text-xs font-medium text-slate-600">{t("ragMode")}</span>
@@ -170,6 +385,43 @@ export function InputPanel() {
         </label>
 
         <label className="block">
+          <span className="text-xs font-medium text-slate-600">{t("echidna")}</span>
+          <div className="mt-1 flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
+            <span className="text-sm text-slate-900">{t("echidna")}</span>
+            <input
+              aria-label={t("echidna")}
+              type="checkbox"
+              checked={settings.echidnaEnabled}
+              onChange={(event) =>
+                updateSettings({ echidnaEnabled: event.currentTarget.checked })
+              }
+              className="h-4 w-4 rounded border-slate-300 text-audit-teal focus:ring-audit-teal"
+            />
+          </div>
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">
+            {t("externalTimeoutSeconds")}
+          </span>
+          <input
+            aria-label={t("externalTimeoutSeconds")}
+            type="number"
+            min={1}
+            step={1}
+            value={settings.externalTimeoutSeconds}
+            disabled={!settings.echidnaEnabled}
+            onChange={(event) => {
+              const value = event.currentTarget.valueAsNumber;
+              if (Number.isFinite(value)) {
+                updateSettings({ externalTimeoutSeconds: value });
+              }
+            }}
+            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 disabled:bg-slate-50 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          />
+        </label>
+
+        <label className="block">
           <span className="text-xs font-medium text-slate-600">{t("apiToken")}</span>
           <input
             type="password"
@@ -193,7 +445,7 @@ export function InputPanel() {
           />
         </label>
 
-        <p className="min-h-5 text-xs text-slate-600" aria-live="polite">
+        <p className="min-h-5 text-xs text-slate-600" role="status">
           {validationMessage}
         </p>
       </div>
@@ -202,7 +454,7 @@ export function InputPanel() {
         <button
           type="button"
           onClick={submitAnalysis}
-          disabled={isSubmitting || !settings.inputPath.trim()}
+          disabled={isSubmitting || isImporting || !settings.inputPath.trim()}
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
         >
           <Play className="h-4 w-4" aria-hidden="true" />
