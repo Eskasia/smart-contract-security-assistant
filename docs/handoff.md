@@ -43,11 +43,11 @@ MLX——Apple Silicon 本地推理 runtime，本專案以 4-bit 權重量化估
 
 Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG chunks、prompt、LLM output、報告品質 judge score、token usage、partial 狀態、review status 與 review note，用於除錯與報告回溯；`scsa trace-dashboard` 可列出 trace id、dataset version、model version、review status。
 
-HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
+HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、Markdown report download、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
 
 Source import——`POST /api/imports` 與 `scsa import-source` 支援 GitHub archive、Etherscan API 與 ZIP；匯入後回傳 `input_path`、`import_id`、`source_kind`、`extracted_files`、`total_bytes`、`trust_level=untrusted`，前端可直接把 `input_path` 接到 `POST /api/analyses`。匯入目錄預設為 `reports-api/imports` 或 API `output_dir/imports`，可用 `--imports-dir` 與 import size limits 調整。遠端匯入會禁用環境 proxy、在 redirect 前檢查 target host、讀取後驗證 final response URL，並在超過 `max_total_bytes + 65,536` bytes 時拒絕回應。
 
-Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；security score 是合約風險量化分數，judge score 評估報告完整度。
+Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；前端可複製 `/reports/{contract_id}?finding={finding_id}` deep link 並下載 JSON/Markdown report，下載使用 `Authorization` header，不把 API token 放入 URL；security score 是合約風險量化分數，judge score 評估報告完整度。
 
 External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒，未安裝時結果為 `skipped`。
 
@@ -60,6 +60,21 @@ Report comparison——兩份 JSON 報告的差異比較，用 finding type、de
 0G proof package——`uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json` 後用 `REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')` 取得實際報告 id；`uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"` 產生 hash-stable `audit-proof.json`；本地驗證用 `cd integrations/0g && npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run && npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"`。Dry-run `proof_mode` 為 `dry_run` 且 `explorer_links` 為空；Live proof 仍需 funded `ZERO_G_PRIVATE_KEY`、`ZERO_G_RPC_URL=https://evmrpc.0g.ai`、`ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai`，先 `npm run deploy`，再設定 `ZERO_G_REGISTRY_ADDRESS` 後執行 live upload/register/verify；live registered `explorer_links` 欄位為 `storage_tx`、`registry`、`registration_tx`，預設指向 ChainScan。
 
 ## 驗證結果
+
+2026-05-24 剩餘 9% 補強驗證結果：
+
+```text
+uv run ruff check .        all checks passed
+uv run pytest              102 passed
+uv run python eval/run_eval.py  recall_at_k = 1.0
+uv run python eval/run_judge.py  local_average_judge_score = 5.0, external_average_judge_score = 5.0
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, precision = 0.8621, recall = 1.0, f1 = 0.9259
+uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+cd frontend && npm run test -- --run  33 passed
+cd frontend && npm run build          completed
+git diff --check                    passed
+Chrome headless CDP                 report deep-link, JSON download, Markdown download controls rendered; 390px mobile width has no button overflow
+```
 
 2026-05-17 前端驗證結果：
 

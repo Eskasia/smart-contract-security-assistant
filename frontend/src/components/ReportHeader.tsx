@@ -1,8 +1,19 @@
-import { Activity, Database, GitBranch, Timer } from "lucide-react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import {
+  Activity,
+  Copy,
+  Database,
+  Download,
+  FileJson,
+  FileText,
+  GitBranch,
+  Timer,
+} from "lucide-react";
 
+import { getReportMarkdown } from "../lib/api";
 import { formatSecurityScore, formatTokens } from "../lib/format";
 import { useTranslation } from "../lib/i18n";
-import { useAnalysisStore } from "../store/analysisStore";
+import { useAnalysisStore, useSettingsStore } from "../store/analysisStore";
 import { LanguageToggle } from "./LanguageToggle";
 import { Metric } from "./Metric";
 import { ReviewBadge, StatusBadge } from "./StatusBadge";
@@ -10,9 +21,59 @@ import { ReviewBadge, StatusBadge } from "./StatusBadge";
 export function ReportHeader() {
   const { t } = useTranslation();
   const report = useAnalysisStore((state) => state.report);
+  const selectedFindingId = useAnalysisStore((state) => state.selectedFindingId);
   const connectionMode = useAnalysisStore((state) => state.connectionMode);
   const analysisError = useAnalysisStore((state) => state.analysisError);
+  const apiToken = useSettingsStore((state) => state.settings.apiToken);
+  const [actionMessage, setActionMessage] = useState("");
   const metadata = report.analysis_metadata;
+  const reportFileName = useMemo(
+    () => safeFileName(report.contract_id || "report"),
+    [report.contract_id],
+  );
+  const shareUrl = useMemo(() => {
+    const url = new URL(
+      `/reports/${encodeURIComponent(report.contract_id)}`,
+      window.location.origin,
+    );
+    if (selectedFindingId) {
+      url.searchParams.set("finding", selectedFindingId);
+    }
+    return url.toString();
+  }, [report.contract_id, selectedFindingId]);
+
+  const copyReportLink = useCallback(async () => {
+    if (!navigator.clipboard?.writeText) {
+      setActionMessage(t("clipboardUnavailable"));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setActionMessage(t("reportLinkCopied"));
+    } catch {
+      setActionMessage(t("clipboardUnavailable"));
+    }
+  }, [shareUrl, t]);
+
+  const downloadJson = useCallback(() => {
+    downloadTextFile(
+      `${reportFileName}.json`,
+      JSON.stringify(report, null, 2),
+      "application/json;charset=utf-8",
+    );
+    setActionMessage(t("downloadStarted"));
+  }, [report, reportFileName, t]);
+
+  const downloadMarkdown = useCallback(async () => {
+    try {
+      const markdown = await getReportMarkdown(report.contract_id, apiToken);
+      downloadTextFile(`${reportFileName}.md`, markdown, "text/markdown;charset=utf-8");
+      setActionMessage(t("downloadStarted"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("unavailable");
+      setActionMessage(t("downloadFailed", { message }));
+    }
+  }, [apiToken, report.contract_id, reportFileName, t]);
 
   return (
     <header className="border-b border-slate-200 bg-white px-5 py-4">
@@ -33,7 +94,17 @@ export function ReportHeader() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 lg:w-auto">
-          <div className="flex justify-start lg:justify-end">
+          <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+            <HeaderActionButton label={t("copyReportLink")} onClick={copyReportLink}>
+              <Copy className="h-4 w-4" aria-hidden="true" />
+            </HeaderActionButton>
+            <HeaderActionButton label={t("downloadJson")} onClick={downloadJson}>
+              <FileJson className="h-4 w-4" aria-hidden="true" />
+            </HeaderActionButton>
+            <HeaderActionButton label={t("downloadMarkdown")} onClick={downloadMarkdown}>
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              <Download className="h-3 w-3" aria-hidden="true" />
+            </HeaderActionButton>
             <LanguageToggle />
           </div>
           <dl className="grid w-full grid-cols-2 gap-3 md:grid-cols-4 lg:min-w-[360px] lg:w-auto">
@@ -71,6 +142,50 @@ export function ReportHeader() {
           {t("analysisStatusFailed", { message: analysisError })}
         </p>
       )}
+      {actionMessage && (
+        <p className="mt-3 text-sm text-slate-600" role="status">
+          {actionMessage}
+        </p>
+      )}
     </header>
   );
+}
+
+function HeaderActionButton({
+  children,
+  label,
+  onClick,
+}: {
+  children: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+      aria-label={label}
+      title={label}
+    >
+      {children}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function safeFileName(value: string): string {
+  return value.replace(/[^A-Za-z0-9_.-]+/g, "_").replace(/^_+|_+$/g, "") || "report";
+}
+
+function downloadTextFile(filename: string, content: string, contentType: string): void {
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }

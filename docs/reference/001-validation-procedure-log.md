@@ -1,29 +1,29 @@
 ---
 title: "驗證程序日誌"
-description: "記錄 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。"
+description: "記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。"
 category: "reference"
 number: "001"
 status: current
 services: ["tests", "eval", "frontend", "docs", "integrations/0g"]
 related: ["guides/001", "design/001"]
-last_modified: "2026-05-17"
+last_modified: "2026-05-24"
 ---
 
 # 001 — 驗證程序日誌
 
 ## Status
 
-current；本日誌記錄 2026-05-17 release cleanup 驗證命令，並保留 2026-04-30 至 2026-05-07 的 RAG、judge、E2E memory、MLX probe、0G dry-run 與 full public project build 最後有效結果。
+current；本日誌記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令，並保留 2026-04-30 至 2026-05-07 的 RAG、judge、E2E memory、MLX probe、0G dry-run 與 full public project build 最後有效結果。
 
 ## Summary
 
-本輪驗證覆蓋 lint、pytest、前端測試/build、0G proof package、0G Storage dry-run、proof verifier、report proof attach、API boundary、native build policy 與 benchmark trust metrics。結論：核心 Python 流程、專案級 Solidity 輸入、API 加固、0G 本地 proof 流程、報告治理與文件產物可重建；dry-run proof 不產生 public Explorer links，live 0G deploy/register 仍需 funded key 與 registry address。
+本輪驗證覆蓋 lint、pytest、前端測試/build、report export/share、CI release gate、API boundary、native build policy 與 benchmark trust metrics。結論：核心 Python 流程、專案級 Solidity 輸入、API 加固、報告交付、0G 本地 proof 流程、報告治理與文件產物可重建；dry-run proof 不產生 public Explorer links，live 0G deploy/register 仍需 funded key 與 registry address。
 
 ## Environment
 
 | 項目 | 值 |
 |---|---|
-| 日期 | 2026-05-17 |
+| 日期 | 2026-05-24 |
 | 專案根目錄 | `/Users/william/智能合約安全分析助理 ` |
 | Python package | `smart-contract-security-assistant` |
 | Slither | `0.11.5` |
@@ -34,6 +34,16 @@ current；本日誌記錄 2026-05-17 release cleanup 驗證命令，並保留 20
 
 | 程序 | 命令 | 結果 |
 |---|---|---|
+| Remaining 9% lint | `uv run ruff check .` | 2026-05-24：`All checks passed!` |
+| Remaining 9% tests | `uv run pytest` | 2026-05-24：`102 passed in 18.99s` |
+| Remaining 9% frontend tests | `cd frontend && npm run test -- --run` | 2026-05-24：`6 files`, `33 passed` |
+| Remaining 9% frontend build | `cd frontend && npm run build` | 2026-05-24：build completed |
+| Remaining 9% RAG recall eval | `uv run python eval/run_eval.py` | 2026-05-24：`cases=8`, `recall_at_k=1.0` |
+| Remaining 9% judge eval | `uv run python eval/run_judge.py` | 2026-05-24：`cases=4`, `local_average_judge_score=5.0`, `external_average_judge_score=5.0` |
+| Remaining 9% public benchmark gate | `uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5` | 2026-05-24：`cases=50`, `supported_hit_rate=1.0`, `average_score_gap_safe_minus_vulnerable=45.05`, `precision=0.8621`, `recall=1.0`, `f1=0.9259` |
+| Remaining 9% public project preflight | `uv run python eval/run_public_project_builds.py --preflight-only` | 2026-05-24：`cases=10`, `forge=true`, `npx=true`, `missing_required_tools=[]` |
+| Remaining 9% diff hygiene | `git diff --check` | 2026-05-24：passed |
+| Remaining 9% browser smoke | Chrome headless CDP against `http://127.0.0.1:5173/` | 2026-05-24：header rendered report deep-link, JSON download and Markdown download controls; 390px mobile width had no button overflow; only dev-server/favicon noise observed |
 | Release cleanup lint | `uv run ruff check src/smart_contract_audit/source_import.py src/smart_contract_audit/http_api.py src/smart_contract_audit/cli.py src/smart_contract_audit/evaluation/public_benchmark.py eval/run_public_benchmark.py tests/test_source_import.py tests/test_http_api.py tests/test_public_benchmark.py` | `All checks passed!` |
 | Release cleanup focused tests | `uv run pytest tests/test_source_import.py tests/test_http_api.py tests/test_public_benchmark.py -q` | `30 passed in 5.30s` |
 | Frontend release tests | `cd frontend && npm run test -- --run` | 2026-05-17：`6 passed`, `32 passed` |

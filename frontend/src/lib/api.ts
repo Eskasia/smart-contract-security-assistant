@@ -58,6 +58,26 @@ async function requestJson<T>(
   return response.json() as Promise<T>;
 }
 
+async function requestText(
+  path: string,
+  init?: RequestInit,
+  apiToken?: string,
+): Promise<string> {
+  const response = await fetch(path, {
+    headers: {
+      ...authorizationHeader(apiToken),
+      ...init?.headers,
+    },
+    ...init,
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status);
+  }
+
+  return response.text();
+}
+
 function pathSegment(value: string): string {
   return encodeURIComponent(value);
 }
@@ -101,6 +121,14 @@ export function getAnalysis(analysisId: string, apiToken?: string): Promise<Anal
 export function getReport(contractId: string, apiToken?: string): Promise<AnalysisReport> {
   return requestJson<AnalysisReport>(
     `/api/reports/${pathSegment(contractId)}`,
+    undefined,
+    apiToken,
+  );
+}
+
+export function getReportMarkdown(contractId: string, apiToken?: string): Promise<string> {
+  return requestText(
+    `/api/reports/${pathSegment(contractId)}/markdown`,
     undefined,
     apiToken,
   );

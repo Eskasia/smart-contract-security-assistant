@@ -1,13 +1,13 @@
 # Review Checklist
 
-日期：2026-05-17。
+日期：2026-05-24。
 
 本 checklist 用於本專案安全閘門審查。
 
 | Gate | Acceptance |
 |---|---|
 | Git baseline | repo 在 `main`，可讀取 baseline diff |
-| CI | `.github/workflows/ci.yml` 執行 ruff、pytest、RAG eval、judge eval |
+| CI | `.github/workflows/ci.yml` 執行 ruff、pytest、RAG eval、judge eval、public benchmark gate、public project build preflight、frontend test/build 與 `git diff --check` |
 | Project input | Foundry、Hardhat、nested imports 三個 fixture 均可 Slither 分析；Foundry/Hardhat native build preflight 與 Hardhat 自訂 artifacts/cache path 有單元測試覆蓋 |
 | API boundary | Token auth、`input_root`、body limit 與 non-wildcard CORS 測試通過 |
 | Source import boundary | `POST /api/imports` 與 `scsa import-source` 支援 GitHub/Etherscan/ZIP；拒絕 zip-slip、symlink、nested archive、非 allowlist host、非 allowlist redirect target、oversized remote response；匯入來源分析時強制 `native_build_policy=disabled` |
@@ -25,6 +25,6 @@
 | Report comparison | `scsa compare-reports` 可輸出新增、修復、持續存在 findings 與 score delta |
 | Public benchmark | `eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17` 通過 |
 | Benchmark metrics | Public benchmark summary 含 confusion matrix、precision、recall 與 F1 |
-| Report | JSON/Markdown 含 vulnerable code、AI remediation code、trace id、dataset version、model version、report/finding review status、finding review note、security score、報告品質 judge score、token usage |
+| Report | JSON/Markdown 含 vulnerable code、AI remediation code、trace id、dataset version、model version、report/finding review status、finding review note、security score、報告品質 judge score、token usage；前端可複製 report deep link 並下載 JSON/Markdown |
 | Judge | `eval/run_judge.py` 同時輸出 local 與 external 報告品質分數 |
 | GitHub Actions | `.github/workflows/smart-contract-audit.yml` 可手動產生 `scsa-reports` artifact 與 `comparison.md` |

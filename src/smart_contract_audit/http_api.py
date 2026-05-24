@@ -295,6 +295,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         if len(path) == 3 and path[:2] == ["api", "reports"]:
             self._get_report(path[2])
             return
+        if len(path) == 4 and path[:2] == ["api", "reports"] and path[3] == "markdown":
+            self._get_report_markdown(path[2])
+            return
         if len(path) == 3 and path[:2] == ["api", "traces"]:
             finding_id = query.get("finding_id", [None])[0]
             self._get_trace(path[2], finding_id)
@@ -372,6 +375,26 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
             return
         self._send_json(report)
+
+    def _get_report_markdown(self, contract_id: str) -> None:
+        try:
+            markdown = _read_report_markdown(self.server.config.output_dir, contract_id)
+        except ValueError as exc:
+            self._send_error_response(
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_ERROR",
+                str(exc),
+            )
+            return
+        if markdown is None:
+            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            return
+        safe_contract_id = require_safe_path_segment(contract_id, "contract_id")
+        self._send_text(
+            markdown,
+            content_type="text/markdown; charset=utf-8",
+            disposition=f'attachment; filename="{safe_contract_id}.md"',
+        )
 
     def _get_trace(self, trace_id: str, finding_id: str | None) -> None:
         trace_db = self.server.config.resolved_trace_db()
@@ -561,6 +584,24 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self._send_common_headers()
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_text(
+        self,
+        body_text: str,
+        *,
+        content_type: str,
+        status: HTTPStatus = HTTPStatus.OK,
+        disposition: str | None = None,
+    ) -> None:
+        body = body_text.encode("utf-8")
+        self.send_response(status)
+        self._send_common_headers()
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        if disposition:
+            self.send_header("Content-Disposition", disposition)
         self.end_headers()
         self.wfile.write(body)
 
@@ -778,6 +819,13 @@ def _read_report(output_dir: Path, contract_id: str) -> dict[str, Any] | None:
     if not report_path.exists():
         return None
     return json.loads(report_path.read_text(encoding="utf-8"))
+
+
+def _read_report_markdown(output_dir: Path, contract_id: str) -> str | None:
+    markdown_path = _report_path(output_dir, contract_id, ".md")
+    if not markdown_path.exists():
+        return None
+    return markdown_path.read_text(encoding="utf-8")
 
 
 def _write_report_dict(output_dir: Path, contract_id: str, report: dict[str, Any]) -> None:

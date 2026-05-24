@@ -118,6 +118,14 @@ def test_http_api_analysis_report_trace_review_and_sse(tmp_path: Path) -> None:
         trace_id = report["analysis_metadata"]["analysis_trace_id"]
         assert report["findings"][0]["finding_id"] == "f_001"
 
+        markdown, headers = _text_request(
+            f"{base_url}/api/reports/contract_api_001/markdown"
+        )
+        assert headers["Content-Type"] == "text/markdown; charset=utf-8"
+        assert headers["Content-Disposition"] == 'attachment; filename="contract_api_001.md"'
+        assert "# Smart Contract Security Report" in markdown
+        assert "- Contract ID: `contract_api_001`" in markdown
+
         trace_rows = _json_request(f"{base_url}/api/traces/{trace_id}?finding_id=f_001")
         assert trace_rows[0]["packed_prompt"] is None
         assert trace_rows[0]["slither_raw"] is None
@@ -211,10 +219,13 @@ def test_http_api_rejects_invalid_payload_and_review_status(tmp_path: Path) -> N
 
 
 def test_http_api_requires_token_when_configured(tmp_path: Path) -> None:
+    output_dir = tmp_path / "reports"
+    output_dir.mkdir(parents=True)
+    (output_dir / "contract_api_001.md").write_text("# Report\n", encoding="utf-8")
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+        config=ApiConfig(output_dir=output_dir, api_token="dev-token"),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -237,6 +248,18 @@ def test_http_api_requires_token_when_configured(tmp_path: Path) -> None:
             expect_error=422,
         )
         assert created["error"]["code"] == "VALIDATION_ERROR"
+
+        error = _json_request(
+            f"{base_url}/api/reports/contract_api_001/markdown",
+            expect_error=401,
+        )
+        assert error["error"]["code"] == "UNAUTHORIZED"
+
+        markdown, _ = _text_request(
+            f"{base_url}/api/reports/contract_api_001/markdown",
+            headers={"Authorization": "Bearer dev-token"},
+        )
+        assert markdown == "# Report\n"
     finally:
         server.shutdown()
         server.server_close()
@@ -566,6 +589,20 @@ def test_http_api_rejects_path_like_report_id(tmp_path: Path) -> None:
         )
         assert error["error"]["code"] == "VALIDATION_ERROR"
         assert "contract_id" in error["error"]["message"]
+
+        error = _json_request(
+            f"{base_url}/api/reports/..%2Fescape/markdown",
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "contract_id" in error["error"]["message"]
+
+        error = _json_request(
+            f"{base_url}/api/reports/..%5Cescape/markdown",
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "contract_id" in error["error"]["message"]
     finally:
         server.shutdown()
         server.server_close()
@@ -623,6 +660,16 @@ def _json_request(
             raise
         assert exc.code == expect_error
         return json.loads(exc.read().decode("utf-8"))
+
+
+def _text_request(
+    url: str,
+    headers: dict[str, str] | None = None,
+) -> tuple[str, dict[str, str]]:
+    request = urllib.request.Request(url, method="GET", headers=headers or {})
+    with urllib.request.urlopen(request, timeout=5) as response:
+        headers = dict(response.headers.items())
+        return response.read().decode("utf-8"), headers
 
 
 def _wait_for_terminal_job(base_url: str, analysis_id: str) -> dict[str, Any]:

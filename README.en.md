@@ -41,6 +41,7 @@ Open `http://127.0.0.1:5173`. The React UI sends import and analysis requests to
 - Project build support: Foundry/Hardhat native builds run before Slither in trusted mode; `--native-build-policy disabled` skips build scripts for untrusted projects. The public build harness initializes submodules, installs npm dependencies, and handles custom Hardhat artifacts/cache paths.
 - Local API hardening: bearer token auth, allowed `input_root`, request body limit, non-wildcard CORS, and native build policy controls.
 - Source import hardening: `/api/imports` and `scsa import-source` stage remote sources locally, reject zip-slip, symlink entries, nested archives, unsafe redirects, oversized remote responses, and non-allowlisted hosts, then force imported paths to untrusted build mode.
+- Report handoff: the API exposes JSON reports and authenticated Markdown downloads; the frontend can copy report deep links and download JSON/Markdown without putting API tokens in URLs.
 - Static analysis: Slither detector mapping for reentrancy, access control, unchecked external calls, delegatecall, array length manipulation, oracle issues, price manipulation, privilege escalation, and upgrade risk.
 - Report quality: local and external judge adapters score report completeness on a 0-5 scale.
 - Security score: `security_score_v2` returns a 0-100 contract risk score based on severity, confidence, finding review status, partial analysis state, and business logic review requirements.
@@ -105,7 +106,11 @@ Validated on 2026-05-06:
 
 The workflow `.github/workflows/smart-contract-audit.yml` adds a manual audit button in GitHub Actions. It accepts a Solidity file or project directory, runs `scsa analyze`, and uploads the generated reports as the `scsa-reports` artifact. When `baseline_report` is provided, it also writes `comparison.md` and can fail on new severity 3 findings or a configurable score drop.
 
+The CI workflow `.github/workflows/ci.yml` runs ruff, pytest, RAG eval, judge eval, the public benchmark gate, public project build preflight, frontend tests/build, and `git diff --check` on pull requests.
+
 ## Validation
+
+Validated on 2026-05-24: `uv run ruff check .` passed, `uv run pytest` reached `102 passed`, frontend tests reached `33 passed`, frontend build completed, RAG recall was `1.0`, judge averages were `5.0/5.0`, public benchmark reached supported hit rate `1.0`, precision `0.8621`, recall `1.0`, F1 `0.9259`, public project preflight reported `missing_required_tools=[]`, and `git diff --check` passed. Chrome headless CDP verified the report deep-link, JSON download, and Markdown download controls, with no button overflow at `390px` mobile width. CI now includes those release gates plus frontend test/build and whitespace checks.
 
 Validated on 2026-05-17: `uv run ruff check .` passed, `uv run pytest` reached `102 passed`, frontend tests reached `32 passed`, frontend build completed, RAG recall was `1.0`, judge averages were `5.0/5.0`, public benchmark regenerated `docs/reference/002-public-benchmark-leaderboard.md`, public project preflight reported `missing_required_tools=[]`, and `git diff --check` passed.
 

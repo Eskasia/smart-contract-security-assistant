@@ -73,6 +73,59 @@ describe("App", () => {
     expect(screen.queryByRole("link", { name: "Storage tx" })).not.toBeInTheDocument();
   });
 
+  it("copies report deep links and downloads exports without exposing tokens", async () => {
+    useSettingsStore.setState({
+      settings: { ...defaultSettings, apiToken: "export-token" },
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const createObjectURL = vi.fn(() => "blob:report");
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    const fetchMock = vi.fn(async () => (
+      new Response("# Smart Contract Security Report\n", {
+        status: 200,
+        headers: { "Content-Type": "text/markdown" },
+      })
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "複製報告連結" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    const copiedUrl = writeText.mock.calls[0][0] as string;
+    expect(copiedUrl).toContain(`/reports/${encodeURIComponent(demoReport.contract_id)}`);
+    expect(copiedUrl).toContain("finding=f_001");
+    expect(copiedUrl).not.toContain("export-token");
+
+    fireEvent.click(screen.getByRole("button", { name: "下載 Markdown" }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/reports/${demoReport.contract_id}/markdown`,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer export-token",
+          }),
+        }),
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "下載 JSON" }));
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:report");
+  });
+
   it("switches the interface language", async () => {
     render(<App />);
 

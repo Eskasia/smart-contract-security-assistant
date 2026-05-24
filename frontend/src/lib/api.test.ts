@@ -5,6 +5,7 @@ import {
   createAnalysis,
   createImport,
   getReport,
+  getReportMarkdown,
   getTrace,
   patchFindingReview,
 } from "./api";
@@ -135,6 +136,7 @@ describe("createAnalysis", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await getReport("contract/../x");
+    await getReportMarkdown("contract/../x");
     await getTrace("trace/001", "finding/001");
     await patchFindingReview("contract/../x", "finding/001", {
       review_status: "false_positive",
@@ -148,11 +150,16 @@ describe("createAnalysis", () => {
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      "/api/traces/trace%2F001?finding_id=finding%2F001",
+      "/api/reports/contract%2F..%2Fx/markdown",
       expect.any(Object),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
+      "/api/traces/trace%2F001?finding_id=finding%2F001",
+      expect.any(Object),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
       "/api/reports/contract%2F..%2Fx/findings/finding%2F001/review",
       expect.objectContaining({
         method: "PATCH",
@@ -175,11 +182,14 @@ describe("createAnalysis", () => {
 
     await getReport("contract_001");
     await getReport("contract_001", "runtime-token");
+    await getReportMarkdown("contract_001", "runtime-token");
 
     const firstHeaders = fetchMock.mock.calls[0][1].headers as Record<string, string>;
     const secondHeaders = fetchMock.mock.calls[1][1].headers as Record<string, string>;
+    const thirdHeaders = fetchMock.mock.calls[2][1].headers as Record<string, string>;
     expect(firstHeaders.Authorization).toBeUndefined();
     expect(secondHeaders.Authorization).toBe("Bearer runtime-token");
+    expect(thirdHeaders.Authorization).toBe("Bearer runtime-token");
   });
 
   it("does not expose raw error response bodies in thrown messages", async () => {

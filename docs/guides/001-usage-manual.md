@@ -6,14 +6,14 @@ number: "001"
 status: current
 services: ["src/smart_contract_audit", "data/dataset_v1.0", "eval"]
 related: ["design/001", "reference/001"]
-last_modified: "2026-05-06"
+last_modified: "2026-05-24"
 ---
 
 # 001 — 使用說明書
 
 ## Status
 
-current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-06 本地驗證結果核對。
+current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`src/smart_contract_audit/http_api.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-24 report export 更新核對。
 
 ## Summary
 
@@ -73,6 +73,8 @@ uv run scsa api \
 ```
 
 `--native-build-policy disabled` 會略過未信任 Foundry/Hardhat 專案的 build scripts，改用 Slither/solc fallback；前端設定 API token 後會改用 polling，因為瀏覽器 EventSource 無法帶 Authorization header。
+
+Report 讀取端點為 `GET /api/reports/{contract_id}`，Markdown 下載端點為 `GET /api/reports/{contract_id}/markdown`；兩者都使用同一組 bearer token、CORS 與 `contract_id` path segment 驗證。前端下載 JSON/Markdown 時使用 `Authorization` header，不會把 API token 放入 deep link。
 
 ## 報告狀態
 
