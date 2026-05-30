@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a reproducible problem in Smart Contract Security Assistant.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not include secrets, private keys, proprietary contracts, or code you are not authorized to share.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact command and the smallest shareable Solidity input.
+      placeholder: |
+        1. Run `uv run scsa analyze ...`
+        2. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "v0.1.0 or git commit SHA"
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "macOS 15.5, Python 3.12, uv 0.x"
+    validations:
+      required: false
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: Authorization and data safety
+      options:
+        - label: I own or am authorized to share any contract, trace, or report included in this issue.
+          required: true
+        - label: I removed private keys, secrets, customer data, and proprietary material.
+          required: true
