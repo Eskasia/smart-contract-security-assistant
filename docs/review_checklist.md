@@ -15,7 +15,7 @@
 | 0G proof package | `scsa 0g-package` 產生 stable `audit-proof.json`，含 report hash、score、finding count、trace id；contract id 不能逃出 output directory |
 | 0G Storage dry-run | `integrations/0g` 可用 `npm run upload -- <audit-proof.json> --dry-run` 產生 `proof_mode=dry_run`、空 `explorer_links` 的 `submission-proof.json`，並通過 `npm run verify-proof` |
 | 0G Chain registry | `AuditProofRegistry` owner-only；`register-proof.mjs` 嚴格驗證 report hash、storage root、registry address、score bps 與 explorer link key |
-| Hackathon submission | `README.hackathon.md`、`docs/hackathon/003-submission-package-index.md`、`docs/hackathon/008-issue-remediation-tracker.md`、HackQuest JSON、demo checklist、X post template、live proof blocker fields 與 reproduction steps 完整 |
+| Hackathon submission | `README.md`、`docs/hackathon/003-submission-package-index.md`、`docs/hackathon/007-judge-reproduction-guide.md`、`docs/hackathon/008-issue-remediation-tracker.md`、HackQuest JSON、demo checklist、X post template、live proof blocker fields 與 reproduction steps 完整 |
 | Hackathon repo visibility | GitHub repository page must not show a Private badge before HackQuest submission |
 | Public project build validation | local manifest summary、native build threshold、commit ref checkout、10 repo manifest pinning、preflight missing tools、dependency install fallback 有單元測試覆蓋；10 pinned public repos 達 `10/10` analyzer 與 `10/10` native build |
 | RAG corpus | `eval/run_eval.py` 的 `recall_at_k` 維持 `1.0` |

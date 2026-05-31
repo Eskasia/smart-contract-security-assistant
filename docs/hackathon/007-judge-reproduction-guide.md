@@ -107,6 +107,6 @@ Expected live fields:
 
 ## References
 
-- `README.hackathon.md`
+- `README.md`
 - `docs/reference/001-validation-procedure-log.md`
 - `integrations/0g/.env.example`

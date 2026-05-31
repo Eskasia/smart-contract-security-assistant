@@ -50,7 +50,7 @@ live_registered——本專案 `submission-proof.json` 的正式提交狀態，�
 | 0G mainnet proof | `docs/hackathon/004-live-0g-proof-record.md` | blocked；待 live deploy/register |
 | Structured form values | `docs/hackathon/hackquest-submission.form.json` | blocked；live proof 與 X post 仍空 |
 | Demo video | `docs/hackathon/006-demo-video-production-checklist.md` | partially ready；public MP4 URL 已公開，正式 live 0G proof 段落仍待補 |
-| README / documentation | `README.hackathon.md` | ready except live fields |
+| README / documentation | `README.md` + `docs/hackathon/007-judge-reproduction-guide.md` | ready except live fields |
 | Public X post | `docs/hackathon/005-public-x-post-template.md` | blocked；待 screenshot/clip 與公開發布 |
 | Judge reproduction | `docs/hackathon/007-judge-reproduction-guide.md` | local ready；live verification blocked |
 

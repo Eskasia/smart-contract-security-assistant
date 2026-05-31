@@ -4,7 +4,7 @@ description: "HackQuest form text, 0G proof fields, public X post copy, and fina
 category: "hackathon"
 number: "001"
 status: draft
-services: ["README.hackathon.md", "integrations/0g", "frontend"]
+services: ["README.md", "integrations/0g", "frontend"]
 related: ["hackathon/002", "hackathon/003", "hackathon/004", "hackathon/005", "hackathon/006", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -94,7 +94,7 @@ Public X post link:
 ## Final Submission Checklist
 
 - [x] GitHub repository is public.
-- [ ] `README.hackathon.md` explains architecture, 0G modules, and local reproduction.
+- [ ] `README.md` explains the public project overview and `docs/hackathon/007-judge-reproduction-guide.md` explains local reproduction.
 - [ ] 0G mainnet registry contract address is filled in.
 - [ ] 0G Explorer links open without authentication.
 - [ ] Demo video is 3 minutes or less and shows product flow plus 0G proof.

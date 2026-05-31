@@ -20,7 +20,7 @@
 - 2026-05-04 已新增 Foundry/Hardhat 原生 build preflight；成功時 Slither 使用專案框架，失敗或工具缺失時回退 solc fallback 並寫入 `analysis_metadata.errors`。
 - 2026-05-04 已新增 `eval/run_public_project_builds.py` 與 `eval/public_benchmark/public-project-builds-10-manifest.json`，可用 10 個 pinned public repos 自動 clone 或讀 local path，初始化 submodules、安裝 npm dependencies、支援 Hardhat 自訂 artifacts/cache 路徑，輸出 analyzer success rate、native build success rate、`forge`/`npx` 可用性與 blocker 統計；本機實測達 `10/10` analyzer 與 `10/10` native build。
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
-- 2026-05-04 已新增英文版 `README.en.md`。
+- 2026-05-31 已將公開入口收斂為單一 `README.md`；`README.en.md` 與 `README.hackathon.md` 不再作為 GitHub 入口，hackathon reproduction 與 proof 說明保留在 `docs/hackathon/`。
 - 2026-05-06 已新增 HTTP API 邊界加固：bearer token、`input_root`、request body limit、固定 CORS origin 與 CLI 啟動參數。
 - 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
 - 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
@@ -33,7 +33,7 @@
 - 2026-05-17 public benchmark 已新增 `--leaderboard-output` 與 `--leaderboard-date`，可產生 `docs/reference/002-public-benchmark-leaderboard.md`；2026-05-06 已新增 confusion matrix、precision、recall 與 F1 指標。
 - 2026-05-07 已新增 0G hackathon proof flow：`scsa 0g-package` 產生 `audit-proof.json`，`integrations/0g` 提供 Storage upload、registry deploy/register 與 proof verify scripts，`scsa 0g-attach-proof` 可把 `submission-proof.json` 回寫到 report metadata，前端右欄可顯示 0G Proof panel；live deployment 欄位仍為 pending。
 - OSS readiness 基礎文件已存在：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、`.github/ISSUE_TEMPLATE/*`、`.github/pull_request_template.md`。
-- README 已整理成外部讀者版本，包含 authorized-use boundary、quickstart、demo output、limitations 與 maintainer automation use cases。
+- README 已整理成 SCSA 專屬 evidence workbench 敘事，包含 analyzer/AI 邊界、trace/CI/review workflow、Quick Start、Web Workbench、CLI cookbook、輸出契約、安全邊界與驗證。
 - Release readiness 已開始：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
 - Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
 - Tester outreach 與 feedback tracker 已建立：`docs/community/002-v0.1.0-outreach-kit.md`、`docs/community/003-v0.1.0-feedback-tracker.md`。

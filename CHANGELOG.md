@@ -18,6 +18,13 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
   issues #4 through #8 under the `v0.1.0` milestone.
 - v0.1.0 release readiness checklist in `docs/release/001-v0.1.0-checklist.md`.
 
+### Changed
+
+- Consolidated public project positioning into the main `README.md` as the
+  single GitHub entry point for SCSA's local evidence workbench narrative.
+- Moved hackathon-specific reproduction and live proof references to
+  `docs/hackathon/` instead of maintaining a separate hackathon README.
+
 ### Validation
 
 - `uv sync --extra audit --dev`

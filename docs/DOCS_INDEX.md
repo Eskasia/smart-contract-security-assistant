@@ -22,7 +22,7 @@ Generated at: 2026-05-31
 | hackathon | 007 | draft | Judge Reproduction Guide | Reviewer-facing setup, local demo, dry-run proof, and live 0G verification steps. | 2026-05-07 | `docs/hackathon/007-judge-reproduction-guide.md` |
 | hackathon | 008 | draft | 0G Hackathon Issue Remediation Tracker | Tracks each issue from /Users/william/0g-apac-hackathon-issues.md and its remediation status. | 2026-05-07 | `docs/hackathon/008-issue-remediation-tracker.md` |
 | hackathon | 009 | draft | HackQuest 成果提交說明書 | 繁體中文整理 0G APAC Hackathon 的 HackQuest 成果提交材料與本專案交付對應。 | 2026-05-07 | `docs/hackathon/009-hackquest-submission-guide-zh.md` |
-| readme | 001 | current | English README | 面向 GitHub 使用者的英文安裝、API 加固、功能、benchmark 與 Actions 說明。 | 2026-05-31 | `README.en.md` |
+| readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-05-31 | `README.md` |
 | reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-05-31 | `docs/knowledge-graph.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。 | 2026-05-24 | `docs/reference/001-validation-procedure-log.md` |
 | reference | 002 | current | Public Benchmark Leaderboard | 記錄 2026-05-17 Hugging Face Slither 50 份公開樣本的支援命中率、confusion matrix、precision、recall、F1 與逐案結果。 | 2026-05-17 | `docs/reference/002-public-benchmark-leaderboard.md` |
