@@ -65,6 +65,19 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
     lines.extend(
         [
             "",
+            "## Evidence Graph Summary",
+            "",
+            "- Nodes: `analysis_trace.sqlite:evidence_nodes`",
+            "- Edges: `analysis_trace.sqlite:evidence_edges`",
+            "- Claims: `analysis_trace.sqlite:evidence_claims`",
+            "- Unsupported security claims: "
+            f"`{report.evidence_graph_summary.get('unsupported_security_claims', 0)}`",
+        ]
+    )
+
+    lines.extend(
+        [
+            "",
             "## Findings",
             "",
         ]
@@ -83,6 +96,7 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
             ]
             if finding.review_note:
                 finding_lines.append(f"- Finding review note: {finding.review_note}")
+            standard_refs = finding.to_dict().get("standard_refs", [])
             finding_lines.extend(
                 [
                     f"- Location: `{finding.location.file}:{finding.location.line_start}`",
@@ -93,6 +107,22 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     f"`{finding.external_judge_score:.2f}/5`",
                     f"- Tokens: prompt `{finding.prompt_tokens}`, completion "
                     f"`{finding.completion_tokens}`, total `{finding.total_tokens}`",
+                    "- Standards: "
+                    + _format_standard_refs(standard_refs),
+                    "- Evidence graph root: "
+                    + f"`{finding.evidence_graph.get('root_finding_node_id', 'unavailable')}`",
+                    "- Groundedness: "
+                    + f"`{finding.evidence_graph.get('groundedness_status', 'unavailable')}`",
+                    "- Native rules: "
+                    + _format_native_rules(finding.evidence_graph.get("rule_results", [])),
+                    "- Exploit validation: "
+                    + _format_exploit_validation(finding.exploit_validation),
+                    "- Fuzz seeds: "
+                    + _format_count(finding.fuzz_seed_suggestions, "seed"),
+                    "- Formal properties: "
+                    + _format_count(finding.formal_property_suggestions, "property"),
+                    "- DeFi profit signal: "
+                    + f"`{finding.defi_profit_signal.get('status', 'not_observed')}`",
                     "",
                     "Evidence:",
                     "",
@@ -112,6 +142,22 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     "",
                     finding.attack_path or "Not generated.",
                     "",
+                    "Exploit Validation:",
+                    "",
+                    _render_exploit_validation(finding.exploit_validation),
+                    "",
+                    "Fuzz Seed Suggestions:",
+                    "",
+                    _render_fuzz_seeds(finding.fuzz_seed_suggestions),
+                    "",
+                    "Formal Property Suggestions:",
+                    "",
+                    _render_formal_properties(finding.formal_property_suggestions),
+                    "",
+                    "DeFi Profit Signal:",
+                    "",
+                    _render_defi_profit_signal(finding.defi_profit_signal),
+                    "",
                     "Fix suggestion:",
                     "",
                     finding.fix_suggestion or "Not generated.",
@@ -127,3 +173,112 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
             lines.extend(finding_lines)
 
     output_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _format_standard_refs(standard_refs: object) -> str:
+    if not isinstance(standard_refs, list) or not standard_refs:
+        return "`[]`"
+    formatted = []
+    for ref in standard_refs:
+        if not isinstance(ref, dict):
+            continue
+        standard = ref.get("standard")
+        ref_id = ref.get("id")
+        label = ref.get("label")
+        if standard and ref_id and label:
+            formatted.append(f"`{standard} {ref_id}` ({label})")
+        elif ref_id:
+            formatted.append(f"`{ref_id}`")
+    return ", ".join(formatted) if formatted else "`[]`"
+
+
+def _format_native_rules(rule_results: object) -> str:
+    if not isinstance(rule_results, list) or not rule_results:
+        return "`[]`"
+    formatted = []
+    for result in rule_results:
+        if not isinstance(result, dict):
+            continue
+        rule_id = result.get("rule_id")
+        status = result.get("status")
+        if rule_id and status:
+            formatted.append(f"`{rule_id}` ({status})")
+    return ", ".join(formatted) if formatted else "`[]`"
+
+
+def _format_exploit_validation(validation: object) -> str:
+    if not isinstance(validation, dict) or not validation:
+        return "`not_attempted`"
+    status = validation.get("status", "not_attempted")
+    mode = validation.get("mode", "sandbox_only")
+    human_review = validation.get("human_review_required", True)
+    return f"`{status}` / `{mode}` / human review `{human_review}`"
+
+
+def _format_count(items: object, label: str) -> str:
+    if not isinstance(items, list):
+        return "`0`"
+    return f"`{len(items)}` {label}{'' if len(items) == 1 else 's'}"
+
+
+def _render_exploit_validation(validation: object) -> str:
+    if not isinstance(validation, dict) or not validation:
+        return "Status: `not_attempted`"
+    lines = [
+        f"Status: `{validation.get('status', 'not_attempted')}`",
+        f"Mode: `{validation.get('mode', 'sandbox_only')}`",
+        f"Triggered: `{validation.get('triggered')}`",
+        f"Human review required: `{validation.get('human_review_required', True)}`",
+    ]
+    if validation.get("profit_delta"):
+        lines.append(f"Profit delta: `{validation['profit_delta']}`")
+    if validation.get("execution_log_path"):
+        lines.append(f"Execution log: `{validation['execution_log_path']}`")
+    sequence = validation.get("transaction_sequence")
+    if isinstance(sequence, list) and sequence:
+        lines.append("Transaction sequence: " + " -> ".join(f"`{step}`" for step in sequence))
+    return "\n".join(lines)
+
+
+def _render_fuzz_seeds(seeds: object) -> str:
+    if not isinstance(seeds, list) or not seeds:
+        return "No fuzz seed suggestions."
+    lines = []
+    for seed in seeds:
+        if not isinstance(seed, dict):
+            continue
+        lines.append(
+            "- "
+            f"`{seed.get('seed_id', 'seed')}` targets "
+            f"`{seed.get('target_function', 'target')}`; "
+            f"supported by `{', '.join(seed.get('supported_by', []))}`."
+        )
+    return "\n".join(lines) if lines else "No fuzz seed suggestions."
+
+
+def _render_formal_properties(properties: object) -> str:
+    if not isinstance(properties, list) or not properties:
+        return "No formal property suggestions."
+    lines = []
+    for prop in properties:
+        if not isinstance(prop, dict):
+            continue
+        lines.append(
+            "- "
+            f"`{prop.get('property_id', 'property')}` is `{prop.get('status', 'draft')}` "
+            f"and `{prop.get('verification_status', 'not_proven')}`."
+        )
+    return "\n".join(lines) if lines else "No formal property suggestions."
+
+
+def _render_defi_profit_signal(signal: object) -> str:
+    if not isinstance(signal, dict) or not signal:
+        return "Status: `not_observed`"
+    lines = [
+        f"Status: `{signal.get('status', 'not_observed')}`",
+        f"Profitability: `{signal.get('profitability_status', 'not_assessed')}`",
+    ]
+    asset_flow = signal.get("asset_flow")
+    if isinstance(asset_flow, list) and asset_flow:
+        lines.append(f"Asset delta: `{asset_flow}`")
+    return "\n".join(lines)

@@ -31,6 +31,7 @@ def test_normalize_mapped_detector() -> None:
     assert result.findings[0].vulnerability_type == "reentrancy"
     assert result.findings[0].severity == 3
     assert result.findings[0].location.line_start == 10
+    assert result.findings[0].to_dict()["standard_refs"][0]["id"] == "SC08:2026"
     assert not result.unmapped
 
 

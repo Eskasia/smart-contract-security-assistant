@@ -15,6 +15,12 @@ export const demoReport: AnalysisReport = {
     total_finding_penalty: 38.16,
     severity_counts: { "1": 0, "2": 1, "3": 1 },
   },
+  evidence_graph_summary: {
+    finding_count: 2,
+    claim_count: 2,
+    native_rule_result_count: 10,
+    unsupported_security_claims: 0,
+  },
   external_tool_results: [
     {
       tool_name: "mythril",
@@ -67,6 +73,127 @@ export const demoReport: AnalysisReport = {
       total_tokens: 980,
       review_status: "unreviewed",
       review_note: "",
+      standard_refs: [
+        {
+          standard: "OWASP Smart Contract Top 10",
+          id: "SC08:2026",
+          label: "Reentrancy",
+          confidence: "high",
+        },
+        {
+          standard: "SWC",
+          id: "SWC-107",
+          label: "Reentrancy",
+          confidence: "high",
+        },
+      ],
+      evidence_graph: {
+        nodes_path: "analysis_trace.sqlite:evidence_nodes",
+        edges_path: "analysis_trace.sqlite:evidence_edges",
+        claims_path: "analysis_trace.sqlite:evidence_claims",
+        root_finding_node_id: "finding:f_001",
+        source_nodes: ["source:tests/contracts/VulnerableVault.sol:11-16"],
+        tool_signal_nodes: ["tool_signal:slither:reentrancy-eth:f_001"],
+        rag_chunk_nodes: ["rag_chunk:web50_022#12"],
+        claim_nodes: ["claim:f_001:001"],
+        standard_nodes: ["standard_ref:OWASP:SC08:2026", "standard_ref:SWC:SWC-107"],
+        rule_nodes: ["rule_result:scsa.reentrancy.evidence_confirmer.v1:f_001"],
+        advanced_nodes: [
+          "exploit_validation:f_001:001",
+          "seed:f_001:001",
+          "property:f_001:001",
+          "defi_profit_signal:f_001:001",
+        ],
+        unsupported_security_claims: 0,
+        groundedness_status: "supported",
+        rule_results: [
+          {
+            rule_id: "scsa.reentrancy.evidence_confirmer.v1",
+            status: "confirmed_by_evidence",
+            confidence_delta: 0.15,
+          },
+          {
+            rule_id: "scsa.multi_tool_consensus_scorer.v1",
+            status: "single_tool_signal",
+            confidence_delta: 0,
+          },
+        ],
+        claims: [
+          {
+            claim_id: "claim:f_001:001",
+            text: "withdraw sends ETH before clearing the caller balance.",
+            groundedness_status: "supported",
+            support_node_ids: ["source:tests/contracts/VulnerableVault.sol:11-16"],
+          },
+        ],
+      },
+      exploit_validation: {
+        validation_id: "exploit_validation:f_001:001",
+        status: "not_attempted",
+        mode: "sandbox_only",
+        poc_artifact_path: null,
+        test_framework: null,
+        triggered: null,
+        profit_delta: null,
+        asset_delta: [],
+        transaction_sequence: [],
+        execution_log_path: null,
+        human_review_required: true,
+        safety_notes: [
+          "PoC validation is disabled by default.",
+          "Only local fixtures or authorized targets are allowed.",
+        ],
+        supported_by: [
+          "finding:f_001",
+          "source:tests/contracts/VulnerableVault.sol:11-16",
+        ],
+      },
+      fuzz_seed_suggestions: [
+        {
+          finding_id: "f_001",
+          seed_id: "seed:f_001:001",
+          target_function: "withdraw",
+          preconditions: [
+            "attacker has a positive recorded balance",
+            "vault has enough local fixture ETH",
+          ],
+          sequence: [
+            { call: "deposit", sender: "attacker", value: "1 ETH" },
+            { call: "withdraw", sender: "attacker", value: "0" },
+          ],
+          expected_signal: "external_call_before_state_update",
+          status: "suggestion",
+          supported_by: [
+            "finding:f_001",
+            "source:tests/contracts/VulnerableVault.sol:11-16",
+          ],
+        },
+      ],
+      formal_property_suggestions: [
+        {
+          property_id: "property:f_001:001",
+          finding_id: "f_001",
+          format: "foundry_invariant",
+          status: "draft",
+          property_text:
+            "function invariant_totalAssetsCoverBalances() public { /* reviewer adapts draft */ }",
+          compile_status: "not_checked",
+          verification_status: "not_proven",
+          supported_by: [
+            "finding:f_001",
+            "source:tests/contracts/VulnerableVault.sol:11-16",
+          ],
+          review_notes: "Reviewer must adapt this draft before relying on it.",
+        },
+      ],
+      defi_profit_signal: {
+        status: "not_observed",
+        asset_flow: [],
+        oracle_dependency: null,
+        flash_loan_dependency: false,
+        profitability_status: "not_assessed",
+        supported_by: [],
+      },
     },
     {
       finding_id: "f_002",
@@ -102,6 +229,120 @@ export const demoReport: AnalysisReport = {
       total_tokens: 610,
       review_status: "accepted_risk",
       review_note: "Privileged transfer requires business owner confirmation.",
+      standard_refs: [
+        {
+          standard: "OWASP Smart Contract Top 10",
+          id: "SC01:2026",
+          label: "Access Control",
+          confidence: "medium",
+        },
+      ],
+      evidence_graph: {
+        nodes_path: "analysis_trace.sqlite:evidence_nodes",
+        edges_path: "analysis_trace.sqlite:evidence_edges",
+        claims_path: "analysis_trace.sqlite:evidence_claims",
+        root_finding_node_id: "finding:f_002",
+        source_nodes: ["source:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18-22"],
+        tool_signal_nodes: ["tool_signal:slither:owner-drain:f_002"],
+        rag_chunk_nodes: ["rag_chunk:web50_036#04"],
+        claim_nodes: ["claim:f_002:001"],
+        standard_nodes: ["standard_ref:OWASP:SC01:2026"],
+        rule_nodes: ["rule_result:scsa.auth_sensitive_state_write.v1:f_002"],
+        advanced_nodes: [
+          "exploit_validation:f_002:001",
+          "seed:f_002:001",
+          "property:f_002:001",
+          "defi_profit_signal:f_002:001",
+        ],
+        unsupported_security_claims: 0,
+        groundedness_status: "supported",
+        rule_results: [
+          {
+            rule_id: "scsa.auth_sensitive_state_write.v1",
+            status: "needs_review",
+            confidence_delta: 0.03,
+          },
+          {
+            rule_id: "scsa.multi_tool_consensus_scorer.v1",
+            status: "single_tool_signal",
+            confidence_delta: 0,
+          },
+        ],
+        claims: [
+          {
+            claim_id: "claim:f_002:001",
+            text: "The drain path moves contract value through a privileged function.",
+            groundedness_status: "supported",
+            support_node_ids: ["source:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18-22"],
+          },
+        ],
+      },
+      exploit_validation: {
+        validation_id: "exploit_validation:f_002:001",
+        status: "not_attempted",
+        mode: "sandbox_only",
+        poc_artifact_path: null,
+        test_framework: null,
+        triggered: null,
+        profit_delta: null,
+        asset_delta: [],
+        transaction_sequence: [],
+        execution_log_path: null,
+        human_review_required: true,
+        safety_notes: [
+          "PoC validation is disabled by default.",
+          "Only local fixtures or authorized targets are allowed.",
+        ],
+        supported_by: [
+          "finding:f_002",
+          "source:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18-22",
+        ],
+      },
+      fuzz_seed_suggestions: [
+        {
+          finding_id: "f_002",
+          seed_id: "seed:f_002:001",
+          target_function: "drain",
+          preconditions: [
+            "exercise privileged path with authorized and unauthorized senders",
+          ],
+          sequence: [
+            { call: "drain", sender: "owner", value: "0" },
+            { call: "drain", sender: "attacker", value: "0" },
+          ],
+          expected_signal: "privileged_state_or_asset_flow_diff",
+          status: "suggestion",
+          supported_by: [
+            "finding:f_002",
+            "source:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18-22",
+          ],
+        },
+      ],
+      formal_property_suggestions: [
+        {
+          property_id: "property:f_002:001",
+          finding_id: "f_002",
+          format: "foundry_invariant",
+          status: "draft",
+          property_text:
+            "function invariant_privilegedCallsRequireAuthorizedActor() public { /* reviewer adapts draft */ }",
+          compile_status: "not_checked",
+          verification_status: "not_proven",
+          supported_by: [
+            "finding:f_002",
+            "source:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18-22",
+          ],
+          review_notes: "Reviewer must adapt this draft before relying on it.",
+        },
+      ],
+      defi_profit_signal: {
+        status: "not_observed",
+        asset_flow: [],
+        oracle_dependency: null,
+        flash_loan_dependency: false,
+        profitability_status: "not_assessed",
+        supported_by: [],
+      },
     },
   ],
   analysis_metadata: {

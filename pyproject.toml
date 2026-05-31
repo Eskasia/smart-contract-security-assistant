@@ -37,6 +37,8 @@ scsa = "smart_contract_audit.cli:main"
 
 [dependency-groups]
 dev = [
+    "cyclonedx-bom>=7.3.0",
+    "pip-licenses>=5.5.5",
     "pytest>=8.3",
     "ruff>=0.8",
 ]

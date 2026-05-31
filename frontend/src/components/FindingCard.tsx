@@ -57,6 +57,14 @@ export const FindingCard = memo(function FindingCard({
   const vulnerableCode = finding.vulnerable_code ?? "";
   const remediationCode = finding.remediation_code ?? "";
   const explanation = streamText || finding.explanation;
+  const evidenceGraph = finding.evidence_graph ?? {};
+  const standardRefs = finding.standard_refs ?? [];
+  const ruleResults = evidenceGraph.rule_results ?? finding.native_rule_results ?? [];
+  const claims = evidenceGraph.claims ?? [];
+  const exploitValidation = finding.exploit_validation;
+  const fuzzSeeds = finding.fuzz_seed_suggestions ?? [];
+  const formalProperties = finding.formal_property_suggestions ?? [];
+  const defiProfitSignal = finding.defi_profit_signal;
   const [reviewDraft, setReviewDraft] = useState<FindingReviewStatus>(
     finding.review_status ?? "unreviewed",
   );
@@ -146,6 +154,140 @@ export const FindingCard = memo(function FindingCard({
         <Metric label={t("localJudge")} value={formatScore(finding.local_judge_score)} />
         <Metric label={t("externalJudge")} value={formatScore(finding.external_judge_score)} />
       </div>
+
+      <section
+        aria-labelledby={`${finding.finding_id}-evidence-graph`}
+        className="mt-4 border-t border-slate-200 pt-3"
+      >
+        <div className="grid gap-3 lg:grid-cols-3">
+          <div>
+            <h3 id={`${finding.finding_id}-evidence-graph`} className="text-sm font-semibold text-slate-900">
+              {t("evidenceGraph")}
+            </h3>
+            <p className="mt-1 break-words text-xs leading-5 text-slate-600">
+              {evidenceGraph.root_finding_node_id ?? finding.finding_id}
+            </p>
+          </div>
+          <Metric
+            label={t("groundedness")}
+            value={evidenceGraph.groundedness_status ?? "unavailable"}
+          />
+          <Metric
+            label={t("unsupportedClaims")}
+            value={evidenceGraph.unsupported_security_claims ?? 0}
+          />
+        </div>
+
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <EvidenceList
+            title={t("toolProvenance")}
+            items={evidenceGraph.tool_signal_nodes ?? [finding.static_tool_source]}
+          />
+          <EvidenceList
+            title={t("sourceRange")}
+            items={evidenceGraph.source_nodes ?? [formatLocation(finding.location)]}
+          />
+          <EvidenceList
+            title={t("ragSupport")}
+            items={evidenceGraph.rag_chunk_nodes ?? []}
+          />
+          <EvidenceList
+            title={t("standards")}
+            items={standardRefs.map((ref) => `${ref.standard} ${ref.id} ${ref.label}`)}
+          />
+        </div>
+
+        {ruleResults.length > 0 ? (
+          <div className="mt-3">
+            <h3 className="mb-2 text-sm font-semibold text-slate-900">{t("nativeRules")}</h3>
+            <ul className="space-y-1 text-xs leading-5 text-slate-700">
+              {ruleResults.map((rule) => (
+                <li key={rule.rule_id} className="break-words">
+                  <span className="font-medium">{rule.rule_id}</span>: {rule.status}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {claims.length > 0 ? (
+          <div className="mt-3">
+            <h3 className="mb-2 text-sm font-semibold text-slate-900">{t("claimSupport")}</h3>
+            <ul className="space-y-1 text-xs leading-5 text-slate-700">
+              {claims.map((claim) => (
+                <li key={claim.claim_id} className="break-words">
+                  <span className="font-medium">{claim.groundedness_status}</span>:{" "}
+                  {claim.claim_text ?? claim.text ?? claim.claim_id}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
+
+      <section
+        aria-labelledby={`${finding.finding_id}-advanced-evidence`}
+        className="mt-4 border-t border-slate-200 pt-3"
+      >
+        <h3 id={`${finding.finding_id}-advanced-evidence`} className="text-sm font-semibold text-slate-900">
+          {t("exploitValidation")}
+        </h3>
+        <div className="mt-3 grid gap-3 md:grid-cols-4">
+          <Metric
+            label={t("validationStatus")}
+            value={exploitValidation?.status ?? "not_attempted"}
+          />
+          <Metric
+            label={t("validationMode")}
+            value={exploitValidation?.mode ?? "sandbox_only"}
+          />
+          <Metric
+            label={t("humanReviewRequired")}
+            value={String(exploitValidation?.human_review_required ?? true)}
+          />
+          <Metric
+            label={t("defiProfitSignal")}
+            value={defiProfitSignal?.profitability_status ?? "not_assessed"}
+          />
+        </div>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <EvidenceList
+            title={t("transactionSequence")}
+            items={exploitValidation?.transaction_sequence ?? []}
+          />
+          <EvidenceList
+            title={t("safetyNotes")}
+            items={exploitValidation?.safety_notes ?? []}
+          />
+          <EvidenceList
+            title={t("fuzzSeeds")}
+            items={fuzzSeeds.map((seed) => `${seed.seed_id} -> ${seed.target_function}`)}
+          />
+          <EvidenceList
+            title={t("formalProperties")}
+            items={formalProperties.map(
+              (property) =>
+                `${property.property_id}: ${property.status}/${property.verification_status}`,
+            )}
+          />
+          <EvidenceList
+            title={t("assetDelta")}
+            items={(defiProfitSignal?.asset_flow ?? []).map(
+              (flow) => `${flow.asset ?? "asset"} ${flow.from ?? "from"} -> ${flow.to ?? "to"} ${flow.delta ?? ""}`,
+            )}
+          />
+          <EvidenceList
+            title={t("claimSupport")}
+            items={Array.from(
+              new Set([
+                ...(exploitValidation?.supported_by ?? []),
+                ...fuzzSeeds.flatMap((seed) => seed.supported_by),
+                ...formalProperties.flatMap((property) => property.supported_by),
+              ]),
+            )}
+          />
+        </div>
+      </section>
 
       <div className="mt-4 grid gap-3 border-t border-slate-200 pt-3 md:grid-cols-[minmax(170px,220px)_minmax(0,1fr)_auto]">
         <label className="block">
@@ -266,3 +408,22 @@ export const FindingCard = memo(function FindingCard({
     </article>
   );
 });
+
+function EvidenceList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <section>
+      <h3 className="mb-1 text-xs font-semibold uppercase text-slate-500">{title}</h3>
+      {items.length > 0 ? (
+        <ul className="space-y-1 text-xs leading-5 text-slate-700">
+          {items.map((item, index) => (
+            <li key={`${item}-${index}`} className="break-words">
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-xs text-slate-500">[]</p>
+      )}
+    </section>
+  );
+}

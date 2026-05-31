@@ -4,6 +4,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from .advanced_evidence import attach_advanced_evidence
 from .analysis_context import (
     create_analysis_context,
     validate_analysis_target,
@@ -13,6 +14,7 @@ from .config import (
     DEFAULT_MODEL_VERSION,
     DEFAULT_RAG_MODE,
 )
+from .evidence_graph import attach_evidence_graphs
 from .external_finding_adapter import (
     EXTERNAL_FINDING_TOOLS,
     external_findings_from_results,
@@ -179,6 +181,8 @@ def analyze_contract(
             trace_store,
             trace_id,
         )
+        attach_advanced_evidence(processed_findings, trace_store)
+        attach_evidence_graphs(processed_findings, trace_store, trace_id)
         final_status = overall_status_for(processed_findings)
 
         report = build_analysis_report(

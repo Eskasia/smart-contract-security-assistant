@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "case_id": "access_control_001",
+      "vulnerability_type": "access_control",
+      "positive": {"path": "positive/AdminWriteOpenA.sol", "expected": "finding"},
+      "negative": {"path": "negative/AdminWriteGuardedA.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-105"]}
+    },
+    {
+      "case_id": "access_control_002",
+      "vulnerability_type": "access_control",
+      "positive": {"path": "positive/AdminWriteOpenB.sol", "expected": "finding"},
+      "negative": {"path": "negative/AdminWriteGuardedB.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-105"]}
+    },
+    {
+      "case_id": "access_control_003",
+      "vulnerability_type": "access_control",
+      "positive": {"path": "positive/AdminWriteOpenC.sol", "expected": "finding"},
+      "negative": {"path": "negative/AdminWriteGuardedC.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-105"]}
+    }
+  ]
+}

@@ -24,11 +24,18 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
       - name: Install dependencies
         run: uv sync --extra audit --dev
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+      - name: Tool attribution check
+        run: uv run python scripts/check_tool_matrix.py
+      - name: Generate SBOM and license inventory
+        run: uv run python scripts/generate_sbom.py
       - name: Lint
         run: uv run ruff check .
       - name: Test
@@ -37,6 +44,18 @@ jobs:
         run: uv run python eval/run_eval.py
       - name: Judge eval
         run: uv run python eval/run_judge.py
+      - name: Paired variant benchmark
+        run: uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70
+      - name: RAG groundedness eval
+        run: uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0
+      - name: Sandbox exploit validation
+        run: uv run python eval/run_exploit_validation.py
+      - name: Fuzz seed suggestions
+        run: uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1
+      - name: Formal property suggestions
+        run: uv run python eval/run_formal_property_suggestions.py --min-property-count 1
+      - name: EVMbench adapter
+        run: uv run python eval/run_evmbench_adapter.py
       - name: Public benchmark gate
         run: >
           uv run python eval/run_public_benchmark.py
@@ -54,3 +73,25 @@ jobs:
         run: npm run build
       - name: Whitespace check
         run: git diff --check
+      - name: Upload compliance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-artifacts
+          path: |
+            reports/sbom/tool-matrix.cdx.json
+            reports/licenses/tool-matrix-licenses.txt
+            reports/eval/benchmark_matrix.json
+            reports/eval/benchmark_summary.md
+            reports/eval/paired_variant_results.json
+            reports/eval/rag_groundedness.json
+            reports/eval/evmbench_detect.json
+            reports/eval/evmbench_exploit_sandbox.json
+            reports/eval/evmbench_summary.md
+            reports/poc/f_001/validation.json
+            reports/poc/f_001/execution.log
+            reports/fuzz/fuzz_seed_suggestions.json
+            reports/fuzz/echidna_seed_notes.md
+            reports/fuzz/medusa_seed_notes.md
+            reports/fuzz/foundry_fuzz_targets.md
+            reports/properties/property_suggestions.json
+            reports/properties/property_suggestions.md

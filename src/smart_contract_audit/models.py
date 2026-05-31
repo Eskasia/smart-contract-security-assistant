@@ -70,10 +70,42 @@ class Finding:
     total_tokens: int = 0
     review_status: str = "unreviewed"
     review_note: str = ""
+    standard_refs: list[dict[str, Any]] = field(default_factory=list)
+    evidence_graph: dict[str, Any] = field(default_factory=dict)
+    native_rule_results: list[dict[str, Any]] = field(default_factory=list)
+    exploit_validation: dict[str, Any] = field(default_factory=dict)
+    fuzz_seed_suggestions: list[dict[str, Any]] = field(default_factory=list)
+    formal_property_suggestions: list[dict[str, Any]] = field(default_factory=list)
+    defi_profit_signal: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        from .exploit_validation import default_exploit_validation
+        from .fuzz import suggest_fuzz_seeds
+        from .properties import suggest_formal_properties
+        from .standards import standard_refs_for
+
         data = asdict(self)
         data["location"] = self.location.to_dict()
+        data["standard_refs"] = self.standard_refs or standard_refs_for(
+            self.vulnerability_type
+        )
+        data["exploit_validation"] = self.exploit_validation or default_exploit_validation(
+            self
+        )
+        data["fuzz_seed_suggestions"] = (
+            self.fuzz_seed_suggestions or suggest_fuzz_seeds(self)
+        )
+        data["formal_property_suggestions"] = (
+            self.formal_property_suggestions or suggest_formal_properties(self)
+        )
+        data["defi_profit_signal"] = self.defi_profit_signal or {
+            "status": "not_observed",
+            "asset_flow": [],
+            "oracle_dependency": None,
+            "flash_loan_dependency": False,
+            "profitability_status": "not_assessed",
+            "supported_by": [],
+        }
         return data
 
 
@@ -135,6 +167,7 @@ class AnalysisReport:
     score_formula_version: str = "security_score_v2"
     score_factors: dict[str, Any] = field(default_factory=dict)
     external_tool_results: list[ExternalToolResult] = field(default_factory=list)
+    evidence_graph_summary: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -151,4 +184,5 @@ class AnalysisReport:
             "score_formula_version": self.score_formula_version,
             "score_factors": self.score_factors,
             "external_tool_results": [result.to_dict() for result in self.external_tool_results],
+            "evidence_graph_summary": self.evidence_graph_summary,
         }

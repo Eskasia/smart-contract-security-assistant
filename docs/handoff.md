@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-05-31。
+更新日期：2026-06-01。
 
 ## 已完成內容
 
@@ -11,7 +11,7 @@
 - 2026-05-01 已新增 `frontend/` React/Vite 工作台，包含三欄 triage UI、Zustand 狀態、Local Storage 設定、SSE hook、1,000 ms polling fallback、virtualized findings、syntax-highlighted vulnerable code、remediation diff、review status、finding-level review feedback 與 trace evidence panel。
 - 測試覆蓋 adapter、analysis context、finding processor、report builder、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、security score review multiplier、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、knowledge graph artifact、schema validation、端到端流程。
 - Eval 腳本已存在：`eval/run_eval.py` 測 RAG recall，`eval/run_judge.py` 同時輸出 local 與 external 報告品質 judge adapter 分數。
-- CI 設定在 `.github/workflows/ci.yml`，目前執行 ruff、pytest、RAG eval 與 judge eval。
+- CI 設定在 `.github/workflows/ci.yml`，目前執行 dependency sync、tool attribution、SBOM/license inventory、ruff、pytest、RAG eval、judge eval、paired variants、RAG groundedness、sandbox exploit validation、fuzz seed suggestions、formal property suggestions、EVMbench adapter、public benchmark、public project preflight、frontend test/build 與 whitespace check。
 - 2026-05-04 已新增 `.github/workflows/smart-contract-audit.yml`，GitHub Actions 可手動輸入 Solidity 檔案或專案目錄並上傳 `scsa-reports` artifact。
 - Git baseline 已建立在 `main`，review checklist 位於 `docs/review_checklist.md`。
 - 2026-05-04 公開資料測試補上 `unchecked-transfer` 與 `unused-return`，統一映射到 `unchecked_external_call`。
@@ -37,6 +37,9 @@
 - Release readiness 已開始：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
 - Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
 - Tester outreach 與 feedback tracker 已建立：`docs/community/002-v0.1.0-outreach-kit.md`、`docs/community/003-v0.1.0-feedback-tracker.md`。
+- 2026-06-01 Phase 1 合規入口已開始落地：新增 `THIRD_PARTY_NOTICES.md`、`NOTICE`、`tool_matrix.yml`、`standards_mapping.yml`、`docs/reference/tool-attribution.md`、`docs/reference/license-boundary.md`、`docs/reference/related-work.md`、`docs/reference/standards-mapping.md`，並讓 report finding 輸出 `standard_refs`。
+- 2026-06-01 Phase 2 evidence layer 已開始落地：新增 Evidence Graph SQLite tables、finding `evidence_graph`、5 個 SCSA-native post-analysis rules、paired-variant benchmark、RAG groundedness eval、UI evidence provenance 顯示與 CI gate。
+- 2026-06-01 Phase 3 advanced evidence 已開始落地：新增 `exploit_validation`、sandbox-only Foundry reentrancy PoC fixture、fuzz seed suggestions、formal property drafts、DeFi profit signal、EVMbench adapter、SQLite `exploit_validations` 與 UI advanced evidence 顯示。
 
 ## 技術核心
 
@@ -56,6 +59,16 @@ Report——Markdown/JSON 會輸出 security score、逐條 finding review statu
 
 External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna/Medusa 是智能合約 fuzz 工具，Aderyn 是 Rust 靜態分析器，Halmos 是 Foundry symbolic testing runner；Mythril JSON issues、Echidna/Medusa failed/falsified properties、Aderyn JSON issues 與 Halmos proof failures 會轉成正式 finding 與 trace row，Aderyn SARIF 只以 `artifact_paths.sarif` 記錄 artifact path。CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒；`halmos` 需要 trusted Foundry project，未安裝時結果為 `skipped`。
 
+Standards mapping——`standards_mapping.yml` 是 internal finding type 到 OWASP Smart Contract Top 10、SCWE、SCSVS 與 SWC 的 deterministic mapping；JSON report 每個 finding 會輸出 `standard_refs`，Markdown report 會顯示 Standards 行。找不到 mapping 時輸出空陣列，不由 LLM 補值。
+
+Evidence Graph——`analysis_trace.sqlite` 目前含 `evidence_nodes`、`evidence_edges`、`evidence_claims`，每個 finding 會連到 tool signal、source range、trace row、RAG chunk、LLM claim、review action、standard ref 與 SCSA-native rule result。JSON report 的 `evidence_graph` 提供 UI 顯示用摘要，`eval/run_rag_groundedness.py` 要求 unsupported security claim 為 `0`。
+
+SCSA-native rules——Phase 2 已新增 reentrancy evidence confirmer、auth-sensitive state write checker、unchecked low-level call canonicalizer、upgradeable proxy risk mapper、multi-tool consensus scorer。這些 rules 只在 analyzer evidence 之上做 confirmation / confidence decomposition，不取代 Slither 或 external tools。
+
+Paired variants——`eval/paired_variants/` 目前涵蓋 `reentrancy`、`unchecked_external_call`、`access_control`、`upgrade_risk`、`dangerous_delegatecall` 五類，每類 3 組 positive/negative pair；`uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70` 會輸出 `reports/eval/paired_variant_results.json`、`benchmark_summary.md` 與 `benchmark_matrix.json`。
+
+Phase 3 advanced evidence——`exploit_validation` 預設為 `not_attempted` 且 `mode=sandbox_only`；正常分析不自動執行 PoC。`uv run python eval/run_exploit_validation.py` 只跑 `tests/poc/reentrancy/` 本地 Foundry fixture，輸出 `reports/poc/f_001/validation.json` 與 `execution.log`。`fuzz_seed_suggestions` 與 `formal_property_suggestions` 都是 reviewer starting point；property 未 compile/verify 前固定 `status=draft`、`verification_status=not_proven`。`defi_profit_signal` 只能承接 local execution 或 trusted external-tool output。
+
 UI design system——2026-05-31 已新增 `docs/design/005-ui-design-system.md`；前端定位為 evidence-first security console，使用 CSS variables/Tailwind tokens、shared `Button`/`Field`/`PanelSection`/`MetricGroup`、四工具 `ToolSelector` 與 `min-h-dvh` layout。Legacy `echidnaEnabled` persisted setting 會 migration 成 `externalTools=["echidna"]`，API token 仍不持久化。
 
 Native build preflight——Foundry/Hardhat 專案在 `trusted` 模式先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback；`disabled` 模式略過 build scripts，適合未信任 public repo。
@@ -68,6 +81,33 @@ Report comparison——兩份 JSON 報告的差異比較，用 finding type、de
 
 ## 驗證結果
 
+2026-06-01 Phase 1-3 roadmap 驗證結果：
+
+```text
+uv sync --extra audit --dev           resolved 198 packages, checked 83 packages
+uv run ruff check .                   all checks passed
+uv run pytest                         116 passed
+uv run python eval/run_eval.py        recall_at_k = 1.0
+uv run python eval/run_judge.py       local_average_judge_score = 5.0, external_average_judge_score = 5.0
+uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0, precision = 1.0, recall = 1.0, f1 = 1.0
+uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0  unsupported_security_claims = 0
+uv run python eval/run_exploit_validation.py  status = executed_triggered, mode = local_foundry_test
+uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1  seed_count = 1
+uv run python eval/run_formal_property_suggestions.py --min-property-count 1  property_count = 1
+uv run python eval/run_evmbench_adapter.py  exploit_adapter = sandbox_only, unauthorized_targets_blocked = true
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, precision = 0.8621, recall = 1.0, f1 = 0.9259
+uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+uv run python scripts/check_tool_matrix.py  passed
+uv run python scripts/generate_sbom.py      generated tool-matrix SBOM and license inventory
+uv run cyclonedx-py environment --output-file reports/sbom/python.cdx.json  passed
+uv run pip-licenses --format=plain-vertical --output-file reports/licenses/python-licenses.txt  passed
+cd frontend && npx @cyclonedx/cyclonedx-npm --output-file ../reports/sbom/frontend.cdx.json  passed
+cd frontend && npm ls --json > ../reports/licenses/npm-tree.json  passed
+cd frontend && npm run test -- --run  35 passed
+cd frontend && npm run build          completed
+git diff --check                     passed
+```
+
 2026-05-24 剩餘 9% 補強驗證結果：
 
 ```text
@@ -75,6 +115,12 @@ uv run ruff check .        all checks passed
 uv run pytest              102 passed
 uv run python eval/run_eval.py  recall_at_k = 1.0
 uv run python eval/run_judge.py  local_average_judge_score = 5.0, external_average_judge_score = 5.0
+uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0, precision = 1.0, recall = 1.0, f1 = 1.0
+uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0  unsupported_security_claims = 0
+uv run python eval/run_exploit_validation.py  status = executed_triggered, mode = local_foundry_test
+uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1  seed_count = 1
+uv run python eval/run_formal_property_suggestions.py --min-property-count 1  property_count = 1
+uv run python eval/run_evmbench_adapter.py  exploit_adapter = sandbox_only, unauthorized_targets_blocked = true
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, precision = 0.8621, recall = 1.0, f1 = 0.9259
 uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
 cd frontend && npm run test -- --run  33 passed
@@ -165,6 +211,12 @@ Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、ext
 ## 文件入口
 
 - 文件索引：`docs/DOCS_INDEX.md`
+- Third-party notices：`THIRD_PARTY_NOTICES.md`
+- Tool attribution：`docs/reference/tool-attribution.md`
+- License boundary：`docs/reference/license-boundary.md`
+- Related work：`docs/reference/related-work.md`
+- Standards mapping：`docs/reference/standards-mapping.md`
+- Phase 2 benchmark matrix：`docs/reference/public-benchmark-leaderboard.md`
 - Changelog：`CHANGELOG.md`
 - v0.1.0 release checklist：`docs/release/001-v0.1.0-checklist.md`
 - v0.1.0 tester feedback guide：`docs/community/001-v0.1.0-tester-feedback.md`

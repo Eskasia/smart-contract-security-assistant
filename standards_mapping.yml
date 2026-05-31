@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "updated_at": "2026-06-01",
+  "mappings": [
+    {
+      "internal_type": "reentrancy",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC08:2026", "label": "Reentrancy Attacks", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-046", "label": "Reentrancy Attacks", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-CODE", "label": "Code Security", "confidence": "mapped"},
+        {"standard": "SWC", "id": "SWC-107", "label": "Reentrancy", "confidence": "mapped"}
+      ],
+      "report_tags": ["external_call_before_state_update", "reentrant_control_flow"]
+    },
+    {
+      "internal_type": "unchecked_external_call",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC06:2026", "label": "Unchecked External Calls", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-048", "label": "Unchecked Call Return Value", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-CODE", "label": "Code Security", "confidence": "mapped"},
+        {"standard": "SWC", "id": "SWC-104", "label": "Unchecked Call Return Value", "confidence": "mapped"}
+      ],
+      "report_tags": ["unchecked_call_result", "external_call_error_handling"]
+    },
+    {
+      "internal_type": "access_control",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC01:2026", "label": "Access Control Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-016", "label": "Insufficient Authorization Checks", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-AUTH", "label": "Access Control and Authentication", "confidence": "mapped"}
+      ],
+      "report_tags": ["missing_authorization", "privileged_action"]
+    },
+    {
+      "internal_type": "privilege_escalation",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC01:2026", "label": "Access Control Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-017", "label": "Privileged Role Mismanagement", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-AUTH", "label": "Access Control and Authentication", "confidence": "mapped"}
+      ],
+      "report_tags": ["authorization_bypass", "role_mismanagement"]
+    },
+    {
+      "internal_type": "upgrade_risk",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC10:2026", "label": "Proxy and Upgradeability Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-005", "label": "Insecure Upgradeable Proxy Design", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-ARCH", "label": "Architecture, Design, and Threat Modeling", "confidence": "mapped"}
+      ],
+      "report_tags": ["upgradeability", "initializer_or_proxy_control"]
+    },
+    {
+      "internal_type": "dangerous_delegatecall",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC10:2026", "label": "Proxy and Upgradeability Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCWE", "id": "SCWE-035", "label": "Insecure Delegatecall Usage", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-COMM", "label": "Secure Interactions and Communications", "confidence": "mapped"},
+        {"standard": "SWC", "id": "SWC-112", "label": "Delegatecall to Untrusted Callee", "confidence": "mapped"}
+      ],
+      "report_tags": ["delegatecall", "untrusted_target"]
+    },
+    {
+      "internal_type": "array_length_manipulation",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC02:2026", "label": "Business Logic Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-GOV", "label": "Business Logic and Economic Security", "confidence": "mapped"}
+      ],
+      "report_tags": ["state_invariant", "storage_manipulation"]
+    },
+    {
+      "internal_type": "price_manipulation",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC03:2026", "label": "Price Oracle Manipulation", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-ORACLE", "label": "Arithmetic and Logic Security", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-GOV", "label": "Business Logic and Economic Security", "confidence": "mapped"}
+      ],
+      "report_tags": ["price_oracle", "economic_logic"]
+    },
+    {
+      "internal_type": "oracle",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC03:2026", "label": "Price Oracle Manipulation", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-ORACLE", "label": "Arithmetic and Logic Security", "confidence": "mapped"}
+      ],
+      "report_tags": ["oracle_dependency", "randomness_or_price_signal"]
+    },
+    {
+      "internal_type": "invariant_violation",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC02:2026", "label": "Business Logic Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-GOV", "label": "Business Logic and Economic Security", "confidence": "mapped"}
+      ],
+      "report_tags": ["property_failure", "fuzz_signal"]
+    },
+    {
+      "internal_type": "formal_property_violation",
+      "standard_refs": [
+        {"standard": "OWASP Smart Contract Top 10", "id": "SC02:2026", "label": "Business Logic Vulnerabilities", "confidence": "mapped"},
+        {"standard": "SCSVS", "id": "SCSVS-GOV", "label": "Business Logic and Economic Security", "confidence": "mapped"}
+      ],
+      "report_tags": ["symbolic_testing", "property_failure"]
+    }
+  ]
+}
