@@ -155,6 +155,8 @@ CI runs ruff, pytest, RAG recall eval, and judge eval on pull requests to
 - Changelog: `CHANGELOG.md`
 - v0.1.0 release checklist: `docs/release/001-v0.1.0-checklist.md`
 - v0.1.0 tester feedback guide: `docs/community/001-v0.1.0-tester-feedback.md`
+- v0.1.0 tester outreach kit: `docs/community/002-v0.1.0-outreach-kit.md`
+- v0.1.0 feedback tracker: `docs/community/003-v0.1.0-feedback-tracker.md`
 - Usage manual: `docs/guides/001-usage-manual.md`
 - Architecture: `docs/design/001-project-architecture.md`
 - Validation log: `docs/reference/001-validation-procedure-log.md`
