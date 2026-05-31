@@ -152,6 +152,8 @@ CI runs ruff, pytest, RAG recall eval, and judge eval on pull requests to
 ## Project Documents
 
 - Handoff: `docs/handoff.md`
+- Changelog: `CHANGELOG.md`
+- v0.1.0 release checklist: `docs/release/001-v0.1.0-checklist.md`
 - Usage manual: `docs/guides/001-usage-manual.md`
 - Architecture: `docs/design/001-project-architecture.md`
 - Validation log: `docs/reference/001-validation-procedure-log.md`
