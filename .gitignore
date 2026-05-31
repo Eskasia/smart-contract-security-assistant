@@ -8,6 +8,7 @@ __pycache__/
 htmlcov/
 .venv/
 venv/
+reports-demo/
 node_modules/
 npm-debug.log*
 yarn-debug.log*
