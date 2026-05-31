@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "case_id": "reentrancy_001",
+      "vulnerability_type": "reentrancy",
+      "positive": {"path": "positive/VaultReentrantA.sol", "expected": "finding"},
+      "negative": {"path": "negative/VaultSafeA.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-107"], "owasp_top10": ["SC08:2026"]}
+    },
+    {
+      "case_id": "reentrancy_002",
+      "vulnerability_type": "reentrancy",
+      "positive": {"path": "positive/VaultReentrantB.sol", "expected": "finding"},
+      "negative": {"path": "negative/VaultSafeB.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-107"], "owasp_top10": ["SC08:2026"]}
+    },
+    {
+      "case_id": "reentrancy_003",
+      "vulnerability_type": "reentrancy",
+      "positive": {"path": "positive/VaultReentrantC.sol", "expected": "finding"},
+      "negative": {"path": "negative/VaultSafeC.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-107"], "owasp_top10": ["SC08:2026"]}
+    }
+  ]
+}

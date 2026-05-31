@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "updated_at": "2026-06-01",
+  "tools": [
+    {
+      "id": "slither",
+      "name": "Slither",
+      "category": "static_analysis",
+      "source_url": "https://github.com/crytic/slither",
+      "license": "AGPL-3.0",
+      "bundled": false,
+      "invocation": "cli_or_python_package",
+      "required": true,
+      "output_used": ["detector_findings", "source_ranges", "severity", "raw_evidence"],
+      "scsa_role": "primary_deterministic_signal"
+    },
+    {
+      "id": "aderyn",
+      "name": "Aderyn",
+      "category": "static_analysis",
+      "source_url": "https://github.com/Cyfrin/aderyn",
+      "license": "GPL-3.0",
+      "bundled": false,
+      "invocation": "external_cli",
+      "required": false,
+      "output_used": ["static_findings", "sarif_artifact_path", "optional_report_summary"],
+      "scsa_role": "optional_static_signal"
+    },
+    {
+      "id": "echidna",
+      "name": "Echidna",
+      "category": "fuzzing",
+      "source_url": "https://github.com/crytic/echidna",
+      "license": "AGPL-3.0",
+      "bundled": false,
+      "invocation": "external_cli",
+      "required": false,
+      "output_used": ["invariant_failures", "counterexample_signal", "run_metadata"],
+      "scsa_role": "optional_property_fuzzing_signal"
+    },
+    {
+      "id": "medusa",
+      "name": "Medusa",
+      "category": "fuzzing",
+      "source_url": "https://github.com/crytic/medusa",
+      "license": "AGPL-3.0",
+      "bundled": false,
+      "invocation": "external_cli",
+      "required": false,
+      "output_used": ["fuzzer_failures", "campaign_metadata", "trace_evidence"],
+      "scsa_role": "optional_coverage_guided_fuzzing_signal"
+    },
+    {
+      "id": "mythril",
+      "name": "Mythril",
+      "category": "symbolic_execution",
+      "source_url": "https://github.com/ConsenSysDiligence/mythril",
+      "license": "MIT",
+      "bundled": false,
+      "invocation": "external_cli",
+      "required": false,
+      "output_used": ["symbolic_issues", "swc_refs", "trace_context"],
+      "scsa_role": "optional_symbolic_execution_signal"
+    },
+    {
+      "id": "halmos",
+      "name": "Halmos",
+      "category": "symbolic_testing",
+      "source_url": "https://github.com/a16z/halmos",
+      "license": "AGPL-3.0",
+      "bundled": false,
+      "invocation": "external_cli_trusted_foundry_mode",
+      "required": false,
+      "output_used": ["proof_failure", "assertion_failure", "test_target_metadata"],
+      "scsa_role": "optional_foundry_symbolic_testing_signal"
+    },
+    {
+      "id": "foundry",
+      "name": "Foundry",
+      "category": "native_build",
+      "source_url": "https://github.com/foundry-rs/foundry",
+      "license": "Apache-2.0 OR MIT",
+      "bundled": false,
+      "invocation": "external_cli_trusted_mode",
+      "required": false,
+      "output_used": ["native_build_status", "project_compile_context"],
+      "scsa_role": "optional_trusted_project_build_preflight"
+    },
+    {
+      "id": "hardhat",
+      "name": "Hardhat",
+      "category": "native_build",
+      "source_url": "https://github.com/NomicFoundation/hardhat",
+      "license": "MIT",
+      "bundled": false,
+      "invocation": "external_cli_or_local_npm_binary_trusted_mode",
+      "required": false,
+      "output_used": ["native_build_status", "project_compile_context"],
+      "scsa_role": "optional_trusted_project_build_preflight"
+    }
+  ]
+}

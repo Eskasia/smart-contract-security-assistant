@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "case_id": "unchecked_call_001",
+      "vulnerability_type": "unchecked_external_call",
+      "positive": {"path": "positive/UncheckedCallA.sol", "expected": "finding"},
+      "negative": {"path": "negative/CheckedCallA.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-104"]}
+    },
+    {
+      "case_id": "unchecked_call_002",
+      "vulnerability_type": "unchecked_external_call",
+      "positive": {"path": "positive/UncheckedCallB.sol", "expected": "finding"},
+      "negative": {"path": "negative/CheckedCallB.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-104"]}
+    },
+    {
+      "case_id": "unchecked_call_003",
+      "vulnerability_type": "unchecked_external_call",
+      "positive": {"path": "positive/UncheckedCallC.sol", "expected": "finding"},
+      "negative": {"path": "negative/CheckedCallC.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-104"]}
+    }
+  ]
+}

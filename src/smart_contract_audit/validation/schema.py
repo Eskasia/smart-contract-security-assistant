@@ -16,6 +16,7 @@ REPORT_SCHEMA: dict = {
         "security_score",
         "score_formula_version",
         "score_factors",
+        "evidence_graph_summary",
     ],
     "properties": {
         "report_version": {"type": "string"},
@@ -34,6 +35,7 @@ REPORT_SCHEMA: dict = {
         "security_score": {"type": "number", "minimum": 0, "maximum": 100},
         "score_formula_version": {"type": "string"},
         "score_factors": {"type": "object"},
+        "evidence_graph_summary": {"type": "object"},
         "analysis_metadata": {
             "type": "object",
             "required": [
@@ -109,6 +111,13 @@ REPORT_SCHEMA: dict = {
                 "total_tokens",
                 "review_status",
                 "review_note",
+                "standard_refs",
+                "evidence_graph",
+                "native_rule_results",
+                "exploit_validation",
+                "fuzz_seed_suggestions",
+                "formal_property_suggestions",
+                "defi_profit_signal",
             ],
             "properties": {
                 "finding_id": {"type": "string"},
@@ -145,7 +154,107 @@ REPORT_SCHEMA: dict = {
                     ]
                 },
                 "review_note": {"type": "string"},
+                "standard_refs": {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/standard_ref"},
+                },
+                "evidence_graph": {"type": "object"},
+                "native_rule_results": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                },
+                "exploit_validation": {"$ref": "#/$defs/exploit_validation"},
+                "fuzz_seed_suggestions": {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/fuzz_seed"},
+                },
+                "formal_property_suggestions": {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/formal_property"},
+                },
+                "defi_profit_signal": {"type": "object"},
             },
-        }
+        },
+        "exploit_validation": {
+            "type": "object",
+            "required": [
+                "status",
+                "mode",
+                "human_review_required",
+                "safety_notes",
+                "supported_by",
+            ],
+            "properties": {
+                "status": {
+                    "enum": [
+                        "not_attempted",
+                        "generated",
+                        "executed_triggered",
+                        "executed_not_triggered",
+                        "failed_to_compile",
+                        "failed_to_run",
+                        "blocked_by_policy",
+                        "requires_human_review",
+                    ]
+                },
+                "mode": {"type": "string"},
+                "poc_artifact_path": {"type": ["string", "null"]},
+                "test_framework": {"type": ["string", "null"]},
+                "triggered": {"type": ["boolean", "null"]},
+                "profit_delta": {"type": ["object", "null"]},
+                "asset_delta": {"type": "array", "items": {"type": "object"}},
+                "transaction_sequence": {"type": "array"},
+                "execution_log_path": {"type": ["string", "null"]},
+                "human_review_required": {"type": "boolean"},
+                "safety_notes": {"type": "array", "items": {"type": "string"}},
+                "supported_by": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "fuzz_seed": {
+            "type": "object",
+            "required": ["finding_id", "seed_id", "target_function", "supported_by"],
+            "properties": {
+                "finding_id": {"type": "string"},
+                "seed_id": {"type": "string"},
+                "target_function": {"type": "string"},
+                "preconditions": {"type": "array", "items": {"type": "string"}},
+                "sequence": {"type": "array"},
+                "expected_signal": {"type": "string"},
+                "status": {"type": "string"},
+                "supported_by": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "formal_property": {
+            "type": "object",
+            "required": [
+                "property_id",
+                "finding_id",
+                "format",
+                "status",
+                "verification_status",
+                "supported_by",
+            ],
+            "properties": {
+                "property_id": {"type": "string"},
+                "finding_id": {"type": "string"},
+                "format": {"type": "string"},
+                "status": {"const": "draft"},
+                "property_text": {"type": "string"},
+                "compile_status": {"type": "string"},
+                "verification_status": {"type": "string"},
+                "supported_by": {"type": "array", "items": {"type": "string"}},
+                "review_notes": {"type": "string"},
+            },
+        },
+        "standard_ref": {
+            "type": "object",
+            "required": ["standard", "id", "label", "confidence"],
+            "properties": {
+                "standard": {"type": "string"},
+                "id": {"type": "string"},
+                "label": {"type": "string"},
+                "confidence": {"type": "string"},
+            },
+        },
     },
 }

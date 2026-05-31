@@ -88,6 +88,7 @@ def build_analysis_report(
         score_formula_version=security_score.formula_version,
         score_factors=security_score.factors,
         external_tool_results=external_tool_results,
+        evidence_graph_summary=_evidence_graph_summary(findings),
     )
 
 
@@ -114,3 +115,43 @@ def elapsed_ms(started_at: float) -> int:
 
 def _average_score(scores: list[float]) -> float:
     return round(sum(scores) / len(scores), 2) if scores else 0.0
+
+
+def _evidence_graph_summary(findings: list[Finding]) -> dict[str, int]:
+    claim_count = 0
+    unsupported_security_claims = 0
+    rule_count = 0
+    exploit_validation_count = 0
+    fuzz_seed_count = 0
+    formal_property_count = 0
+    observed_profit_signal_count = 0
+    for finding in findings:
+        graph = finding.evidence_graph or {}
+        claims = graph.get("claims", [])
+        if isinstance(claims, list):
+            claim_count += len(claims)
+            unsupported_security_claims += sum(
+                1
+                for claim in claims
+                if isinstance(claim, dict)
+                and claim.get("groundedness_status") in {"unsupported", "contradicted"}
+            )
+        rule_results = graph.get("rule_results", [])
+        if isinstance(rule_results, list):
+            rule_count += len(rule_results)
+        if finding.exploit_validation:
+            exploit_validation_count += 1
+        fuzz_seed_count += len(finding.fuzz_seed_suggestions)
+        formal_property_count += len(finding.formal_property_suggestions)
+        if finding.defi_profit_signal.get("status") == "observed":
+            observed_profit_signal_count += 1
+    return {
+        "finding_count": len(findings),
+        "claim_count": claim_count,
+        "native_rule_result_count": rule_count,
+        "unsupported_security_claims": unsupported_security_claims,
+        "exploit_validation_count": exploit_validation_count,
+        "fuzz_seed_count": fuzz_seed_count,
+        "formal_property_count": formal_property_count,
+        "observed_profit_signal_count": observed_profit_signal_count,
+    }

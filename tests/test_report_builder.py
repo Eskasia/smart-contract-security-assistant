@@ -38,6 +38,7 @@ def test_build_analysis_report_aggregates_metadata_and_score() -> None:
     assert report.analysis_metadata.local_average_judge_score == 5.0
     assert report.security_score == 70.0
     assert report.analysis_metadata.input_kind == "unknown"
+    assert report.to_dict()["findings"][0]["standard_refs"][0]["id"] == "SC08:2026"
 
 
 def test_finish_analysis_report_writes_reports_and_updates_trace(tmp_path: Path) -> None:

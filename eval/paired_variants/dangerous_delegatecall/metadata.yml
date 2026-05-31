@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "case_id": "dangerous_delegatecall_001",
+      "vulnerability_type": "dangerous_delegatecall",
+      "positive": {"path": "positive/DelegatecallOpenA.sol", "expected": "finding"},
+      "negative": {"path": "negative/DelegatecallGuardedA.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-112"]}
+    },
+    {
+      "case_id": "dangerous_delegatecall_002",
+      "vulnerability_type": "dangerous_delegatecall",
+      "positive": {"path": "positive/DelegatecallOpenB.sol", "expected": "finding"},
+      "negative": {"path": "negative/DelegatecallGuardedB.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-112"]}
+    },
+    {
+      "case_id": "dangerous_delegatecall_003",
+      "vulnerability_type": "dangerous_delegatecall",
+      "positive": {"path": "positive/DelegatecallOpenC.sol", "expected": "finding"},
+      "negative": {"path": "negative/DelegatecallGuardedC.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-112"]}
+    }
+  ]
+}

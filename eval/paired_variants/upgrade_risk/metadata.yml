@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "case_id": "upgrade_risk_001",
+      "vulnerability_type": "upgrade_risk",
+      "positive": {"path": "positive/UpgradeOpenA.sol", "expected": "finding"},
+      "negative": {"path": "negative/UpgradeGuardedA.sol", "expected": "clean"},
+      "labels": {"swc": ["SWC-105"]}
+    },
+    {
+      "case_id": "upgrade_risk_002",
+      "vulnerability_type": "upgrade_risk",
+      "positive": {"path": "positive/UpgradeOpenB.sol", "expected": "finding"},
+      "negative": {"path": "negative/UpgradeGuardedB.sol", "expected": "clean"},
+      "labels": {"scwe": ["SCWE-092"]}
+    },
+    {
+      "case_id": "upgrade_risk_003",
+      "vulnerability_type": "upgrade_risk",
+      "positive": {"path": "positive/UpgradeOpenC.sol", "expected": "finding"},
+      "negative": {"path": "negative/UpgradeGuardedC.sol", "expected": "clean"},
+      "labels": {"scwe": ["SCWE-092"]}
+    }
+  ]
+}

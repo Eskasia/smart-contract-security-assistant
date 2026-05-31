@@ -7,7 +7,7 @@
 
 Local-first evidence workbench for Solidity security triage.
 
-SCSA turns deterministic analyzer output into reviewable security evidence: Slither findings, optional external-tool signals, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
+SCSA turns deterministic analyzer output into reviewable security evidence: Slither findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
 
 本專案協助維護者、審計學習者與小型 Solidity 團隊完成第一輪安全初篩。漏洞事實來自 Slither 與外部安全工具；LLM 只負責把既有 evidence 轉成可讀解釋、攻擊路徑與修復建議。
 
@@ -19,7 +19,7 @@ Smart contract review often produces fragmented evidence: scanner JSON, terminal
 
 Core design:
 
-- Evidence first: raw tool output, normalized findings, retrieved context, prompts, generated explanations, and reviewer notes stay inspectable.
+- Evidence first: raw tool output, normalized findings, source ranges, tool signals, retrieved context, claims, generated explanations, and reviewer notes stay inspectable.
 - Local first: source code and generated artifacts remain on the machine running the analysis.
 - Deterministic before AI: LLM output explains findings; analyzer output remains the security fact source.
 - Human in the loop: every report is a triage handoff for qualified review.
@@ -33,10 +33,29 @@ Core design:
 | Core analyzer | Slither |
 | Optional tools | Aderyn, Echidna, Medusa, Mythril, Halmos |
 | Inputs | `.sol`, Foundry, Hardhat, nested imports, GitHub archive, Etherscan API, ZIP |
-| Outputs | JSON report, Markdown report, SQLite trace, external-tool artifacts, Aderyn SARIF path |
+| Outputs | JSON report, Markdown report, SQLite trace, Evidence Graph tables, exploit validation records, fuzz/property suggestions, external-tool artifacts, Aderyn SARIF path |
 | Interfaces | CLI, local HTTP API, React/Vite workbench, legacy Gradio UI |
 | AI boundary | AI explains evidence; AI does not create vulnerability facts |
 | Trust boundary | Imported sources are untrusted unless explicitly trusted by the caller |
+
+## Third-Party Tooling and Attribution
+
+SCSA is an evidence orchestration and review layer. It integrates with external
+security tools, but it does not claim ownership of their detector, fuzzer,
+symbolic-execution, or build engines.
+
+External tools are optional unless explicitly marked as required. They are not
+bundled in this repository unless stated otherwise. Each tool remains governed
+by its own license.
+
+See:
+
+- [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
+- [`tool_matrix.yml`](tool_matrix.yml)
+- [`docs/reference/tool-attribution.md`](docs/reference/tool-attribution.md)
+- [`docs/reference/license-boundary.md`](docs/reference/license-boundary.md)
+- [`docs/reference/related-work.md`](docs/reference/related-work.md)
+- [`docs/reference/standards-mapping.md`](docs/reference/standards-mapping.md)
 
 ## Terminology
 
@@ -46,6 +65,9 @@ Core design:
 - SQLite trace — local database rows that preserve analyzer output, normalized findings, prompts, generation output, and review state.
 - SARIF — static-analysis result format used by code scanning systems; SCSA tracks Aderyn SARIF as an artifact path.
 - Native build policy — setting that controls whether Foundry/Hardhat build scripts may run for a source tree.
+- Evidence Graph — SQLite-backed nodes, edges, and claims linking each finding to tool signal, source range, standards, RAG chunks, native rules, and reviewer status.
+- Exploit validation — sandbox-only local validation record for triggerability and asset delta; it is disabled by default in normal analysis.
+- Formal property suggestion — reviewer-only invariant or rule draft; it is not a proof until compiled and verified.
 
 ## Architecture
 
@@ -57,11 +79,15 @@ graph TD
   Policy --> External["Optional external tools"]
   Slither --> Normalize["Finding normalization"]
   External --> Normalize
-  Normalize --> Schema["JSON schema validation"]
-  Schema --> RAG["Local RAG retrieval"]
+  Normalize --> Advanced["Phase 3 advanced evidence defaults"]
+  Advanced --> Graph["Evidence Graph + SCSA-native rules"]
+  Graph --> Schema["JSON schema validation"]
+  Schema --> RAG["Hybrid local RAG retrieval"]
   RAG --> Explain["Deterministic or MLX-ready explanation"]
   Explain --> Report["JSON + Markdown report"]
   Normalize --> Trace["SQLite trace"]
+  Graph --> Sandbox["Optional sandbox-only PoC validation"]
+  Sandbox --> Report
   Report --> Review["React reviewer workbench"]
   Trace --> Review
   Report --> CI["CI gates / comparison / benchmark"]
@@ -77,7 +103,8 @@ Generated files go to `knowledge-graph-out/`, which is intentionally ignored by 
 
 ## Relation To Security Tools
 
-SCSA is an evidence and review layer around established analyzers. It does not replace them.
+SCSA is an evidence and review layer around established analyzers. It does not
+replace them, and its MIT license does not relicense external tools.
 
 | Project | What it is known for | How SCSA uses or complements it |
 |---|---|---|
@@ -139,7 +166,7 @@ function withdraw() external {
 }
 ```
 
-The generated report records the normalized finding, source location, detector evidence, SWC reference, attack path, fix suggestion, tool source, confidence fields, trace id, and review status.
+The generated report records the normalized finding, source location, detector evidence, SWC/OWASP/SCSVS/SCWE standard references when mapped, attack path, fix suggestion, tool source, confidence fields, trace id, and review status.
 
 ## Web Workbench
 
@@ -212,6 +239,11 @@ uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id> --finding-id f_001
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 
+# Suggest reviewer-only formal properties from an existing report
+uv run scsa properties suggest reports/<contract_id>.json \
+  --format foundry-invariant \
+  --out reports/properties
+
 # Probe local MLX runtime availability
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
 
@@ -230,9 +262,10 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 
 | Output | Purpose |
 |---|---|
-| JSON report | Machine-readable findings, score, metadata, review state, and external-tool summaries |
-| Markdown report | Human-readable audit triage handoff |
-| SQLite trace | Raw analyzer output, normalized finding, RAG chunks, prompt, generation output, and review notes |
+| JSON report | Machine-readable findings, standards mapping, evidence graph summary, score, metadata, review state, and external-tool summaries |
+| Markdown report | Human-readable audit triage handoff with standards, native rules, and groundedness per finding |
+| SQLite trace | Raw analyzer output, Evidence Graph nodes/edges/claims, exploit validation rows, normalized finding, RAG chunks, prompt, generation output, and review notes |
+| Phase 3 artifacts | Sandbox-only PoC validation JSON/logs, fuzz seed notes, formal property drafts, and EVMbench detect/exploit adapter summaries |
 | External-tool artifacts | Tool-specific JSON/text output and SARIF artifact paths |
 | Comparison report | Added, fixed, and persistent findings across two reports |
 | 0G proof package | Optional report hash/proof metadata package for hackathon or external verification workflows |
@@ -249,11 +282,24 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 
 ## Validation
 
-Last full local verification on 2026-05-31:
+Last full local verification on 2026-06-01:
 
 ```text
-uv run pytest -q                     106 passed
+uv sync --extra audit --dev          resolved 198 packages, checked 83 packages
 uv run ruff check .                  all checks passed
+uv run pytest                        116 passed
+uv run python eval/run_eval.py       recall_at_k = 1.0
+uv run python eval/run_judge.py      local_average_judge_score = 5.0, external_average_judge_score = 5.0
+uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0
+uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0  unsupported_security_claims = 0
+uv run python eval/run_exploit_validation.py  status = executed_triggered, mode = local_foundry_test
+uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1  seed_count = 1
+uv run python eval/run_formal_property_suggestions.py --min-property-count 1  property_count = 1
+uv run python eval/run_evmbench_adapter.py  exploit_adapter = sandbox_only
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, f1 = 0.9259
+uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+uv run python scripts/check_tool_matrix.py  passed
+uv run python scripts/generate_sbom.py      generated tool-matrix SBOM and license inventory
 cd frontend && npm run test -- --run 35 passed
 cd frontend && npm run build         completed
 git diff --check                     passed
@@ -262,10 +308,18 @@ git diff --check                     passed
 CI gates:
 
 ```bash
+uv run python scripts/check_tool_matrix.py
+uv run python scripts/generate_sbom.py
 uv run ruff check .
 uv run pytest
 uv run python eval/run_eval.py
 uv run python eval/run_judge.py
+uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70
+uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0
+uv run python eval/run_exploit_validation.py
+uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1
+uv run python eval/run_formal_property_suggestions.py --min-property-count 1
+uv run python eval/run_evmbench_adapter.py
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5
 uv run python eval/run_public_project_builds.py --preflight-only
 cd frontend && npm run test -- --run
@@ -273,11 +327,12 @@ cd frontend && npm run build
 git diff --check
 ```
 
-Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md).
+Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md) and [`docs/reference/public-benchmark-leaderboard.md`](docs/reference/public-benchmark-leaderboard.md).
 
 ## GitHub Actions
 
-- `.github/workflows/ci.yml` runs lint, tests, RAG eval, judge eval, public benchmark, public project build preflight, frontend test/build, and whitespace checks on pushes and pull requests.
+- `.github/workflows/ci.yml` runs tool attribution checks, compliance artifact generation, lint, tests, RAG eval, judge eval, paired variant benchmark, groundedness eval, sandbox exploit validation, fuzz/property suggestion evals, EVMbench adapter, public benchmark, public project build preflight, frontend test/build, and whitespace checks on pushes and pull requests.
+- CI produces compliance artifacts plus `reports/eval/benchmark_matrix.json`, `reports/eval/benchmark_summary.md`, `reports/eval/paired_variant_results.json`, `reports/eval/rag_groundedness.json`, EVMbench adapter outputs, sandbox PoC logs, fuzz seed notes, and property suggestion artifacts.
 - `.github/workflows/smart-contract-audit.yml` provides a manual audit workflow that runs `scsa analyze`, optionally compares against a baseline report, and uploads generated reports as the `scsa-reports` artifact.
 
 ## Limitations
@@ -295,11 +350,18 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - [`SECURITY.md`](SECURITY.md)
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+- [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 - [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md)
 - [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)
 - [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)
 - [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)
 - [`docs/knowledge-graph.md`](docs/knowledge-graph.md)
+- [`docs/reference/tool-attribution.md`](docs/reference/tool-attribution.md)
+- [`docs/reference/license-boundary.md`](docs/reference/license-boundary.md)
+- [`docs/reference/related-work.md`](docs/reference/related-work.md)
+- [`docs/reference/standards-mapping.md`](docs/reference/standards-mapping.md)
+- [`docs/reference/phase3-advanced-evidence.md`](docs/reference/phase3-advanced-evidence.md)
+- [`docs/reference/public-benchmark-leaderboard.md`](docs/reference/public-benchmark-leaderboard.md)
 - [`docs/release/001-v0.1.0-checklist.md`](docs/release/001-v0.1.0-checklist.md)
 - [`docs/community/001-v0.1.0-tester-feedback.md`](docs/community/001-v0.1.0-tester-feedback.md)
 - [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)

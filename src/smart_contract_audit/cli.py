@@ -110,6 +110,32 @@ def main(argv: list[str] | None = None) -> None:
     zero_g_attach_proof.add_argument("report", type=Path)
     zero_g_attach_proof.add_argument("proof", type=Path)
 
+    properties = subparsers.add_parser(
+        "properties",
+        help="Generate reviewer-only formal property suggestions.",
+    )
+    properties_subparsers = properties.add_subparsers(
+        dest="properties_command",
+        required=True,
+    )
+    properties_suggest = properties_subparsers.add_parser(
+        "suggest",
+        help="Suggest draft formal properties for an existing JSON report.",
+    )
+    properties_suggest.add_argument("report", type=Path)
+    properties_suggest.add_argument(
+        "--format",
+        default="foundry_invariant",
+        choices=[
+            "foundry-invariant",
+            "foundry_invariant",
+            "scribble",
+            "certora_cvl",
+            "solidity_assert",
+        ],
+    )
+    properties_suggest.add_argument("--out", type=Path, default=Path("reports/properties"))
+
     mlx_probe = subparsers.add_parser("mlx-probe", help="Record MLX load/fallback status.")
     mlx_probe.add_argument("--model-path")
     mlx_probe.add_argument("--parameter-count-billion", type=float, default=8.0)
@@ -241,6 +267,15 @@ def main(argv: list[str] | None = None) -> None:
                 indent=2,
             )
         )
+    elif args.command == "properties":
+        from .properties import suggest_properties_for_report
+
+        payload = suggest_properties_for_report(
+            report_path=args.report,
+            output_dir=args.out,
+            output_format=args.format,
+        )
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
     elif args.command == "mlx-probe":
         discovered_paths = []
         model_path = args.model_path

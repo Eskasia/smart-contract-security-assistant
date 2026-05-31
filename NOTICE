@@ -1,0 +1,8 @@
+Smart Contract Security Assistant (SCSA)
+
+SCSA is an MIT-licensed local-first evidence orchestration and review layer.
+It integrates with external open-source tools but does not bundle or relicense
+their detector, fuzzer, symbolic-execution, or build engines.
+
+See THIRD_PARTY_NOTICES.md for third-party source, license, bundled status,
+invocation method, and output-boundary details.

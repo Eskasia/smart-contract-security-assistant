@@ -60,11 +60,189 @@ class TraceStore:
                 review_note TEXT DEFAULT '',
                 PRIMARY KEY (trace_id, finding_id)
             );
+
+            CREATE TABLE IF NOT EXISTS evidence_nodes (
+                node_id TEXT PRIMARY KEY,
+                node_type TEXT NOT NULL,
+                label TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS evidence_edges (
+                edge_id TEXT PRIMARY KEY,
+                src_node_id TEXT NOT NULL,
+                dst_node_id TEXT NOT NULL,
+                edge_type TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS evidence_claims (
+                claim_id TEXT PRIMARY KEY,
+                finding_id TEXT NOT NULL,
+                claim_text TEXT NOT NULL,
+                support_node_ids_json TEXT NOT NULL,
+                groundedness_status TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS exploit_validations (
+                validation_id TEXT PRIMARY KEY,
+                finding_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                poc_artifact_path TEXT,
+                execution_log_path TEXT,
+                triggered INTEGER,
+                profit_delta_json TEXT,
+                transaction_sequence_json TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
             """
         )
         self._ensure_column("analysis_trace", "review_status", "TEXT")
         self._ensure_column("trace_findings", "review_status", "TEXT DEFAULT 'unreviewed'")
         self._ensure_column("trace_findings", "review_note", "TEXT DEFAULT ''")
+        self.conn.commit()
+
+    def record_exploit_validation(
+        self,
+        finding_id: str,
+        validation: dict[str, Any],
+    ) -> None:
+        assert self.conn is not None
+        validation_id = str(
+            validation.get("validation_id") or f"exploit_validation:{finding_id}:001"
+        )
+        triggered = validation.get("triggered")
+        self.conn.execute(
+            """
+            INSERT OR REPLACE INTO exploit_validations (
+                validation_id, finding_id, status, mode, poc_artifact_path,
+                execution_log_path, triggered, profit_delta_json,
+                transaction_sequence_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                validation_id,
+                finding_id,
+                str(validation.get("status", "not_attempted")),
+                str(validation.get("mode", "sandbox_only")),
+                validation.get("poc_artifact_path"),
+                validation.get("execution_log_path"),
+                None if triggered is None else int(bool(triggered)),
+                json.dumps(validation.get("profit_delta"), ensure_ascii=False),
+                json.dumps(validation.get("transaction_sequence", []), ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+
+    def get_finding_rag_chunk_ids(self, trace_id: str, finding_id: str) -> list[str]:
+        assert self.conn is not None
+        row = self.conn.execute(
+            """
+            SELECT rag_chunk_ids
+            FROM trace_findings
+            WHERE trace_id = ? AND finding_id = ?
+            """,
+            (trace_id, finding_id),
+        ).fetchone()
+        if row is None or not row[0]:
+            return []
+        try:
+            payload = json.loads(row[0])
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(payload, list):
+            return []
+        return [str(item) for item in payload]
+
+    def update_finding_normalized_data(
+        self,
+        trace_id: str,
+        finding_id: str,
+        normalized_finding: dict[str, Any],
+    ) -> None:
+        assert self.conn is not None
+        self.conn.execute(
+            """
+            UPDATE trace_findings
+            SET normalized_finding = ?
+            WHERE trace_id = ? AND finding_id = ?
+            """,
+            (
+                json.dumps(normalized_finding, ensure_ascii=False),
+                trace_id,
+                finding_id,
+            ),
+        )
+        self.conn.commit()
+
+    def record_evidence_graph(self, graph: Any) -> None:
+        assert self.conn is not None
+        self.conn.executemany(
+            """
+            INSERT OR REPLACE INTO evidence_nodes (
+                node_id, node_type, label, payload_json, created_at
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    node_id,
+                    node_type,
+                    label,
+                    json.dumps(payload, ensure_ascii=False),
+                    created_at,
+                )
+                for node_id, node_type, label, payload, created_at in (
+                    node.to_row() for node in graph.nodes
+                )
+            ],
+        )
+        self.conn.executemany(
+            """
+            INSERT OR REPLACE INTO evidence_edges (
+                edge_id, src_node_id, dst_node_id, edge_type, payload_json, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    edge_id,
+                    src_node_id,
+                    dst_node_id,
+                    edge_type,
+                    json.dumps(payload, ensure_ascii=False),
+                    created_at,
+                )
+                for edge_id, src_node_id, dst_node_id, edge_type, payload, created_at in (
+                    edge.to_row() for edge in graph.edges
+                )
+            ],
+        )
+        self.conn.executemany(
+            """
+            INSERT OR REPLACE INTO evidence_claims (
+                claim_id, finding_id, claim_text, support_node_ids_json,
+                groundedness_status, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    claim.claim_id,
+                    claim.finding_id,
+                    claim.claim_text,
+                    json.dumps(claim.support_node_ids, ensure_ascii=False),
+                    claim.groundedness_status,
+                    claim.created_at,
+                )
+                for claim in graph.claims
+            ],
+        )
         self.conn.commit()
 
     def _ensure_column(self, table: str, column: str, column_type: str) -> None:

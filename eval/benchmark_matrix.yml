@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "benchmarks": [
+    {
+      "id": "paired_variants",
+      "path": "eval/paired_variants",
+      "mode": "detect",
+      "required_in_ci": true,
+      "metrics": ["precision", "recall", "f1", "paired_pass_rate"]
+    },
+    {
+      "id": "public_hf_slither50",
+      "source": "eval/public_benchmark/hf-slither50-v2-manifest.json",
+      "mode": "detect",
+      "required_in_ci": true,
+      "metrics": ["supported_hit_rate", "precision", "recall", "f1"]
+    },
+    {
+      "id": "public_project_build_preflight",
+      "source": "eval/public_benchmark/public-project-builds-10-manifest.json",
+      "mode": "detect_preflight",
+      "required_in_ci": true,
+      "metrics": ["analyzer_success_rate", "native_build_success_rate"]
+    }
+  ]
+}
