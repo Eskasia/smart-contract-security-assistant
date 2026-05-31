@@ -4,7 +4,7 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
-## Unreleased
+## v0.1.0 - 2026-05-31
 
 ### Added
 
