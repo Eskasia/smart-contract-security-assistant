@@ -4,6 +4,9 @@ Generated at: 2026-05-31
 
 | Category | # | Status | Name | Description | Last Modified | Path |
 |---|---|---|---|---|---|---|
+| community | 001 | active | v0.1.0 tester feedback guide | 定義 release 後 quickstart 測試者、授權使用邊界、回報格式與外部使用證據收集目標。 | 2026-05-31 | `docs/community/001-v0.1.0-tester-feedback.md` |
+| community | 002 | active | v0.1.0 tester outreach kit | 提供邀請測試者的短訊息、技術訊息、中文訊息、public post draft 與 evidence rules。 | 2026-05-31 | `docs/community/002-v0.1.0-outreach-kit.md` |
+| community | 003 | active | v0.1.0 feedback tracker | 追蹤 tester report、public usage signals、outreach log 與 feedback evidence counter。 | 2026-05-31 | `docs/community/003-v0.1.0-feedback-tracker.md` |
 | design | 001 | current | 專案架構書 | 描述 Solidity 安全初篩 MVP 的模組邊界、資料流、儲存與取捨。 | 2026-04-30 | `docs/design/001-project-architecture.md` |
 | design | 002 | draft | 前端架構書 | 規劃智能合約安全分析助理的報告審查型前端架構、資料契約與治理邊界。 | 2026-05-01 | `docs/design/002-frontend-architecture.md` |
 | design | 003 | draft | 90% 使用率優化建構書 | 規劃把試用率、持續使用率與答案滿意度推到 90% 的工程路線。 | 2026-05-04 | `docs/design/003-90-percent-adoption-optimization-plan.md` |
@@ -21,6 +24,7 @@ Generated at: 2026-05-31
 | hackathon | 009 | draft | HackQuest 成果提交說明書 | 繁體中文整理 0G APAC Hackathon 的 HackQuest 成果提交材料與本專案交付對應。 | 2026-05-07 | `docs/hackathon/009-hackquest-submission-guide-zh.md` |
 | readme | 001 | current | English README | 面向 GitHub 使用者的英文安裝、API 加固、功能、benchmark 與 Actions 說明。 | 2026-05-31 | `README.en.md` |
 | reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-05-31 | `docs/knowledge-graph.md` |
-| review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、0G proof、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-24 | `docs/review_checklist.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。 | 2026-05-24 | `docs/reference/001-validation-procedure-log.md` |
 | reference | 002 | current | Public Benchmark Leaderboard | 記錄 2026-05-17 Hugging Face Slither 50 份公開樣本的支援命中率、confusion matrix、precision、recall、F1 與逐案結果。 | 2026-05-17 | `docs/reference/002-public-benchmark-leaderboard.md` |
+| release | 001 | draft | v0.1.0 release readiness checklist | 定義首個 public OSS release 的範圍、延後項目、驗證命令、release notes 必備內容與 GitHub release 步驟。 | 2026-05-31 | `docs/release/001-v0.1.0-checklist.md` |
+| review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、0G proof、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-24 | `docs/review_checklist.md` |

@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-05-17。
+更新日期：2026-05-31。
 
 ## 已完成內容
 
@@ -32,6 +32,11 @@
 - 2026-05-17 已新增 0G proof artifact hash 驗證與 chain id gate：`upload-storage.mjs`、`register-proof.mjs` 會檢查 `ZERO_G_RPC_URL` chain id，`verify-submission-proof.mjs` 會重新計算 `artifact.source_file` sha256，dry-run proof 會驗證 `storage_root_hash` 等於 artifact hash。
 - 2026-05-17 public benchmark 已新增 `--leaderboard-output` 與 `--leaderboard-date`，可產生 `docs/reference/002-public-benchmark-leaderboard.md`；2026-05-06 已新增 confusion matrix、precision、recall 與 F1 指標。
 - 2026-05-07 已新增 0G hackathon proof flow：`scsa 0g-package` 產生 `audit-proof.json`，`integrations/0g` 提供 Storage upload、registry deploy/register 與 proof verify scripts，`scsa 0g-attach-proof` 可把 `submission-proof.json` 回寫到 report metadata，前端右欄可顯示 0G Proof panel；live deployment 欄位仍為 pending。
+- OSS readiness 基礎文件已存在：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、`.github/ISSUE_TEMPLATE/*`、`.github/pull_request_template.md`。
+- README 已整理成外部讀者版本，包含 authorized-use boundary、quickstart、demo output、limitations 與 maintainer automation use cases。
+- Release readiness 已開始：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
+- Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
+- Tester outreach 與 feedback tracker 已建立：`docs/community/002-v0.1.0-outreach-kit.md`、`docs/community/003-v0.1.0-feedback-tracker.md`。
 
 ## 技術核心
 
@@ -128,6 +133,16 @@ uv run python scripts/build_knowledge_graph.py  knowledge-graph-out artifacts ge
 uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 ```
 
+2026-05-31 README / OSS readiness 更新驗證結果：
+
+```text
+uv sync --extra audit --dev           installed audit dependencies
+uv run ruff check .                   all checks passed
+uv run pytest                         15 passed
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-demo
+                                      overall_status = finding, f_001 = reentrancy, severity = 3
+```
+
 端到端測試的記憶體使用低於 16GB 硬體上限；目前測試路徑使用 deterministic fallback。本機 `/Users/william/models/Qwen3.5-9B-MLX-4bit` 已完成 `mlx-lm` 載入 probe，峰值 RSS 661,520,384 bytes。
 
 ## 已知限制
@@ -150,6 +165,11 @@ Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、ext
 ## 文件入口
 
 - 文件索引：`docs/DOCS_INDEX.md`
+- Changelog：`CHANGELOG.md`
+- v0.1.0 release checklist：`docs/release/001-v0.1.0-checklist.md`
+- v0.1.0 tester feedback guide：`docs/community/001-v0.1.0-tester-feedback.md`
+- v0.1.0 tester outreach kit：`docs/community/002-v0.1.0-outreach-kit.md`
+- v0.1.0 feedback tracker：`docs/community/003-v0.1.0-feedback-tracker.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`
 - 專案架構書：`docs/design/001-project-architecture.md`
 - Knowledge graph：`docs/knowledge-graph.md`

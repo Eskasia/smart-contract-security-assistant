@@ -2,18 +2,38 @@
 
 [![CI](https://github.com/Eskasia/smart-contract-security-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Eskasia/smart-contract-security-assistant/actions/workflows/ci.yml)
 
-本專案是一個本地優先的 Solidity 安全初篩工作台。它把 Slither、可選外部安全工具、本地 RAG、MLX-ready 生成、SQLite trace 與 React triage UI 串成一條可重現的審計輔助流程，輸出 JSON、Markdown、SARIF artifact path 與逐條 finding review 狀態。
+Local-first Solidity security triage assistant with Slither, optional external audit tools, local RAG context, MLX-ready generation, a React reviewer workbench, and traceable JSON/Markdown/SQLite outputs.
+
+本專案協助維護者、審計學習者與小型 Solidity 團隊做第一輪安全初篩。LLM 只負責把 deterministic findings 轉成可讀解釋、攻擊路徑與修復建議；漏洞判定來源仍以 Slither 與外部安全工具輸出為準。
 
 > Automated triage only. This tool improves repeatability and evidence capture, but it does not replace a qualified manual smart contract audit.
 
 English README: [`README.en.md`](README.en.md)
 
+## Who This Is For
+
+- OSS maintainers reviewing Solidity pull requests.
+- Small audit teams that need reproducible local triage before human review.
+- Hackathon or prototype teams checking obvious contract risks before release.
+- Learners who want traceable examples of Slither findings and explanations.
+
+## Authorized-Use Boundary
+
+Only scan contracts that you own, maintain, or are explicitly authorized to review.
+
+Do not use this project to scan private repositories, proprietary contracts, customer audit material, or third-party code without permission. Do not include private keys, secrets, customer data, or unpublished third-party reports in issues, traces, examples, or pull requests.
+
+## Tester Feedback Wanted
+
+Smart Contract Security Assistant v0.1.0 is collecting independent quickstart feedback from Solidity/Web3 users. If you can run the fixture locally, please leave your environment, command result, and usability feedback in issue #12:
+https://github.com/Eskasia/smart-contract-security-assistant/issues/12
+
 ## Why This Exists
 
-- **Local-first evidence**：source、finding、prompt、trace、review note 與 report artifact 都留在本地目錄。
-- **Security-tool orchestration**：以 Slither 為核心，支援 Mythril、Echidna、Aderyn、Medusa、Halmos 的可選結果匯入。
-- **Reviewer workflow**：前端提供 finding triage、trace evidence、remediation diff、report review 與 JSON/Markdown 下載。
-- **CI-ready gates**：內建 benchmark、public project build preflight、report comparison 與 GitHub Actions workflow。
+- **Local-first evidence**: source, finding, prompt, trace, review note and report artifacts stay in local directories.
+- **Security-tool orchestration**: Slither is the core analyzer; Mythril, Echidna, Aderyn, Medusa and Halmos can be attached when installed.
+- **Reviewer workflow**: the frontend supports finding triage, trace evidence, remediation diff, report review and JSON/Markdown downloads.
+- **CI-ready gates**: benchmark checks, public project build preflight, report comparison and GitHub Actions workflows are included.
 
 ## Knowledge Graph
 
@@ -35,27 +55,41 @@ graph TD
   Report --> CI["CI gates / comparison / benchmark"]
 ```
 
-圖譜規格在 [`docs/knowledge-graph.md`](docs/knowledge-graph.md)。本機可重建 artifact：
+Graph spec: [`docs/knowledge-graph.md`](docs/knowledge-graph.md). Local artifact rebuild:
 
 ```bash
 uv run python scripts/build_knowledge_graph.py
 ```
 
-輸出會寫入 `knowledge-graph-out/`，該目錄只留本地，不追蹤到 GitHub。
+Generated files go to `knowledge-graph-out/`, which is intentionally ignored by Git.
 
 ## Quick Start
 
+Prerequisites:
+
+- Python `>=3.11`
+- `uv`
+- A compatible `solc` version for the target contract
+
 ```bash
 uv sync --extra audit --dev
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-demo --native-build-policy disabled
 uv run pytest
 ```
 
-常用輸出：
+The demo command writes:
 
-- `reports/<contract_id>.json`
-- `reports/<contract_id>.md`
-- `reports/analysis_trace.sqlite`
+- `reports-demo/<contract_id>.json`
+- `reports-demo/<contract_id>.md`
+- `reports-demo/analysis_trace.sqlite`
+
+Expected summary for the fixture:
+
+```text
+overall_status: finding
+finding: f_001 | reentrancy | severity 3 | withdraw | SWC-107
+human_review_required: true
+```
 
 ## Web Workbench
 
@@ -75,9 +109,24 @@ npm install
 npm run dev
 ```
 
-開啟 `http://127.0.0.1:5173`。前端透過 Vite proxy 呼叫 `http://127.0.0.1:8787`，提供 source import、analysis submit、SSE/polling status、finding review、trace evidence、report deep link、JSON/Markdown download 與四工具 selector。
+Open `http://127.0.0.1:5173`. The React UI provides source import, analysis submit, SSE/polling status, finding review, trace evidence, report deep link, JSON/Markdown download and four-tool selector.
 
-## CLI Commands
+## Example Output
+
+`tests/contracts/VulnerableVault.sol` intentionally writes state after an external call:
+
+```solidity
+function withdraw() external {
+    uint256 amount = balances[msg.sender];
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success, "transfer failed");
+    balances[msg.sender] = 0;
+}
+```
+
+The generated Markdown report includes a normalized finding, source location, evidence, SWC reference, confidence fields, attack path, fix suggestion, tool source and analysis metadata.
+
+## Commands
 
 ```bash
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports
@@ -88,6 +137,12 @@ uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
 uv run python scripts/build_knowledge_graph.py
+```
+
+Optional extras:
+
+```bash
+uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 ```
 
 ## Capability Matrix
@@ -110,6 +165,20 @@ uv run python scripts/build_knowledge_graph.py
 - API token stays in memory state on the frontend and is not persisted to `localStorage`.
 - Halmos requires trusted Foundry project mode; untrusted/imported sources cannot enable that flow.
 
+## Limitations
+
+- Business-logic, economic-mechanism, oracle, cross-contract and flash-loan risks require human review.
+- Generated explanations can be incomplete or wrong; use the trace and analyzer evidence as the review anchor.
+- Real external tool precision depends on installed binaries, project buildability and configured timeout.
+
+## Maintainer Automation Use Cases
+
+- Pull request review summaries for Solidity security changes.
+- Issue classification for bug reports, feature requests and unsafe usage.
+- Release note drafting from merged security-tooling changes.
+- Test failure triage across Slither, report generation, RAG, frontend and evals.
+- Safer explanation generation from local trace data without uploading unauthorized contracts.
+
 ## Validation
 
 Last full local verification on 2026-05-31:
@@ -131,14 +200,26 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run python eval/run_public_project_builds.py --preflight-only
 ```
 
-## Documentation
+## Project Documents
 
-- [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)：installation、API、trace、external tools、GitHub Actions。
-- [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)：module boundary、data flow、storage。
-- [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)：evidence-first UI tokens and component rules。
-- [`docs/knowledge-graph.md`](docs/knowledge-graph.md)：capability/evidence graph and rebuild command。
-- [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)：public benchmark result table。
+- [`CHANGELOG.md`](CHANGELOG.md)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- [`SECURITY.md`](SECURITY.md)
+- [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md)
+- [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)
+- [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)
+- [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)
+- [`docs/knowledge-graph.md`](docs/knowledge-graph.md)
+- [`docs/release/001-v0.1.0-checklist.md`](docs/release/001-v0.1.0-checklist.md)
+- [`docs/community/001-v0.1.0-tester-feedback.md`](docs/community/001-v0.1.0-tester-feedback.md)
+- [`docs/community/002-v0.1.0-outreach-kit.md`](docs/community/002-v0.1.0-outreach-kit.md)
+- [`docs/community/003-v0.1.0-feedback-tracker.md`](docs/community/003-v0.1.0-feedback-tracker.md)
+- [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)
 
 ## GitHub Actions
 
 `.github/workflows/ci.yml` runs lint, tests, eval gates, public benchmark, frontend build and whitespace checks on PRs. `.github/workflows/smart-contract-audit.yml` provides a manual audit workflow that uploads generated reports as the `scsa-reports` artifact.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, validation, pull request expectations and issue triage guidance. See [`SECURITY.md`](SECURITY.md) before reporting vulnerabilities or unsafe behavior in the tool itself.

@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest an improvement to the local security triage workflow.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the maintainer or auditor workflow this feature improves.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow is currently difficult or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should the project add or change?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI
+        - Slither integration
+        - Finding normalization
+        - RAG
+        - MLX/local generation
+        - Traceability
+        - Reports
+        - Web UI
+        - Documentation
+        - CI/evaluation
+    validations:
+      required: true
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: Authorization and data safety
+      options:
+        - label: This request does not require scanning or reviewing code without authorization.
+          required: true

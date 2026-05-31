@@ -9,6 +9,7 @@ __pycache__/
 htmlcov/
 .venv/
 venv/
+reports-demo/
 node_modules/
 frontend/dist/
 dist/
