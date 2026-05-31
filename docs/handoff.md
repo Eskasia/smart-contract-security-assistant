@@ -13,6 +13,7 @@
 - README 已整理成外部讀者版本，包含 authorized-use boundary、quickstart、demo output、limitations 與 maintainer automation use cases。
 - Release readiness 已開始：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
 - Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
+- Tester outreach 與 feedback tracker 已建立：`docs/community/002-v0.1.0-outreach-kit.md`、`docs/community/003-v0.1.0-feedback-tracker.md`。
 
 ## 技術核心
 
@@ -92,6 +93,8 @@ unzip -t final-output/智能合約安全分析助理_產品報告.pptx
 - Changelog：`CHANGELOG.md`
 - v0.1.0 release checklist：`docs/release/001-v0.1.0-checklist.md`
 - v0.1.0 tester feedback guide：`docs/community/001-v0.1.0-tester-feedback.md`
+- v0.1.0 tester outreach kit：`docs/community/002-v0.1.0-outreach-kit.md`
+- v0.1.0 feedback tracker：`docs/community/003-v0.1.0-feedback-tracker.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`
 - 專案架構書：`docs/design/001-project-architecture.md`
 - 驗證程序日誌：`docs/reference/001-validation-procedure-log.md`
