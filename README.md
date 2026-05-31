@@ -363,12 +363,16 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`docs/reference/phase3-advanced-evidence.md`](docs/reference/phase3-advanced-evidence.md)
 - [`docs/reference/public-benchmark-leaderboard.md`](docs/reference/public-benchmark-leaderboard.md)
 - [`docs/release/001-v0.1.0-checklist.md`](docs/release/001-v0.1.0-checklist.md)
+- [`docs/release/002-v0.2.0-checklist.md`](docs/release/002-v0.2.0-checklist.md)
 - [`docs/community/001-v0.1.0-tester-feedback.md`](docs/community/001-v0.1.0-tester-feedback.md)
 - [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)
 
 ## Tester Feedback Wanted
 
-Smart Contract Security Assistant v0.1.0 is collecting independent quickstart feedback from Solidity/Web3 users. If you can run the fixture locally, please leave your environment, command result, and usability feedback in issue #12:
+The published v0.1.0 release uses issue #12 for independent quickstart
+feedback. Keep that issue scoped to the published v0.1.0 release; v0.2.0
+release readiness is tracked in
+[`docs/release/002-v0.2.0-checklist.md`](docs/release/002-v0.2.0-checklist.md).
 
 https://github.com/Eskasia/smart-contract-security-assistant/issues/12
 

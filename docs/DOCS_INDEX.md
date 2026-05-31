@@ -32,5 +32,6 @@ Generated at: 2026-06-01
 | reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-05-31 | `docs/knowledge-graph.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。 | 2026-05-24 | `docs/reference/001-validation-procedure-log.md` |
 | reference | 002 | current | Public Benchmark Leaderboard | 記錄 2026-05-17 Hugging Face Slither 50 份公開樣本的支援命中率、confusion matrix、precision、recall、F1 與逐案結果。 | 2026-05-17 | `docs/reference/002-public-benchmark-leaderboard.md` |
-| release | 001 | draft | v0.1.0 release readiness checklist | 定義首個 public OSS release 的範圍、延後項目、驗證命令、release notes 必備內容與 GitHub release 步驟。 | 2026-05-31 | `docs/release/001-v0.1.0-checklist.md` |
+| release | 001 | released | v0.1.0 release readiness checklist | 定義首個 public OSS release 的範圍、延後項目、驗證命令、release notes 必備內容與 GitHub release 步驟。 | 2026-06-01 | `docs/release/001-v0.1.0-checklist.md` |
+| release | 002 | draft | v0.2.0 release readiness checklist | 定義 Evidence Graph、Phase 3 advanced evidence、SBOM/license 與 benchmark/eval gate 合併後的 v0.2.0 release 前檢查。 | 2026-06-01 | `docs/release/002-v0.2.0-checklist.md` |
 | review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、0G proof、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-05-24 | `docs/review_checklist.md` |

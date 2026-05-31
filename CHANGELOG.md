@@ -4,6 +4,40 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
+## v0.2.0 - Unreleased
+
+### Added
+
+- HTTP API and React/Vite reviewer workbench from PR #15, including report
+  review flow, trace evidence panels, and frontend validation coverage.
+- Evidence platform roadmap implementation from PR #16: Evidence Graph storage,
+  SCSA-native post-analysis rules, standards mapping, tool attribution, license
+  boundary docs, and generated compliance artifacts.
+- Phase 3 advanced evidence surface: sandbox-only exploit validation records,
+  fuzz seed suggestions, formal property drafts, DeFi profit signal, and
+  EVMbench adapter gates.
+- Expanded CI and release gates for paired variants, groundedness,
+  sandbox-only exploit validation, fuzz/property suggestions, EVMbench adapter,
+  SBOM/license inventory generation, frontend tests, and frontend build.
+- v0.2.0 release readiness checklist in
+  `docs/release/002-v0.2.0-checklist.md`.
+
+### Changed
+
+- Treat v0.2.0 as the next release candidate because the merged scope is a
+  platform expansion, not a patch update to v0.1.0.
+- Keep issue #12 as the v0.1.0 tester feedback entry because it links to the
+  already published v0.1.0 release.
+
+### Validation
+
+- `git pull origin main`
+- `uv run ruff check .`
+- `uv run pytest` — 116 passed
+- `uv run python scripts/check_tool_matrix.py`
+- `cd frontend && npm run test -- --run` — 35 passed
+- `cd frontend && npm run build`
+
 ## v0.1.0 - 2026-05-31
 
 ### Added
