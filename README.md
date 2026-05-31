@@ -25,6 +25,13 @@ issues, traces, examples, or pull requests.
 This tool is not a formal audit replacement. Every report remains human-review
 required.
 
+## Tester Feedback Wanted
+
+Smart Contract Security Assistant v0.1.0 is collecting independent quickstart
+feedback from Solidity/Web3 users. If you can run the fixture locally, please
+leave your environment, command result, and usability feedback in issue #12:
+https://github.com/Eskasia/smart-contract-security-assistant/issues/12
+
 ## Quickstart
 
 Prerequisites:
