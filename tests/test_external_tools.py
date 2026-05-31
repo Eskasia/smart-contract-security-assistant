@@ -54,6 +54,66 @@ def test_echidna_result_counts_failed_tests(tmp_path: Path) -> None:
     assert results[0].findings_count == 1
 
 
+def test_aderyn_result_counts_json_issues_and_sarif_artifact(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+
+    def fake_runner(command: list[str], timeout_seconds: int) -> CompletedProcess[str]:
+        assert timeout_seconds == 60
+        output_index = command.index("--output") + 1
+        output_path = Path(command[output_index])
+        if output_path.suffix == ".sarif":
+            return CompletedProcess(command, 0, stdout='{"version":"2.1.0"}', stderr="")
+        return CompletedProcess(
+            command,
+            1,
+            stdout='{"issues":[{"title":"Unchecked return value"}]}',
+            stderr="",
+        )
+
+    results = run_external_tools(
+        contract,
+        tmp_path / "external",
+        tools=("aderyn",),
+        command_runner=fake_runner,
+        binary_resolver=lambda name: name,
+    )
+
+    assert results[0].tool_name == "aderyn"
+    assert results[0].status == "finding"
+    assert results[0].findings_count == 1
+    assert results[0].artifact_paths["sarif"].endswith("aderyn.sarif")
+
+
+def test_medusa_and_halmos_count_failures(tmp_path: Path) -> None:
+    contract = tmp_path / "Invariant.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Invariant {}", encoding="utf-8")
+
+    def fake_runner(command: list[str], timeout_seconds: int) -> CompletedProcess[str]:
+        if command[0] == "medusa":
+            assert command[:2] == ["medusa", "fuzz"]
+            return CompletedProcess(
+                command,
+                1,
+                stdout='{"tests":[{"status":"falsified"},{"status":"passed"}]}',
+                stderr="",
+            )
+        assert command[0] == "halmos"
+        return CompletedProcess(command, 1, stdout="Counterexample: test invariant", stderr="")
+
+    results = run_external_tools(
+        contract,
+        tmp_path / "external",
+        tools=("medusa", "halmos"),
+        command_runner=fake_runner,
+        binary_resolver=lambda name: name,
+    )
+
+    assert [result.tool_name for result in results] == ["medusa", "halmos"]
+    assert [result.status for result in results] == ["finding", "finding"]
+    assert [result.findings_count for result in results] == [1, 1]
+
+
 def test_missing_external_tool_is_skipped(tmp_path: Path) -> None:
     contract = tmp_path / "Vault.sol"
     contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")

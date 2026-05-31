@@ -14,6 +14,7 @@ from .config import (
     DEFAULT_RAG_MODE,
 )
 from .external_finding_adapter import (
+    EXTERNAL_FINDING_TOOLS,
     external_findings_from_results,
     merge_external_findings,
     record_external_findings,
@@ -29,6 +30,7 @@ from .report_builder import (
     review_status_for,
 )
 from .slither_runner import SlitherRunError, SlitherRunResult, run_slither
+from .solidity_target import SolidityTarget
 from .trace.store import TraceStore
 from .validation.validator import validate_report
 
@@ -135,12 +137,18 @@ def analyze_contract(
 
         if external_tools:
             assert context.target is not None
+            tools_to_run, preflight_results = _preflight_external_tools(
+                external_tools,
+                context.target,
+                native_build_policy,
+            )
             external_tool_results = external_tool_runner(
                 context.target.input_path,
                 context.output_dir / "external-tools" / context.contract_id,
-                external_tools,
+                tools_to_run,
                 external_timeout_seconds,
             )
+            external_tool_results = [*preflight_results, *external_tool_results]
 
         assert context.target is not None
         finding_result = process_slither_findings(
@@ -166,7 +174,7 @@ def analyze_contract(
             [
                 finding
                 for finding in processed_findings
-                if finding.static_tool_source in {"mythril", "echidna"}
+                if finding.static_tool_source in EXTERNAL_FINDING_TOOLS
             ],
             trace_store,
             trace_id,
@@ -203,3 +211,29 @@ def analyze_contract(
             context.contract_id,
         )
         return report
+
+
+def _preflight_external_tools(
+    tools: tuple[str, ...],
+    target: SolidityTarget,
+    native_build_policy: str,
+) -> tuple[tuple[str, ...], list[ExternalToolResult]]:
+    runnable: list[str] = []
+    preflight_results: list[ExternalToolResult] = []
+    for tool in tools:
+        if tool != "halmos":
+            runnable.append(tool)
+            continue
+        if native_build_policy != "trusted" or target.project_type != "foundry":
+            preflight_results.append(
+                ExternalToolResult(
+                    tool_name="halmos",
+                    command=["halmos"],
+                    status="skipped",
+                    findings_count=0,
+                    summary="halmos requires a trusted Foundry project; skipped optional analysis.",
+                )
+            )
+            continue
+        runnable.append(tool)
+    return tuple(runnable), preflight_results

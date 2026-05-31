@@ -47,7 +47,8 @@ Open `http://127.0.0.1:5173`. The React UI sends import and analysis requests to
 - Security score: `security_score_v2` returns a 0-100 contract risk score based on severity, confidence, finding review status, partial analysis state, and business logic review requirements.
 - Traceability: SQLite trace rows store raw Slither output, normalized findings, RAG chunk ids, prompts, LLM output, token usage, judge scores, review status, and review notes.
 - Review feedback: `PATCH /api/reports/{contract_id}/findings/{finding_id}/review` saves `unreviewed`, `true_positive`, `false_positive`, `accepted_risk`, or `fixed`; `false_positive` uses a 0.0 score multiplier and `fixed` uses 0.2 until a fresh scan confirms removal.
-- Optional external tools: `--external-tool mythril` and `--external-tool echidna` attach symbolic execution and fuzzing summaries when those tools are installed.
+- Optional external tools: `--external-tool mythril`, `echidna`, `aderyn`, `medusa`, and `halmos` attach symbolic execution, static-analysis, fuzzing, or proof summaries when those tools are installed. Aderyn SARIF is recorded as an artifact path instead of being embedded in the main report JSON.
+- Knowledge graph: `docs/knowledge-graph.md` documents the source import, analysis, report, trace, review, and CI evidence graph; `uv run python scripts/build_knowledge_graph.py` regenerates local artifacts under `knowledge-graph-out/`.
 
 ## Commands
 
@@ -59,6 +60,7 @@ uv run scsa compare-reports reports/base.json reports/head.json --output reports
 uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
+uv run python scripts/build_knowledge_graph.py
 uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17
 uv run python eval/run_public_project_builds.py --preflight-only
 ```

@@ -427,7 +427,7 @@ def test_http_api_imports_archive_and_passes_external_tool_settings(tmp_path: Pa
             method="POST",
             payload={
                 "input_path": imported["input_path"],
-                "external_tools": ["echidna", "echidna", "mythril"],
+                "external_tools": ["aderyn", "echidna", "echidna", "medusa", "mythril"],
                 "external_timeout_seconds": 999,
                 "native_build_policy": "trusted",
             },
@@ -436,9 +436,26 @@ def test_http_api_imports_archive_and_passes_external_tool_settings(tmp_path: Pa
         assert job["status"] == "no_finding"
         assert analyzer_calls
         assert analyzer_calls[0]["contract_path"] == staged_path
-        assert analyzer_calls[0]["external_tools"] == ("echidna", "mythril")
+        assert analyzer_calls[0]["external_tools"] == (
+            "aderyn",
+            "echidna",
+            "medusa",
+            "mythril",
+        )
         assert analyzer_calls[0]["external_timeout_seconds"] == 120
         assert analyzer_calls[0]["native_build_policy"] == "disabled"
+
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={
+                "input_path": imported["input_path"],
+                "external_tools": ["halmos"],
+                "native_build_policy": "disabled",
+            },
+            expect_error=422,
+        )
+        assert error["error"]["message"] == "halmos requires native_build_policy trusted."
     finally:
         server.shutdown()
         server.server_close()

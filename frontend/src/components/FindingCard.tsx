@@ -9,6 +9,7 @@ import type { Finding, FindingReviewStatus } from "../types/report";
 import { CodeBlock } from "./CodeBlock";
 import { Metric } from "./Metric";
 import { SeverityBadge } from "./StatusBadge";
+import { Button } from "./ui/Button";
 
 const LazyDiffViewerPanel = lazy(() =>
   import("./DiffViewerPanel").then((module) => ({ default: module.DiffViewerPanel })),
@@ -109,7 +110,7 @@ export const FindingCard = memo(function FindingCard({
     <article
       role="article"
       aria-label={finding.finding_id}
-      className={`rounded-md border bg-white p-4 transition ${selected ? "border-audit-teal ring-2 ring-teal-100" : "border-slate-200"}`}
+      className={`rounded-md border bg-surface p-4 transition ${selected ? "border-audit-teal ring-2 ring-teal-100" : "border-border-subtle"}`}
     >
       <button
         type="button"
@@ -174,15 +175,15 @@ export const FindingCard = memo(function FindingCard({
             className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
           />
         </label>
-        <button
+        <Button
           type="button"
           onClick={saveFindingReview}
-          className="inline-flex h-10 items-center justify-center gap-2 self-end rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          className="self-end"
           aria-label={t("saveFindingReview")}
         >
           <Save className="h-4 w-4" aria-hidden="true" />
           <span>{t("save")}</span>
-        </button>
+        </Button>
         <p className="min-h-5 text-xs text-slate-600 md:col-span-3" role="status">
           {reviewMessage}
         </p>
@@ -231,14 +232,14 @@ export const FindingCard = memo(function FindingCard({
                 />
                 {t("split")}
               </label>
-              <button
+              <Button
                 type="button"
                 onClick={copyRemediation}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+                size="icon"
                 aria-label={t("copyRemediationCode")}
               >
                 <Clipboard className="h-4 w-4" aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           </div>
           <Suspense

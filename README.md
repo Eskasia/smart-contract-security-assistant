@@ -1,27 +1,63 @@
-# 智能合約安全分析助理
+# Smart Contract Security Assistant
 
-本專案是 Solidity 智能合約安全初篩工具：單檔 `.sol`、Foundry、Hardhat 或 nested import 專案輸入後，系統執行 Slither 靜態分析、標準化 findings、檢索本地知識庫、產生可追溯報告，並輸出 JSON、Markdown 與 SQLite trace。
+[![CI](https://github.com/Eskasia/smart-contract-security-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Eskasia/smart-contract-security-assistant/actions/workflows/ci.yml)
 
-English README: `README.en.md`
+本專案是一個本地優先的 Solidity 安全初篩工作台。它把 Slither、可選外部安全工具、本地 RAG、MLX-ready 生成、SQLite trace 與 React triage UI 串成一條可重現的審計輔助流程，輸出 JSON、Markdown、SARIF artifact path 與逐條 finding review 狀態。
 
-## 快速啟動
+> Automated triage only. This tool improves repeatability and evidence capture, but it does not replace a qualified manual smart contract audit.
+
+English README: [`README.en.md`](README.en.md)
+
+## Why This Exists
+
+- **Local-first evidence**：source、finding、prompt、trace、review note 與 report artifact 都留在本地目錄。
+- **Security-tool orchestration**：以 Slither 為核心，支援 Mythril、Echidna、Aderyn、Medusa、Halmos 的可選結果匯入。
+- **Reviewer workflow**：前端提供 finding triage、trace evidence、remediation diff、report review 與 JSON/Markdown 下載。
+- **CI-ready gates**：內建 benchmark、public project build preflight、report comparison 與 GitHub Actions workflow。
+
+## Knowledge Graph
+
+```mermaid
+graph TD
+  Source["Solidity source / Foundry / Hardhat / ZIP / GitHub / Etherscan"] --> Import["Import guardrails"]
+  Import --> Policy["Native build policy"]
+  Policy --> Slither["Slither static analysis"]
+  Policy --> External["External tools: Mythril / Echidna / Aderyn / Medusa / Halmos"]
+  Slither --> Normalize["Finding normalization"]
+  External --> Normalize
+  Normalize --> Schema["JSON schema validation"]
+  Schema --> RAG["Local RAG evidence retrieval"]
+  RAG --> LLM["MLX-ready explanation fallback"]
+  LLM --> Report["JSON + Markdown report"]
+  Normalize --> Trace["SQLite trace"]
+  Report --> Review["Reviewer feedback"]
+  Trace --> Review
+  Report --> CI["CI gates / comparison / benchmark"]
+```
+
+圖譜規格在 [`docs/knowledge-graph.md`](docs/knowledge-graph.md)。本機可重建 artifact：
+
+```bash
+uv run python scripts/build_knowledge_graph.py
+```
+
+輸出會寫入 `knowledge-graph-out/`，該目錄只留本地，不追蹤到 GitHub。
+
+## Quick Start
 
 ```bash
 uv sync --extra audit --dev
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports
-uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled
 uv run pytest
 ```
 
-可選功能依需求安裝：
+常用輸出：
 
-```bash
-uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
-```
+- `reports/<contract_id>.json`
+- `reports/<contract_id>.md`
+- `reports/analysis_trace.sqlite`
 
-## 前端工作台
-
-2026-05-06 已串接加固後本機 HTTP API，位置為 `src/smart_contract_audit/http_api.py`。React/Vite 前端位於 `frontend/`，畫面為三欄審計 triage 工作台：左欄輸入、RAG/模型設定、native build policy 與 API token，中欄 finding、vulnerable code、AI explanation、attack path、remediation diff 與逐條 finding 審核回饋，右欄 metadata、judge、token usage、review status 與 trace evidence。
+## Web Workbench
 
 ```bash
 uv run scsa api \
@@ -33,87 +69,76 @@ uv run scsa api \
   --cors-origin http://127.0.0.1:5173 \
   --max-request-bytes 1048576 \
   --native-build-policy disabled
+
 cd frontend
 npm install
 npm run dev
-npm run build
-npm run test
 ```
 
-開發伺服器預設為 `http://127.0.0.1:5173`，`/api/*` 會 proxy 到 `http://127.0.0.1:8787`。本機 API 支援 `POST /api/imports`、`POST /api/analyses`、`GET /api/analyses/{id}`、`GET /api/analyses/{id}/stream`、`GET /api/reports/{contract_id}`、`GET /api/reports/{contract_id}/markdown`、`GET /api/traces/{trace_id}`、`PATCH /api/reports/{contract_id}/review` 與 `PATCH /api/reports/{contract_id}/findings/{finding_id}/review`；前端提供手動 demo report 載入，真實 API submit/review 失敗時會顯示 HTTP 狀態對應的安全錯誤訊息，不自動改寫為 demo success。`--native-build-policy disabled` 會略過未信任 Foundry/Hardhat 專案的 build scripts，改用 Slither/solc fallback。
+開啟 `http://127.0.0.1:5173`。前端透過 Vite proxy 呼叫 `http://127.0.0.1:8787`，提供 source import、analysis submit、SSE/polling status、finding review、trace evidence、report deep link、JSON/Markdown download 與四工具 selector。
 
-## 常用命令
+## CLI Commands
 
 ```bash
-uv run scsa analyze <contract.sol> --out-dir reports
-uv run scsa analyze <contract.sol> --out-dir reports --external-tool mythril --external-tool echidna
+uv run scsa analyze <contract.sol|project-dir> --out-dir reports
+uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool aderyn --external-tool echidna
 uv run scsa import-source --github-url https://github.com/OpenZeppelin/openzeppelin-contracts --out-dir reports-api/imports
 uv run scsa compare-reports reports/base.json reports/head.json --output reports/comparison.md --fail-on-high-added --fail-on-score-drop 10
-uv run scsa analyze tests/fixtures/solidity_projects/foundry --out-dir reports --native-build-policy disabled
-uv run scsa clean-reports data/dataset_v1.0/raw_reports data/dataset_v1.0/chunks/chunks.jsonl
-uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id> --finding-id f_001
+uv run scsa trace-lookup reports/analysis_trace.sqlite <trace_id>
 uv run scsa trace-dashboard reports/analysis_trace.sqlite
 uv run scsa mlx-probe --auto-discover-model --output reports-mlx/mlx_probe.json
-uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled
-uv run python scripts/build_skill_graph.py
-uv run scsa web --host 127.0.0.1 --port 7860
-uv run python eval/run_eval.py
-uv run python eval/run_judge.py
-uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17
-uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
+uv run python scripts/build_knowledge_graph.py
 ```
 
-## 0G Hackathon Proof Package
+## Capability Matrix
 
-本地可重現路徑會產生審計報告、建立 0G proof package、用 dry-run 產生 `submission-proof.json`，再把 proof metadata 回寫到 report；dry-run 不產生 Explorer links，live 0G 上傳與註冊需先設定環境變數並部署 registry。
+| Area | Current support |
+|---|---|
+| Input | Single `.sol`, Foundry, Hardhat, nested Solidity imports, GitHub archive, Etherscan API, ZIP base64 |
+| Analysis | Slither detector mapping, external tool result normalization, local RAG, deterministic/MLX-ready explanation |
+| External tools | Mythril, Echidna, Aderyn, Medusa, Halmos; missing binaries are recorded as skipped |
+| Trust policy | Imported sources are untrusted; `native_build_policy=disabled` skips build scripts and uses Slither/solc fallback |
+| Report | Security score, vulnerable snippet, explanation, attack path, fix suggestion, remediation diff, judge score, token usage |
+| Trace | Raw Slither output, normalized finding, RAG chunks, prompt, LLM output, review status, review note |
+| Frontend | Evidence-first triage console with shared design tokens and responsive layout |
+| CI | Ruff, pytest, RAG eval, judge eval, public benchmark, public project preflight, frontend test/build, whitespace check |
+
+## Security Boundaries
+
+- `POST /api/imports` rejects path traversal, symlink entries, special files, nested archives, unsafe redirects, non-allowlisted hosts and oversized remote responses.
+- HTTP API supports bearer token, fixed CORS origin, `input_root`, request body limit and server-side native build policy ceiling.
+- API token stays in memory state on the frontend and is not persisted to `localStorage`.
+- Halmos requires trusted Foundry project mode; untrusted/imported sources cannot enable that flow.
+
+## Validation
+
+Last full local verification on 2026-05-31:
+
+```text
+uv run pytest -q                     106 passed
+uv run ruff check .                  all checks passed
+cd frontend && npm run test -- --run 35 passed
+cd frontend && npm run build         completed
+git diff --check                     passed
+```
+
+Benchmark gates:
 
 ```bash
-mkdir -p reports
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports --native-build-policy disabled > reports/latest-analysis.json
-REPORT_ID=$(uv run python -c 'import json; print(json.load(open("reports/latest-analysis.json"))["contract_id"])')
-uv run scsa 0g-package reports/latest-analysis.json --out-dir reports-0g --project-name "SCSA 0G Audit Proof" --track "Track 1: Agentic Infrastructure & OpenClaw Lab"
-cd integrations/0g
-npm install
-npm run upload -- "../../reports-0g/$REPORT_ID/audit-proof.json" --dry-run
-npm run verify-proof -- "../../reports-0g/$REPORT_ID/submission-proof.json"
-cd ../..
-uv run scsa 0g-attach-proof reports/latest-analysis.json "reports-0g/$REPORT_ID/submission-proof.json"
+uv run python eval/run_eval.py
+uv run python eval/run_judge.py
+uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5
+uv run python eval/run_public_project_builds.py --preflight-only
 ```
 
-Live 路徑需設定 `ZERO_G_RPC_URL=https://evmrpc.0g.ai`、`ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai` 與 funded `ZERO_G_PRIVATE_KEY`，先執行 `npm run deploy`，把輸出的 registry address 設為 `ZERO_G_REGISTRY_ADDRESS` 後再執行 `npm run upload -- ...`、`npm run register -- ...` 與 `npm run verify-proof -- ...`。
+## Documentation
 
-Live registered `submission-proof.json` 的 `explorer_links` 使用 `storage_tx`、`registry`、`registration_tx` 三個 key，預設指向 ChainScan；dry-run `explorer_links` 必須為空。
+- [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)：installation、API、trace、external tools、GitHub Actions。
+- [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)：module boundary、data flow、storage。
+- [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)：evidence-first UI tokens and component rules。
+- [`docs/knowledge-graph.md`](docs/knowledge-graph.md)：capability/evidence graph and rebuild command。
+- [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)：public benchmark result table。
 
-## 目前範圍
+## GitHub Actions
 
-- 輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 預設先嘗試原生 build，`--native-build-policy disabled` 會略過 build scripts 並使用 Slither/solc fallback；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
-- 靜態分析：Slither detector 映射 reentrancy、access control、unchecked external call（含 `unchecked-transfer`、`unused-return`）、delegatecall、controlled array length、oracle、price manipulation、privilege escalation、upgrade risk。
-- RAG——Retrieval-Augmented Generation，先從本地語料找相關 chunk，再把 chunk 放入 LLM prompt 生成解釋。
-- MLX——Apple Silicon 本地推理 runtime；目前有 4-bit 量化記憶體估算、`mlx-lm` 生成介面與 `scsa mlx-probe` 載入狀態記錄，支援自動探索本機 MLX 模型，未設定模型或 runtime 不可用時走 deterministic fallback。
-- HTTP API——本機 stdlib server，將前端分析、SSE 狀態、JSON/Markdown report 讀取、trace lookup、整份 report review status 與逐條 finding review 寫回串到 `analyze_contract()`、JSON report 與 SQLite trace；支援 bearer token、`input_root`、body size limit、固定 CORS origin 與 native build policy。
-- HTTP API hardening——2026-05-17 已加固 report endpoint 的 `contract_id` path segment 驗證，避免 URL encoded slash 逃出 `output_dir`；`native_build_policy=disabled` 作為 server-side 上限，request 不能升級為 `trusted`；`/api/traces/{trace_id}` 預設 redacts `slither_raw`、`packed_prompt`、`llm_raw_output`；CORS preflight 允許 `Authorization`，前端 API token 僅保留在記憶體狀態並由呼叫端顯式傳入，不寫入 `localStorage`。
-- Source import——2026-05-17 已新增 `POST /api/imports` 與 `scsa import-source`，支援 GitHub archive、Etherscan API 與 ZIP base64；匯入流程只保留 Solidity source 與 Foundry/Hardhat marker，拒絕 path traversal、symlink、特殊檔、nested archive、超量檔案、非 allowlist host、非 allowlist redirect target 與 oversized remote response，遠端讀取禁用環境 proxy，匯入來源固定標記 `trust_level=untrusted` 並在分析時強制 `native_build_policy=disabled`。
-- Frontend live workflow——2026-05-17 已收斂分析生命週期狀態：pending report 會同步 queued/running/error，完成 report commit 會清空串流 explanation buffer，polling 改為單飛重試；pending 或尚無正式 trace id 階段禁用整份 report review 儲存，避免用 `analysis_id` 或 placeholder report 打 review endpoint。`/reports/{contract_id}?finding={finding_id}` 會載入 report、同步選取 finding、捲動並聚焦目標 finding，無效 finding query 會在 report 載入後清除；受 token 保護的 deep link 需重新輸入 API token 後自動重試載入。2026-05-24 已新增 report deep link 複製、JSON 下載與 Markdown 下載；下載使用 `Authorization` header，不把 API token 放入 URL。短狀態訊息已改用 `role=status`，選取 finding 會標記 `aria-current`，手機版 trace panel 會顯示目前 finding 摘要。
-- Analyzer modules——`analyze_contract()` 僅保留流程協調；`analysis_context.py` 負責輸入解析、限制檢查、contract id 與人工審核原因，`finding_processor.py` 負責 finding enrichment、RAG、LLM fallback、token 統計與 trace finding 寫入，`report_builder.py` 負責 report metadata、security score、overall/review status 與 trace finish。
-- Trace——SQLite 追蹤每個 finding 的 Slither raw output、標準化結果、RAG chunk、prompt、LLM output、報告品質 judge score、token usage、review status 與 review note；HTTP API 只回傳 redacted trace metadata，本機 CLI `trace-lookup` 保留完整除錯資料。
-- Security score——0–100 合約安全分數，公式版本為 `security_score_v2`，依 severity、finding confidence、finding review status、partial analysis 與 business logic review penalty 計算；`false_positive` 懲罰係數為 0.0，`fixed` 懲罰係數為 0.2。
-- External tools——可選 `--external-tool mythril`、`--external-tool echidna` 或 API `external_tools`；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 findings 並寫入 trace，HTTP API 會去重工具、限制 allowlist 並將 timeout clamp 到 5–120 秒；未安裝時以 `skipped` 記錄。
-- 0G proof validation——2026-05-17 live upload/register 會驗證 `ZERO_G_RPC_URL` chain id 預設為 `16661`，可用 `ZERO_G_EXPECTED_CHAIN_ID` 覆蓋；`verify-proof` 會重新計算 `artifact.source_file` 的 sha256 並比對 `artifact.sha256`，dry-run proof 會同時驗證 `storage_root_hash` 等於 artifact hash。
-- Report comparison——`compare-reports` 會輸出新增、修復、持續存在 findings 與安全分數差異，可用 `--fail-on-high-added`、`--fail-on-score-drop 10` 作 CI fail gate。
-- Benchmark——`eval/run_public_benchmark.py` 預設讀取 `eval/public_benchmark/hf-slither50-v2-manifest.json`，目前固定 50 份 Hugging Face Slither 標註樣本；支援類型命中率為 `36/36 = 1.0`，safe/vulnerable 平均安全分數差為 `45.05`，並輸出 confusion matrix、precision、recall、F1 與 Markdown leaderboard。
-- Public project build validation——`eval/run_public_project_builds.py` 預設讀取 `eval/public_benchmark/public-project-builds-10-manifest.json`，`--preflight-only` 不 clone 即回報 10 個 public repos、framework 分布、`forge`/`npx` 可用性；完整模式會自動 clone、初始化 submodules、安裝 npm dependencies、支援 Hardhat 自訂 artifacts/cache 路徑，輸出 analyzer success rate、native build success rate 與 native build blocker 統計。2026-05-06 preflight 顯示 `missing_required_tools=[]`；2026-05-04 完整模式達 `10/10` analyzer 與 `10/10` native build。
-- Report——Markdown/JSON 直接輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；HTTP API 與前端可交付 JSON/Markdown report 檔案，judge score 評估報告完整度，security score 才是合約風險量化分數。
-
-GitHub Actions：`.github/workflows/ci.yml` 在 PR 執行 ruff、pytest、RAG eval、judge eval、public benchmark gate、public project build preflight、frontend test/build 與 whitespace check；`.github/workflows/smart-contract-audit.yml` 提供手動掃描入口，輸入 Solidity 檔案或專案目錄後會產生 `scsa-reports` artifact，提供 `baseline_report` 時會額外產生 `comparison.md` 並可用高危新增或分數下降門檻讓 CI 失敗。
-
-## 驗證狀態
-
-2026-05-24 剩餘 9% 補強驗證通過：`uv run ruff check .` 通過，`uv run pytest` 共 102 passed，`cd frontend && npm run test -- --run` 共 33 passed，`cd frontend && npm run build` 通過，`uv run python eval/run_eval.py` 召回率 `1.0`，`uv run python eval/run_judge.py` local/external 報告品質平均分皆 `5.0`，public benchmark `supported_hit_rate=1.0`、`precision=0.8621`、`recall=1.0`、`f1=0.9259`，public project build preflight `missing_required_tools=[]`，`git diff --check` 通過；Chrome headless CDP 驗證 header 顯示 report deep link、JSON 下載與 Markdown 下載，手機寬度 `390px` 無按鈕 overflow。2026-05-17 release cleanup 驗證通過：`uv run ruff check .` 通過，`uv run pytest` 共 102 passed，`cd frontend && npm run test -- --run` 共 32 passed，`cd frontend && npm run build` 通過，`uv run python eval/run_eval.py` 召回率 `1.0`，`uv run python eval/run_judge.py` local/external 報告品質平均分皆 `5.0`，`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17` 通過並產生 leaderboard，`uv run python eval/run_public_project_builds.py --preflight-only` 得到 `missing_required_tools=[]`，`git diff --check` 通過。2026-05-17 前端修正驗證通過：本機 API + Vite + Chrome headless CDP 已驗證 live analysis、pending/failed-placeholder review disable、report/trace 載入、route failure empty state、invalid finding query cleanup、deep link focus、review PATCH 與手機 trace finding summary。2026-05-04 完整 public project build 驗證達 `10/10` analyzer 與 `10/10` native build。2026-05-01 `VulnerableVault.sol` 實測報告輸出 prompt/completion/total tokens 為 `680/300/980`，local/external 報告品質 judge score 皆 `5.00/5`。CI 已接入 ruff、pytest、RAG recall eval、judge eval、public benchmark gate、public project build preflight、frontend test/build 與 whitespace check。
-
-Git baseline 已建立在 `main`，review checklist 位於 `docs/review_checklist.md`。
-
-## 交接文件
-
-完整接手資訊在 `docs/handoff.md`。使用說明書在 `docs/guides/001-usage-manual.md`，專案架構書在 `docs/design/001-project-architecture.md`，競品導向優化計畫在 `docs/design/004-competitor-optimization-plan.md`，公開 benchmark leaderboard 在 `docs/reference/002-public-benchmark-leaderboard.md`，文件索引在 `docs/DOCS_INDEX.md`。專案內 agent 操作規則在 `AGENTS.md`。
-
-自主迭代用 skill graph 在 `docs/skill-graph.md`，定義多 agent 分工、能力節點、缺口排序與驗證閉環；`graphify-out/` 為本機可重建輸出，不追蹤到 GitHub。
+`.github/workflows/ci.yml` runs lint, tests, eval gates, public benchmark, frontend build and whitespace checks on PRs. `.github/workflows/smart-contract-audit.yml` provides a manual audit workflow that uploads generated reports as the `scsa-reports` artifact.

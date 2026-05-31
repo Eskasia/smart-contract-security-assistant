@@ -9,7 +9,7 @@
 - 2026-05-04 已新增 `src/smart_contract_audit/http_api.py` 本機 HTTP API，前端可透過 `POST /api/analyses` 觸發 `analyze_contract()`，再用 SSE、report endpoint、trace endpoint 與 review PATCH 完成真實工作流。
 - 2026-05-04 已將 `analyze_contract()` 拆分為流程協調層、`analysis_context.py` 輸入解析層、`finding_processor.py` finding enrichment 層與 `report_builder.py` report 組裝層，降低 analyzer 單點耦合。
 - 2026-05-01 已新增 `frontend/` React/Vite 工作台，包含三欄 triage UI、Zustand 狀態、Local Storage 設定、SSE hook、1,000 ms polling fallback、virtualized findings、syntax-highlighted vulnerable code、remediation diff、review status、finding-level review feedback 與 trace evidence panel。
-- 測試覆蓋 adapter、analysis context、finding processor、report builder、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、security score review multiplier、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、skill graph artifact、schema validation、端到端流程。
+- 測試覆蓋 adapter、analysis context、finding processor、report builder、analyzer、RAG、Slither 串接、Foundry、Hardhat、nested import 解析、detector expansion、security score review multiplier、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、knowledge graph artifact、schema validation、端到端流程。
 - Eval 腳本已存在：`eval/run_eval.py` 測 RAG recall，`eval/run_judge.py` 同時輸出 local 與 external 報告品質 judge adapter 分數。
 - CI 設定在 `.github/workflows/ci.yml`，目前執行 ruff、pytest、RAG eval 與 judge eval。
 - 2026-05-04 已新增 `.github/workflows/smart-contract-audit.yml`，GitHub Actions 可手動輸入 Solidity 檔案或專案目錄並上傳 `scsa-reports` artifact。
@@ -49,7 +49,9 @@ Source import——`POST /api/imports` 與 `scsa import-source` 支援 GitHub ar
 
 Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；前端可複製 `/reports/{contract_id}?finding={finding_id}` deep link 並下載 JSON/Markdown report，下載使用 `Authorization` header，不把 API token 放入 URL；security score 是合約風險量化分數，judge score 評估報告完整度。
 
-External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna 是智能合約 fuzz 工具；Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 finding 與 trace row，CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒，未安裝時結果為 `skipped`。
+External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna/Medusa 是智能合約 fuzz 工具，Aderyn 是 Rust 靜態分析器，Halmos 是 Foundry symbolic testing runner；Mythril JSON issues、Echidna/Medusa failed/falsified properties、Aderyn JSON issues 與 Halmos proof failures 會轉成正式 finding 與 trace row，Aderyn SARIF 只以 `artifact_paths.sarif` 記錄 artifact path。CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒；`halmos` 需要 trusted Foundry project，未安裝時結果為 `skipped`。
+
+UI design system——2026-05-31 已新增 `docs/design/005-ui-design-system.md`；前端定位為 evidence-first security console，使用 CSS variables/Tailwind tokens、shared `Button`/`Field`/`PanelSection`/`MetricGroup`、四工具 `ToolSelector` 與 `min-h-dvh` layout。Legacy `echidnaEnabled` persisted setting 會 migration 成 `externalTools=["echidna"]`，API token 仍不持久化。
 
 Native build preflight——Foundry/Hardhat 專案在 `trusted` 模式先跑 `forge build` 或 Hardhat compile；成功後 Slither 不帶 `--compile-force-framework solc`，失敗或工具缺失時保留 solc fallback；`disabled` 模式略過 build scripts，適合未信任 public repo。
 
@@ -122,7 +124,7 @@ uv run python eval/run_eval.py        recall_at_k = 1.0
 uv run python eval/run_judge.py       local_average_judge_score = 5.0, external_average_judge_score = 5.0
 uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir <tmp> --rag-mode fallback  report tokens = 680/300/980, judge = 5.00/5
 uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json  load_succeeded = true, peak_rss_bytes = 661,520,384
-uv run python scripts/build_skill_graph.py  graphify-out artifacts generated
+uv run python scripts/build_knowledge_graph.py  knowledge-graph-out artifacts generated
 uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 ```
 
@@ -142,14 +144,15 @@ uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
 
 前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
 
-自主迭代架構：`docs/skill-graph.md` 記錄 skill graph、多 agent 分工、缺口排序、驗證命令與文件更新規則。
-圖譜產物：`uv run python scripts/build_skill_graph.py` 產生本機 `graphify-out/`，該目錄不追蹤到 GitHub。
+Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、external tools、RAG、report、trace、review 與 CI 的能力/證據關係。
+圖譜產物：`uv run python scripts/build_knowledge_graph.py` 產生本機 `knowledge-graph-out/`，該目錄不追蹤到 GitHub。
 
 ## 文件入口
 
 - 文件索引：`docs/DOCS_INDEX.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`
 - 專案架構書：`docs/design/001-project-architecture.md`
+- Knowledge graph：`docs/knowledge-graph.md`
 - 競品導向優化計畫：`docs/design/004-competitor-optimization-plan.md`
 - 驗證程序日誌：`docs/reference/001-validation-procedure-log.md`
 - 公開 benchmark leaderboard：`docs/reference/002-public-benchmark-leaderboard.md`

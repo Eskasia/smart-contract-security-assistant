@@ -240,3 +240,110 @@ def test_analyze_contract_adds_echidna_failures_to_formal_report(tmp_path: Path)
             "SELECT detector_name, rag_mode FROM trace_findings WHERE finding_id = 'f_001'"
         ).fetchone()
     assert row == ("echidna:echidna_total_assets_never_decrease", "external_tool")
+
+
+def test_analyze_contract_adds_aderyn_findings_to_formal_report(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text(
+        "pragma solidity ^0.8.19;\ncontract Vault { function callTarget() external {} }\n",
+        encoding="utf-8",
+    )
+
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
+        return SlitherRunResult(
+            raw_json={"results": {"detectors": []}},
+            solc_version="0.8.19",
+            slither_version="0.11.5",
+            warnings=[],
+        )
+
+    def fake_external_tool_runner(
+        _: Path,
+        output_dir: Path,
+        __: tuple[str, ...],
+        ___: int,
+    ) -> list[ExternalToolResult]:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "aderyn.json"
+        output_path.write_text(
+            """
+            {
+              "issues": [
+                {
+                  "title": "Unchecked return value",
+                  "description": "External call return value is not checked.",
+                  "severity": "High",
+                  "filename": "Vault.sol",
+                  "line": 2
+                }
+              ]
+            }
+            """,
+            encoding="utf-8",
+        )
+        return [
+            ExternalToolResult(
+                tool_name="aderyn",
+                command=["aderyn", "--output", str(output_path), str(contract)],
+                status="finding",
+                findings_count=1,
+                summary="Aderyn reported 1 issue.",
+                output_path=str(output_path),
+                artifact_paths={"sarif": str(output_dir / "aderyn.sarif")},
+            )
+        ]
+
+    report = analyze_contract(
+        contract,
+        output_dir=tmp_path / "reports",
+        dataset_chunks=tmp_path / "missing-chunks.jsonl",
+        slither_runner=fake_slither,
+        external_tools=("aderyn",),
+        external_tool_runner=fake_external_tool_runner,
+    )
+
+    assert report.overall_status == "finding"
+    assert report.findings[0].static_tool_source == "aderyn"
+    assert report.findings[0].vulnerability_type == "unchecked_external_call"
+    assert report.external_tool_results[0].artifact_paths["sarif"].endswith("aderyn.sarif")
+    with sqlite3.connect(tmp_path / "reports" / "analysis_trace.sqlite") as conn:
+        row = conn.execute(
+            "SELECT detector_name, rag_mode FROM trace_findings WHERE finding_id = 'f_001'"
+        ).fetchone()
+    assert row == ("aderyn:unchecked-return-value", "external_tool")
+
+
+def test_analyze_contract_skips_halmos_without_trusted_foundry_project(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19;\ncontract Vault {}\n", encoding="utf-8")
+
+    def fake_slither(_: Path, native_build_policy: str = "trusted") -> SlitherRunResult:
+        return SlitherRunResult(
+            raw_json={"results": {"detectors": []}},
+            solc_version="0.8.19",
+            slither_version="0.11.5",
+            warnings=[],
+        )
+
+    def fake_external_tool_runner(
+        _: Path,
+        __: Path,
+        tools: tuple[str, ...],
+        ___: int,
+    ) -> list[ExternalToolResult]:
+        assert tools == ()
+        return []
+
+    report = analyze_contract(
+        contract,
+        output_dir=tmp_path / "reports",
+        dataset_chunks=tmp_path / "missing-chunks.jsonl",
+        slither_runner=fake_slither,
+        external_tools=("halmos",),
+        external_tool_runner=fake_external_tool_runner,
+        native_build_policy="disabled",
+    )
+
+    assert report.overall_status == "no_finding"
+    assert report.external_tool_results[0].tool_name == "halmos"
+    assert report.external_tool_results[0].status == "skipped"

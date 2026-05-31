@@ -4,6 +4,8 @@ import { useAnalysisStore } from "../store/analysisStore";
 import { Metric } from "./Metric";
 import { ReviewerPanel } from "./ReviewerPanel";
 import { TracePanel } from "./TracePanel";
+import { MetricGroup } from "./ui/MetricGroup";
+import { PanelSection } from "./ui/PanelSection";
 
 function shortenHash(value: string) {
   if (value.length <= 18) return value;
@@ -18,41 +20,43 @@ export function RightRail() {
   const zeroGLinks = zeroGProof?.explorer_links;
 
   return (
-    <aside className="flex w-full shrink-0 flex-col overflow-auto border-t border-slate-200 bg-surface-50 px-4 py-4 lg:h-full lg:w-[360px] lg:border-l lg:border-t-0">
+    <aside className="flex w-full shrink-0 flex-col overflow-auto border-t border-border-subtle bg-panel px-4 py-4 lg:h-full lg:w-[360px] lg:border-l lg:border-t-0">
       <ReviewerPanel />
 
-      <section className="space-y-3 border-b border-slate-200 py-4">
-        <h2 className="text-sm font-semibold text-slate-950">{t("metrics")}</h2>
-        <dl className="grid grid-cols-2 gap-3">
+      <PanelSection title={t("metrics")}>
+        <MetricGroup>
           <Metric label={t("scoreFormula")} value={report.score_formula_version ?? "security_score_v2"} />
           <Metric label={t("promptTokens")} value={formatTokens(metadata.prompt_tokens)} />
           <Metric label={t("completionTokens")} value={formatTokens(metadata.completion_tokens)} />
           <Metric label={t("totalTokens")} value={formatTokens(metadata.total_tokens)} />
           <Metric label={t("localJudge")} value={formatScore(metadata.local_average_judge_score)} />
           <Metric label={t("externalJudge")} value={formatScore(metadata.external_average_judge_score)} />
-        </dl>
+        </MetricGroup>
         {metadata.errors.length > 0 && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
             {metadata.errors.join(" ")}
           </div>
         )}
-      </section>
+      </PanelSection>
 
       {zeroGProof && (
-        <section className="space-y-3 border-b border-slate-200 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-slate-950">0G Proof</h2>
-            {zeroGLinks?.registry && (
-              <a
-                className="shrink-0 text-xs font-semibold text-audit-blue hover:text-slate-950"
-                href={zeroGLinks.registry}
-                rel="noreferrer"
-                target="_blank"
-              >
-                Registry
-              </a>
-            )}
-          </div>
+        <PanelSection
+          title={
+            <span className="flex items-center justify-between gap-3">
+              <span>0G Proof</span>
+              {zeroGLinks?.registry && (
+                <a
+                  className="shrink-0 text-xs font-semibold text-audit-blue hover:text-slate-950"
+                  href={zeroGLinks.registry}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Registry
+                </a>
+              )}
+            </span>
+          }
+        >
           <dl className="space-y-2 text-xs">
             <div className="min-w-0 rounded-md border border-slate-200 bg-white p-3">
               <dt className="font-semibold uppercase text-slate-500">Storage root</dt>
@@ -103,11 +107,10 @@ export function RightRail() {
               </a>
             )}
           </div>
-        </section>
+        </PanelSection>
       )}
 
-      <section className="space-y-3 border-b border-slate-200 py-4">
-        <h2 className="text-sm font-semibold text-slate-950">{t("externalTools")}</h2>
+      <PanelSection title={t("externalTools")}>
         {report.external_tool_results && report.external_tool_results.length > 0 ? (
           <div className="space-y-2">
             {report.external_tool_results.map((result) => (
@@ -124,13 +127,20 @@ export function RightRail() {
                 <p className="mt-1 font-mono text-xs text-slate-500">
                   findings {result.findings_count}
                 </p>
+                {result.artifact_paths
+                  ? Object.entries(result.artifact_paths).map(([name, path]) => (
+                      <p key={name} className="mt-1 break-all font-mono text-xs text-slate-500">
+                        {name} {path}
+                      </p>
+                    ))
+                  : null}
               </div>
             ))}
           </div>
         ) : (
           <p className="text-xs text-slate-500">{t("noExternalTools")}</p>
         )}
-      </section>
+      </PanelSection>
 
       <div className="py-4">
         <TracePanel />

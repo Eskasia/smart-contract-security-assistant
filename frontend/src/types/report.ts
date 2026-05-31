@@ -17,7 +17,7 @@ export type FindingReviewStatus =
 
 export type RagMode = "quality" | "balanced" | "fast" | "fallback";
 export type NativeBuildPolicy = "trusted" | "disabled";
-export type ExternalToolName = "echidna";
+export type ExternalToolName = "aderyn" | "echidna" | "medusa" | "halmos";
 export type EtherscanExplorerHost =
   | "api.etherscan.io"
   | "api-sepolia.etherscan.io";
@@ -103,6 +103,7 @@ export interface ExternalToolResult {
   findings_count: number;
   summary: string;
   output_path?: string;
+  artifact_paths?: Record<string, string>;
   error?: string;
   duration_ms?: number;
 }
@@ -153,7 +154,7 @@ export interface UserSettings {
   datasetChunks: string;
   modelPath: string;
   nativeBuildPolicy: NativeBuildPolicy;
-  echidnaEnabled: boolean;
+  externalTools: ExternalToolName[];
   externalTimeoutSeconds: number;
   apiToken: string;
   diffMode: "inline" | "split";

@@ -6,6 +6,9 @@ import { useTranslation } from "../lib/i18n";
 import { useAnalysisStore } from "../store/analysisStore";
 import type { ExternalToolName, ImportSourceType, RagMode } from "../types/report";
 import { usePersistedSettings } from "../hooks/usePersistedSettings";
+import { Button } from "./ui/Button";
+import { Field, fieldControlClass } from "./ui/Field";
+import { ToolSelector } from "./ui/ToolSelector";
 
 const ragModes: RagMode[] = ["quality", "balanced", "fast", "fallback"];
 const importSourceTypes: ImportSourceType[] = [
@@ -115,8 +118,11 @@ export function InputPanel() {
     setIsSubmitting(true);
     setValidationMessage("");
     try {
-      const externalTools: ExternalToolName[] | undefined = settings.echidnaEnabled
-        ? ["echidna"]
+      const enabledExternalTools = settings.externalTools.filter(
+        (tool) => tool !== "halmos" || settings.nativeBuildPolicy === "trusted",
+      );
+      const externalTools: ExternalToolName[] | undefined = enabledExternalTools.length
+        ? enabledExternalTools
         : undefined;
       const job = await createAnalysis(
         {
@@ -149,14 +155,14 @@ export function InputPanel() {
       <div className="border-b border-slate-200 px-4 py-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-950">{t("input")}</h2>
-          <button
+          <Button
             type="button"
             onClick={loadDemo}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+            size="icon"
             aria-label={t("loadDemo")}
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
         <div className="mt-3 grid grid-cols-2 rounded-md border border-slate-200 bg-white p-1">
           <button
@@ -186,7 +192,7 @@ export function InputPanel() {
             <input
               value={settings.inputPath}
               onChange={(event) => updateSettings({ inputPath: event.currentTarget.value })}
-              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-900 outline-none"
+              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-text-strong outline-none"
             />
           </div>
         </label>
@@ -323,7 +329,7 @@ export function InputPanel() {
                   ? !sourceArchive
                   : !settings.importSourceValue.trim())
               }
-              className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-surface px-3 py-2 text-sm font-medium text-text-strong hover:bg-surface-muted disabled:cursor-not-allowed disabled:text-text-muted focus:outline-none focus:ring-2 focus:ring-audit-teal"
             >
               <Upload className="h-4 w-4" aria-hidden="true" />
               {isImporting ? t("importing") : t("importSource")}
@@ -365,8 +371,7 @@ export function InputPanel() {
           />
         </label>
 
-        <label className="block">
-          <span className="text-xs font-medium text-slate-600">{t("nativeBuildPolicy")}</span>
+        <Field label={t("nativeBuildPolicy")}>
           <select
             value={settings.nativeBuildPolicy}
             onChange={(event) =>
@@ -374,7 +379,7 @@ export function InputPanel() {
                 nativeBuildPolicy: event.currentTarget.value as typeof settings.nativeBuildPolicy,
               })
             }
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+            className={fieldControlClass}
           >
             {nativeBuildPolicies.map((policy) => (
               <option key={policy} value={policy}>
@@ -382,23 +387,15 @@ export function InputPanel() {
               </option>
             ))}
           </select>
-        </label>
+        </Field>
 
-        <label className="block">
-          <span className="text-xs font-medium text-slate-600">{t("echidna")}</span>
-          <div className="mt-1 flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
-            <span className="text-sm text-slate-900">{t("echidna")}</span>
-            <input
-              aria-label={t("echidna")}
-              type="checkbox"
-              checked={settings.echidnaEnabled}
-              onChange={(event) =>
-                updateSettings({ echidnaEnabled: event.currentTarget.checked })
-              }
-              className="h-4 w-4 rounded border-slate-300 text-audit-teal focus:ring-audit-teal"
-            />
-          </div>
-        </label>
+        <Field label={t("externalTools")}>
+          <ToolSelector
+            nativeBuildPolicy={settings.nativeBuildPolicy}
+            value={settings.externalTools}
+            onChange={(externalTools) => updateSettings({ externalTools })}
+          />
+        </Field>
 
         <label className="block">
           <span className="text-xs font-medium text-slate-600">
@@ -410,14 +407,14 @@ export function InputPanel() {
             min={1}
             step={1}
             value={settings.externalTimeoutSeconds}
-            disabled={!settings.echidnaEnabled}
+            disabled={settings.externalTools.length === 0}
             onChange={(event) => {
               const value = event.currentTarget.valueAsNumber;
               if (Number.isFinite(value)) {
                 updateSettings({ externalTimeoutSeconds: value });
               }
             }}
-            className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 disabled:bg-slate-50 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+            className="mt-1 w-full rounded-sm border border-border-subtle bg-surface px-3 py-2 text-sm text-text-strong disabled:bg-slate-50 disabled:text-text-muted focus:outline-none focus:ring-2 focus:ring-audit-teal"
           />
         </label>
 
@@ -451,15 +448,16 @@ export function InputPanel() {
       </div>
 
       <div className="border-t border-slate-200 p-4">
-        <button
+        <Button
           type="button"
           onClick={submitAnalysis}
           disabled={isSubmitting || isImporting || !settings.inputPath.trim()}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          className="w-full"
+          variant="primary"
         >
           <Play className="h-4 w-4" aria-hidden="true" />
           {isSubmitting ? t("submitting") : t("analyze")}
-        </button>
+        </Button>
       </div>
     </aside>
   );

@@ -22,6 +22,8 @@ reports*/
 data/web50/
 tutorial-assets/
 graphify-out/
+knowledge-graph-out/
+.local/
 .ship/
 .claude/
 deck-smart-contract-security-assistant/

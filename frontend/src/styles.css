@@ -4,7 +4,37 @@
 
 :root {
   color-scheme: light;
-  background: #ffffff;
+  background: #f1f5f9;
+  --color-canvas: #f1f5f9;
+  --color-panel: #f8faf9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-border: #d9e3dd;
+  --color-border-subtle: #e2e8f0;
+  --color-text-strong: #0f172a;
+  --color-text: #334155;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #ffffff;
+  --color-accent: #0f766e;
+  --color-accent-hover: #115e59;
+  --color-running: #2563eb;
+  --color-danger: #b91c1c;
+  --color-warning: #b45309;
+  --color-success: #15803d;
+  --font-sans: Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-mono: "JetBrains Mono", SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --shadow-floating: 0 16px 40px -24px rgba(15, 23, 42, 0.35);
+  --ring-focus: 0 0 0 2px rgba(15, 118, 110, 0.35);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,7 +47,8 @@
 
 body {
   margin: 0;
-  background: #ffffff;
+  background: var(--color-canvas);
+  color: var(--color-text);
 }
 
 button,

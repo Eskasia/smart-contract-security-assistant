@@ -95,13 +95,13 @@ function Workbench() {
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-slate-900 lg:h-screen lg:min-h-[720px] lg:flex-row lg:overflow-hidden">
+    <div className="flex min-h-dvh flex-col bg-canvas text-text lg:flex-row lg:overflow-hidden">
       <InputPanel />
       <main className="flex min-w-0 flex-1 flex-col lg:h-full">
         <ReportHeader />
-        <div className="min-h-[720px] flex-1 bg-slate-100 px-5 py-4 lg:min-h-0">
+        <div className="flex-1 bg-canvas px-5 py-4 lg:min-h-0">
           {contractId && isRouteLoading ? (
-            <div className="mb-4 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            <div className="mb-4 rounded-md border border-border-subtle bg-surface px-4 py-3 text-sm text-text-muted">
               {t("routeLoadStatus", { contractId })}
             </div>
           ) : null}

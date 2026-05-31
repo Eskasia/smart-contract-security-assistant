@@ -214,7 +214,7 @@ export const defaultSettings: UserSettings = {
   datasetChunks: "data/dataset_v1.0/chunks/chunks.jsonl",
   modelPath: "",
   nativeBuildPolicy: "disabled",
-  echidnaEnabled: false,
+  externalTools: [],
   externalTimeoutSeconds: 60,
   apiToken: "",
   diffMode: "inline",
@@ -242,12 +242,21 @@ export const useSettingsStore = create<SettingsState>()(
           typeof persisted === "object" && persisted !== null && "settings" in persisted
             ? (persisted as Partial<SettingsState>).settings
             : undefined;
-        const { apiToken: _apiToken, ...safePersistedSettings } = persistedSettings ?? {};
+        const {
+          apiToken: _apiToken,
+          echidnaEnabled,
+          externalTools,
+          ...safePersistedSettings
+        } = (persistedSettings ?? {}) as Partial<SettingsState["settings"]> & {
+          echidnaEnabled?: boolean;
+        };
+        const migratedExternalTools = externalTools ?? (echidnaEnabled ? ["echidna"] : []);
         return {
           ...current,
           settings: {
             ...defaultSettings,
             ...safePersistedSettings,
+            externalTools: migratedExternalTools,
             apiToken: current.settings.apiToken,
           },
         };

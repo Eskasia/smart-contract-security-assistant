@@ -131,4 +131,51 @@ describe("InputPanel", () => {
       archive_base64: "emlwLWJ5dGVz",
     });
   });
+
+  it("sends selected external tools and disables Halmos outside trusted builds", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input);
+      if (url === "/api/analyses") {
+        return new Response(JSON.stringify({ analysis_id: "analysis_456", status: "queued" }), {
+          status: 202,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<InputPanel />);
+
+    expect(screen.getByLabelText("Halmos")).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("Aderyn"));
+    fireEvent.click(screen.getByLabelText("Medusa"));
+    fireEvent.click(screen.getByLabelText("Echidna"));
+    fireEvent.click(screen.getByRole("button", { name: "開始分析" }));
+
+    await waitFor(() =>
+      expect(useAnalysisStore.getState().job?.analysis_id).toBe("analysis_456"),
+    );
+
+    let analysisRequest = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(analysisRequest?.body))).toMatchObject({
+      external_tools: ["aderyn", "medusa", "echidna"],
+      external_timeout_seconds: 60,
+      native_build_policy: "disabled",
+    });
+
+    fetchMock.mockClear();
+    fireEvent.change(screen.getByLabelText("Build 信任模式"), {
+      target: { value: "trusted" },
+    });
+    fireEvent.click(screen.getByLabelText("Halmos"));
+    fireEvent.click(screen.getByRole("button", { name: "開始分析" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    analysisRequest = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(analysisRequest?.body))).toMatchObject({
+      external_tools: ["aderyn", "medusa", "echidna", "halmos"],
+      native_build_policy: "trusted",
+    });
+  });
 });

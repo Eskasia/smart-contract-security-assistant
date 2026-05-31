@@ -85,6 +85,7 @@ class ExternalToolResult:
     findings_count: int
     summary: str
     output_path: str = ""
+    artifact_paths: dict[str, str] = field(default_factory=dict)
     error: str = ""
     duration_ms: int = 0
 

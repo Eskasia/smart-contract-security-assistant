@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "graphify-out"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "knowledge-graph-out"
 
 
 @dataclass(frozen=True)
@@ -43,7 +43,7 @@ def build_graph() -> dict[str, Any]:
         Node("capability.trace", "SQLite traceability", "capability", "Python Quality Agent", ["src/smart_contract_audit/trace/store.py"]),
         Node("capability.report", "Markdown and JSON reports", "capability", "Product Doc Agent", ["src/smart_contract_audit/report.py"]),
         Node("capability.ci", "CI validation", "capability", "Release Agent", [".github/workflows/ci.yml"]),
-        Node("agent.orchestrator", "Orchestrator", "agent", "Orchestrator", ["docs/skill-graph.md"]),
+        Node("agent.orchestrator", "Orchestrator", "agent", "Orchestrator", ["docs/knowledge-graph.md"]),
         Node("agent.security", "Solidity Security Agent", "agent", "Solidity Security Agent", ["tests/test_slither.py"]),
         Node("agent.rag", "RAG Data Agent", "agent", "RAG Data Agent", ["eval/run_eval.py"]),
         Node("agent.llm_eval", "LLM Eval Agent", "agent", "LLM Eval Agent", ["eval/run_judge.py"]),
@@ -55,9 +55,27 @@ def build_graph() -> dict[str, Any]:
         Node("evidence.judge_eval", "Judge eval: average_judge_score=5.0", "evidence", "LLM Eval Agent", ["eval/run_judge.py"]),
         Node("evidence.mlx_probe", "MLX 4bit model load probe succeeded", "evidence", "LLM Eval Agent", ["src/smart_contract_audit/llm/mlx_runtime.py"]),
         Node("artifact.mlx_probe", "reports-mlx/mlx_probe.json", "artifact", "LLM Eval Agent", ["reports-mlx/mlx_probe.json"]),
-        Node("artifact.graph_json", "graphify-out/graph.json", "artifact", "Orchestrator", ["graphify-out/graph.json"]),
-        Node("artifact.graph_report", "graphify-out/GRAPH_REPORT.md", "artifact", "Orchestrator", ["graphify-out/GRAPH_REPORT.md"]),
-        Node("artifact.graph_html", "graphify-out/graph.html", "artifact", "Orchestrator", ["graphify-out/graph.html"]),
+        Node(
+            "artifact.graph_json",
+            "knowledge-graph-out/graph.json",
+            "artifact",
+            "Orchestrator",
+            ["knowledge-graph-out/graph.json"],
+        ),
+        Node(
+            "artifact.graph_report",
+            "knowledge-graph-out/GRAPH_REPORT.md",
+            "artifact",
+            "Orchestrator",
+            ["knowledge-graph-out/GRAPH_REPORT.md"],
+        ),
+        Node(
+            "artifact.graph_html",
+            "knowledge-graph-out/graph.html",
+            "artifact",
+            "Orchestrator",
+            ["knowledge-graph-out/graph.html"],
+        ),
     ]
     edges = [
         Edge("goal.local_first_audit", "capability.cli", "REQUIRES", "README.md"),
@@ -68,25 +86,25 @@ def build_graph() -> dict[str, Any]:
         Edge("capability.rag", "capability.llm", "SUPPLIES_CONTEXT", "src/smart_contract_audit/llm/prompt_template.py"),
         Edge("capability.llm", "capability.report", "PRODUCES", "src/smart_contract_audit/report.py"),
         Edge("capability.report", "capability.trace", "RECORDS", "src/smart_contract_audit/trace/store.py"),
-        Edge("agent.security", "capability.slither", "OWNS", "docs/skill-graph.md"),
-        Edge("agent.rag", "capability.rag", "OWNS", "docs/skill-graph.md"),
-        Edge("agent.llm_eval", "capability.llm", "OWNS", "docs/skill-graph.md"),
-        Edge("agent.quality", "capability.schema", "OWNS", "docs/skill-graph.md"),
-        Edge("agent.docs", "capability.report", "OWNS", "docs/skill-graph.md"),
+        Edge("agent.security", "capability.slither", "OWNS", "docs/knowledge-graph.md"),
+        Edge("agent.rag", "capability.rag", "OWNS", "docs/knowledge-graph.md"),
+        Edge("agent.llm_eval", "capability.llm", "OWNS", "docs/knowledge-graph.md"),
+        Edge("agent.quality", "capability.schema", "OWNS", "docs/knowledge-graph.md"),
+        Edge("agent.docs", "capability.report", "OWNS", "docs/knowledge-graph.md"),
         Edge("evidence.pytest", "capability.ci", "VALIDATES", ".github/workflows/ci.yml"),
         Edge("evidence.ruff", "capability.ci", "VALIDATES", ".github/workflows/ci.yml"),
         Edge("evidence.rag_eval", "capability.rag", "VALIDATES", "eval/rag_recall_test.json"),
         Edge("evidence.judge_eval", "capability.llm", "VALIDATES", "eval/judge_eval_set.json"),
         Edge("evidence.mlx_probe", "artifact.mlx_probe", "PRODUCES", "reports-mlx/mlx_probe.json"),
-        Edge("agent.orchestrator", "artifact.graph_json", "PRODUCES", "scripts/build_skill_graph.py"),
-        Edge("artifact.graph_json", "artifact.graph_report", "PRODUCES", "scripts/build_skill_graph.py"),
-        Edge("artifact.graph_json", "artifact.graph_html", "PRODUCES", "scripts/build_skill_graph.py"),
-        Edge("artifact.graph_report", "agent.orchestrator", "UPDATES", "docs/skill-graph.md"),
+        Edge("agent.orchestrator", "artifact.graph_json", "PRODUCES", "scripts/build_knowledge_graph.py"),
+        Edge("artifact.graph_json", "artifact.graph_report", "PRODUCES", "scripts/build_knowledge_graph.py"),
+        Edge("artifact.graph_json", "artifact.graph_html", "PRODUCES", "scripts/build_knowledge_graph.py"),
+        Edge("artifact.graph_report", "agent.orchestrator", "UPDATES", "docs/knowledge-graph.md"),
     ]
     return {
-        "schema_version": "skill-graph.v1",
+        "schema_version": "scsa-knowledge-graph.v1",
         "generated_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
-        "generated_by": "scripts/build_skill_graph.py",
+        "generated_by": "scripts/build_knowledge_graph.py",
         "project_root": str(PROJECT_ROOT),
         "nodes": [asdict(node) for node in nodes],
         "edges": [asdict(edge) for edge in edges],
@@ -137,11 +155,11 @@ def _render_report(graph: dict[str, Any]) -> str:
         node_counts[node["type"]] = node_counts.get(node["type"], 0) + 1
     counts = ", ".join(f"{key}={value}" for key, value in sorted(node_counts.items()))
     return (
-        "# Skill Graph Report\n\n"
+        "# Knowledge Graph Report\n\n"
         f"Generated at: {graph['generated_at']}\n\n"
         f"Nodes: {summary['nodes']}; edges: {summary['edges']}; core files: {summary['core_files']}.\n\n"
         f"Node types: {counts}.\n\n"
-        "Primary loop: CLI -> Slither -> adapter -> schema -> RAG -> MLX generator -> report -> trace -> evidence -> orchestrator.\n\n"
+        "Primary loop: CLI -> Slither -> adapter -> schema -> RAG -> MLX generator -> report -> trace -> evidence.\n\n"
         "Remaining gap: none. MLX 4bit model probe succeeds and records peak RSS in `reports-mlx/mlx_probe.json`.\n"
     )
 
@@ -162,7 +180,7 @@ def _render_html(graph: dict[str, Any]) -> str:
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <title>智能合約安全分析助理 Skill Graph</title>
+  <title>Smart Contract Security Assistant Knowledge Graph</title>
   <style>
     body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f7f7f4; color: #1f2933; }}
     main {{ max-width: 1160px; margin: 0 auto; padding: 32px 24px; }}
@@ -180,7 +198,7 @@ def _render_html(graph: dict[str, Any]) -> str:
 </head>
 <body>
   <main>
-    <h1>智能合約安全分析助理 Skill Graph</h1>
+    <h1>Smart Contract Security Assistant Knowledge Graph</h1>
     <div class="meta">Nodes: {graph['summary']['nodes']} · Edges: {graph['summary']['edges']} · Core files: {graph['summary']['core_files']} · Generated: {html.escape(graph['generated_at'])}</div>
     <div class="grid">
       <section><h2>Nodes</h2><ul>{node_list}</ul></section>

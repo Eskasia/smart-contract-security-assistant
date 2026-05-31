@@ -59,6 +59,8 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
             )
             if result.error:
                 lines.append(f"  - Error: `{result.error}`")
+            for artifact_name, artifact_path in result.artifact_paths.items():
+                lines.append(f"  - {artifact_name.upper()} artifact: `{artifact_path}`")
 
     lines.extend(
         [

@@ -13,6 +13,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .analyzer import analyze_contract
+from .external_tools import SUPPORTED_EXTERNAL_TOOLS
 from .identifiers import require_safe_path_segment
 from .models import FINDING_REVIEW_STATUSES, AnalysisReport
 from .report import write_json_report, write_markdown_report
@@ -33,7 +34,7 @@ AnalyzerFn = Callable[..., AnalysisReport]
 
 RAG_MODES = {"quality", "balanced", "fast", "fallback"}
 NATIVE_BUILD_POLICIES = {"trusted", "disabled"}
-EXTERNAL_TOOLS = {"echidna", "mythril"}
+EXTERNAL_TOOLS = SUPPORTED_EXTERNAL_TOOLS
 REVIEW_STATUSES = {"pending_human_review", "approved", "rejected", "blocked"}
 MAX_REVIEW_NOTE_LENGTH = 2_000
 DEFAULT_EXTERNAL_TIMEOUT_SECONDS = 60
@@ -272,11 +273,7 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         except RequestBodyTooLarge as exc:
             self._send_request_too_large_response(exc)
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
         return
 
     def do_GET(self) -> None:
@@ -365,14 +362,10 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         try:
             report = _read_report(self.server.config.output_dir, contract_id)
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
         if report is None:
-            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            self._send_report_not_found_response()
             return
         self._send_json(report)
 
@@ -380,14 +373,10 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         try:
             markdown = _read_report_markdown(self.server.config.output_dir, contract_id)
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
         if markdown is None:
-            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            self._send_report_not_found_response()
             return
         safe_contract_id = require_safe_path_segment(contract_id, "contract_id")
         self._send_text(
@@ -422,24 +411,16 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             self._send_request_too_large_response(exc)
             return
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
 
         try:
             report = _read_report(self.server.config.output_dir, contract_id)
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
         if report is None:
-            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            self._send_report_not_found_response()
             return
 
         report["review_status"] = review_status
@@ -461,24 +442,16 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             self._send_request_too_large_response(exc)
             return
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
 
         try:
             report = _read_report(self.server.config.output_dir, contract_id)
         except ValueError as exc:
-            self._send_error_response(
-                HTTPStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_ERROR",
-                str(exc),
-            )
+            self._send_validation_error_response(str(exc))
             return
         if report is None:
-            self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+            self._send_report_not_found_response()
             return
 
         finding = _update_report_finding_review(
@@ -624,6 +597,16 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             str(exc),
         )
 
+    def _send_validation_error_response(self, message: str) -> None:
+        self._send_error_response(
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            "VALIDATION_ERROR",
+            message,
+        )
+
+    def _send_report_not_found_response(self) -> None:
+        self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Report not found.")
+
     def _send_common_headers(self) -> None:
         origin = self.server.config.cors_origin
         if origin:
@@ -717,6 +700,8 @@ def _parse_create_analysis(
         native_build_policy = "disabled"
 
     external_tools = _parse_external_tools(payload.get("external_tools"))
+    if "halmos" in external_tools and native_build_policy == "disabled":
+        raise ValueError("halmos requires native_build_policy trusted.")
     external_timeout_seconds = _parse_external_timeout_seconds(
         payload.get("external_timeout_seconds", DEFAULT_EXTERNAL_TIMEOUT_SECONDS)
     )
@@ -768,7 +753,9 @@ def _parse_external_tools(value: Any) -> tuple[str, ...]:
             raise ValueError("external_tools entries must be strings.")
         tool = raw_tool.strip().lower()
         if tool not in EXTERNAL_TOOLS:
-            raise ValueError("external_tools must contain only: echidna, mythril.")
+            raise ValueError(
+                "external_tools must contain only: aderyn, echidna, halmos, medusa, mythril."
+            )
         if tool not in seen:
             seen.add(tool)
             parsed.append(tool)
@@ -815,17 +802,21 @@ def _path_parts(path: str) -> list[str]:
 
 
 def _read_report(output_dir: Path, contract_id: str) -> dict[str, Any] | None:
-    report_path = _report_path(output_dir, contract_id, ".json")
-    if not report_path.exists():
+    report_text = _read_report_file_text(output_dir, contract_id, ".json")
+    if report_text is None:
         return None
-    return json.loads(report_path.read_text(encoding="utf-8"))
+    return json.loads(report_text)
 
 
 def _read_report_markdown(output_dir: Path, contract_id: str) -> str | None:
-    markdown_path = _report_path(output_dir, contract_id, ".md")
-    if not markdown_path.exists():
+    return _read_report_file_text(output_dir, contract_id, ".md")
+
+
+def _read_report_file_text(output_dir: Path, contract_id: str, suffix: str) -> str | None:
+    report_path = _report_path(output_dir, contract_id, suffix)
+    if not report_path.exists():
         return None
-    return markdown_path.read_text(encoding="utf-8")
+    return report_path.read_text(encoding="utf-8")
 
 
 def _write_report_dict(output_dir: Path, contract_id: str, report: dict[str, Any]) -> None:

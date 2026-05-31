@@ -6,6 +6,8 @@ import { useTranslation, type TranslationKey } from "../lib/i18n";
 import { useAnalysisStore, useSettingsStore } from "../store/analysisStore";
 import type { ReviewStatus } from "../types/report";
 import { Metric } from "./Metric";
+import { Button } from "./ui/Button";
+import { Field, fieldControlClass } from "./ui/Field";
 
 const statuses: ReviewStatus[] = ["pending_human_review", "approved", "rejected", "blocked"];
 const statusLabelKeys: Record<ReviewStatus, TranslationKey> = {
@@ -61,10 +63,10 @@ export function ReviewerPanel() {
   }
 
   return (
-    <section className="space-y-4 border-b border-slate-200 pb-4">
+    <section className="space-y-4 border-b border-border-subtle pb-4">
       <div>
-        <h2 className="text-sm font-semibold text-slate-950">{t("reviewer")}</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-600">{report.review_reason}</p>
+        <h2 className="text-sm font-semibold text-text-strong">{t("reviewer")}</h2>
+        <p className="mt-1 text-xs leading-5 text-text-muted">{report.review_reason}</p>
       </div>
 
       <dl className="grid grid-cols-2 gap-3">
@@ -72,12 +74,11 @@ export function ReviewerPanel() {
         <Metric label={t("humanReview")} value={report.requires_human_review ? t("required") : t("no")} />
       </dl>
 
-      <label className="block">
-        <span className="text-xs font-medium text-slate-600">{t("reviewStatus")}</span>
+      <Field label={t("reviewStatus")}>
         <select
           value={draft}
           onChange={(event) => setDraft(event.currentTarget.value as ReviewStatus)}
-          className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+          className={fieldControlClass}
         >
           {statuses.map((status) => (
             <option key={status} value={status}>
@@ -85,18 +86,18 @@ export function ReviewerPanel() {
             </option>
           ))}
         </select>
-      </label>
+      </Field>
 
-      <button
+      <Button
         type="button"
         onClick={saveReviewStatus}
         disabled={reportNotReady}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-audit-teal"
+        className="w-full"
       >
         <Save className="h-4 w-4" aria-hidden="true" />
         {t("save")}
-      </button>
-      <p className="min-h-5 text-xs text-slate-600" role="status">
+      </Button>
+      <p className="min-h-5 text-xs text-text-muted" role="status">
         {message || (reportNotReady ? t("reportNotReady") : "")}
       </p>
     </section>

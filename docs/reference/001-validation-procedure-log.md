@@ -68,7 +68,7 @@ current；本日誌記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 
 | Enhanced report | `uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir <tmp> --rag-mode fallback` | 2026-05-01：Markdown 含第 11–16 行 vulnerable code、AI remediation code、judge `5.00/5`、tokens `680/300/980` |
 | E2E memory | `/usr/bin/time -l uv run pytest tests/test_e2e.py` | 2026-04-30：`2 passed`, maximum resident set size `54,231,040 bytes` |
 | MLX probe | `uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json` | 2026-04-30：`load_succeeded=true`, `used_fallback=false`, `duration_ms=7145`, `peak_rss_bytes=661,520,384` |
-| Skill graph | `uv run python scripts/build_skill_graph.py` | 2026-04-30：`nodes=25`, `edges=22`, `remaining_gaps=[]`, generated at `2026-04-30T03:17:50+00:00` |
+| Knowledge graph | `uv run python scripts/build_knowledge_graph.py` | 2026-04-30：`nodes=25`, `edges=22`, `remaining_gaps=[]`, generated at `2026-04-30T03:17:50+00:00` |
 
 ## Warning Log
 
@@ -82,7 +82,7 @@ current；本日誌記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 
 |---|---|
 | Public benchmark leaderboard | `docs/reference/002-public-benchmark-leaderboard.md` |
 | MLX probe | 本機 `reports-mlx/mlx_probe.json`，不追蹤到 GitHub |
-| Skill graph | 本機 `graphify-out/`，不追蹤到 GitHub |
+| Knowledge graph | 本機 `knowledge-graph-out/`，不追蹤到 GitHub |
 | 0G dry-run reports | 本機 `reports/` 與 `reports-0g/`，不追蹤到 GitHub |
 
 ## Remaining Limits

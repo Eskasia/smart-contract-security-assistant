@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .analyzer import analyze_contract
+from .external_tools import SUPPORTED_EXTERNAL_TOOLS
 from .llm.mlx_runtime import MLXRuntimeConfig, discover_mlx_model_paths, probe_mlx_runtime
 from .rag.chunker import chunk_document
 from .rag.indexer import deduplicate_chunks, write_chunks
@@ -46,7 +47,7 @@ def main(argv: list[str] | None = None) -> None:
     analyze.add_argument(
         "--external-tool",
         action="append",
-        choices=["mythril", "echidna"],
+        choices=sorted(SUPPORTED_EXTERNAL_TOOLS),
         default=[],
         help="Run optional external tools and attach their summaries to the report.",
     )
