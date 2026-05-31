@@ -1,22 +1,90 @@
-# 智能合約安全分析助理
+# Smart Contract Security Assistant
 
-本專案是 Solidity 智能合約安全初篩 MVP：單檔 `.sol` 輸入後，系統執行 Slither 靜態分析、標準化 findings、檢索本地知識庫、產生可追溯報告，並輸出 JSON、Markdown 與 SQLite trace。
+Local-first Solidity security triage assistant with Slither, normalized
+findings, RAG context, MLX-ready generation, and traceable JSON/Markdown/SQLite
+reports.
 
-## 快速啟動
+本專案協助維護者、審計學習者與小型 Solidity 團隊做第一輪安全初篩。LLM 只負責把 deterministic findings 轉成可讀解釋、攻擊路徑與修復建議；漏洞判定來源仍以 Slither 等靜態分析結果為準。
+
+## Who This Is For
+
+- OSS maintainers reviewing Solidity pull requests.
+- Small audit teams that need reproducible local triage before human review.
+- Hackathon or prototype teams checking obvious contract risks before release.
+- Learners who want traceable examples of Slither findings and explanations.
+
+## Authorized-Use Boundary
+
+Only scan contracts that you own, maintain, or are explicitly authorized to review.
+
+Do not use this project to scan private repositories, proprietary contracts,
+customer audit material, or third-party code without permission. Do not include
+private keys, secrets, customer data, or unpublished third-party reports in
+issues, traces, examples, or pull requests.
+
+This tool is not a formal audit replacement. Every report remains human-review
+required.
+
+## Quickstart
+
+Prerequisites:
+
+- Python `>=3.11`
+- `uv`
+- A compatible `solc` version for the target contract
+
+Install the audit dependencies and run the fixture:
 
 ```bash
 uv sync --extra audit --dev
-uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-demo
 uv run pytest
 ```
 
-可選功能依需求安裝：
+The demo command writes:
 
-```bash
-uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
+- `reports-demo/10679f2de6b7.json`
+- `reports-demo/10679f2de6b7.md`
+- `reports-demo/analysis_trace.sqlite`
+
+Expected summary for the fixture:
+
+```text
+overall_status: finding
+finding: f_001 | reentrancy | severity 3 | withdraw | SWC-107
+human_review_required: true
 ```
 
-## 常用命令
+## Example Output
+
+`tests/contracts/VulnerableVault.sol` intentionally writes state after an external call:
+
+```solidity
+function withdraw() external {
+    uint256 amount = balances[msg.sender];
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success, "transfer failed");
+    balances[msg.sender] = 0;
+}
+```
+
+The generated Markdown report includes:
+
+```text
+### f_001: reentrancy
+
+- Severity: `3`
+- Detector: `reentrancy-eth`
+- Location: `tests/contracts/VulnerableVault.sol:11`
+- Finding confidence: `0.90`
+- Explanation confidence: `0.90`
+```
+
+The JSON report includes the normalized finding, source location, evidence,
+SWC reference, confidence fields, attack path, fix suggestion, tool source, and
+analysis metadata.
+
+## Common Commands
 
 ```bash
 uv run scsa analyze <contract.sol> --out-dir reports
@@ -29,40 +97,76 @@ uv run python eval/run_eval.py
 uv run python eval/run_judge.py
 ```
 
-## 目前範圍
+Optional extras:
 
-- 輸入限制：單一入口 `.sol` 檔，入口檔最多 500 行；同目錄本地 import 可由 Slither 解析，Solidity `0.6.x` 至 `0.8.x`。
-- 靜態分析：Slither detector 映射 reentrancy、access control、unchecked external call、delegatecall、controlled array length。
-- RAG——Retrieval-Augmented Generation，先從本地語料找相關 chunk，再把 chunk 放入 LLM prompt 生成解釋。
-- MLX——Apple Silicon 本地推理 runtime；目前有 4-bit 量化記憶體估算、`mlx-lm` 生成介面與 `scsa mlx-probe` 載入狀態記錄，支援自動探索本機 MLX 模型，未設定模型或 runtime 不可用時走 deterministic fallback。
-- Trace——SQLite 追蹤每個 finding 的 Slither raw output、標準化結果、RAG chunk、prompt 與 LLM output。
-
-## 驗證狀態
-
-2026-04-30 驗證通過：`uv run pytest` 共 15 passed，`uv run ruff check .` 通過，`uv run python eval/run_eval.py` 召回率 1.0，`uv run python eval/run_judge.py` 平均分 5.0，`uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json` 已載入本機 4bit 模型，峰值 RSS 661,520,384 bytes，`uv run python scripts/build_skill_graph.py` 可產生 graph artifact，`pytest tests/test_e2e.py` 最大 resident set size 54,231,040 bytes。CI 已接入 ruff、pytest、RAG recall eval、judge eval。
-
-`review` 技能的 git diff 審查目前無法完整執行，因為此資料夾沒有 `.git` repository 邊界，也沒有 `.claude/skills/review/checklist.md`。
-
-## 產品報告 PPT
-
-最終產品報告位於：
-
-```text
-elite-product-report/final-output/智能合約安全分析助理_產品報告.pptx
+```bash
+uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 ```
 
-2026-04-30 已用 `unzip -t` 檢查 PPTX 壓縮資料，結果為 no errors detected。可預覽 HTML 位於 `elite-product-report/index.html`，縮圖總覽位於 `elite-product-report/screenshots/contact-sheet.png`。
+## Current Scope
 
-其他歷史版本：
+- Input: one Solidity entry file, up to 500 lines.
+- Imports: local same-directory imports are covered by tests.
+- Solidity: tested with `0.6.x` to `0.8.x` workflows.
+- Static analysis: mapped Slither detectors include reentrancy, access control,
+  unchecked external call, delegatecall, and controlled array length.
+- RAG: local retrieval adds related audit chunks before explanation generation.
+- MLX: Apple Silicon local generation path with deterministic fallback when no
+  compatible local model/runtime is available.
+- Trace: SQLite records raw Slither output, normalized findings, RAG chunks,
+  prompts, LLM outputs, and partial/error states.
 
-- `deck-smart-contract-security-assistant/output/output.pptx`
-- `huashu-redesign/output/huashu-redesign-image.pptx`
-- `huashu-redesign/output/huashu-redesign-editable.pptx`
-- `huashu-product-report/output/product-report-fathom-image.pptx`
-- `huashu-product-report/output/product-report-fathom-editable.pptx`
+## Limitations
 
-## 交接文件
+- Business-logic vulnerabilities still require human review.
+- Multi-package Foundry/Hardhat project analysis is not yet v1.0 scope.
+- Mythril, oracle manipulation analysis, SARIF export, and GitHub code scanning
+  integration are not yet implemented.
+- Generated explanations can be incomplete or wrong; use the trace and Slither
+  evidence as the review anchor.
 
-完整接手資訊在 `docs/handoff.md`。使用說明書在 `docs/guides/001-usage-manual.md`，專案架構書在 `docs/design/001-project-architecture.md`，驗證程序日誌在 `docs/reference/001-validation-procedure-log.md`，文件索引在 `docs/DOCS_INDEX.md`。專案內 agent 操作規則在 `AGENTS.md`。
+## Maintainer Automation Use Cases
 
-自主迭代用 skill graph 在 `docs/skill-graph.md`，定義多 agent 分工、能力節點、缺口排序與驗證閉環；可重建產物位於 `graphify-out/graph.json`、`graphify-out/GRAPH_REPORT.md`、`graphify-out/graph.html`。
+This repository is intended to support maintainer workflows such as:
+
+- Pull request review summaries for Solidity security changes.
+- Issue classification for bug reports, feature requests, and unsafe usage.
+- Release note drafting from merged security-tooling changes.
+- Test failure triage across Slither, report generation, RAG, and evals.
+- Safer explanation generation from local trace data without uploading
+  unauthorized contracts.
+
+## Validation Status
+
+2026-05-31 local validation:
+
+```text
+uv sync --extra audit --dev
+uv run ruff check .        All checks passed
+uv run pytest              15 passed
+```
+
+CI runs ruff, pytest, RAG recall eval, and judge eval on pull requests to
+`main`.
+
+## Project Documents
+
+- Handoff: `docs/handoff.md`
+- Usage manual: `docs/guides/001-usage-manual.md`
+- Architecture: `docs/design/001-project-architecture.md`
+- Validation log: `docs/reference/001-validation-procedure-log.md`
+- Document index: `docs/DOCS_INDEX.md`
+- Agent rules: `AGENTS.md`
+
+Autonomous iteration skill graph:
+
+- `docs/skill-graph.md`
+- `graphify-out/graph.json`
+- `graphify-out/GRAPH_REPORT.md`
+- `graphify-out/graph.html`
+
+## Contributing
+
+See `CONTRIBUTING.md` for setup, validation, pull request expectations, and
+issue triage guidance. See `SECURITY.md` before reporting vulnerabilities or
+unsafe behavior in the tool itself.

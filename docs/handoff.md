@@ -1,6 +1,6 @@
 # 智能合約安全分析助理交接
 
-更新日期：2026-04-30。
+更新日期：2026-05-31。
 
 ## 已完成內容
 
@@ -9,6 +9,8 @@
 - 測試覆蓋 adapter、analyzer、RAG、Slither 串接、本地 import 解析、MLX 記憶體估算、MLX 模型自動探索、MLX probe fallback、skill graph artifact、schema validation、端到端流程。
 - Eval 腳本已存在：`eval/run_eval.py` 測 RAG recall，`eval/run_judge.py` 測生成品質。
 - CI 設定在 `.github/workflows/ci.yml`，目前執行 ruff、pytest、RAG eval 與 judge eval。
+- OSS readiness 基礎文件已存在：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、`.github/ISSUE_TEMPLATE/*`、`.github/pull_request_template.md`。
+- README 已整理成外部讀者版本，包含 authorized-use boundary、quickstart、demo output、limitations 與 maintainer automation use cases。
 
 ## 技術核心
 
@@ -32,6 +34,16 @@ uv run python eval/run_judge.py       average_judge_score = 5.0
 uv run scsa mlx-probe --auto-discover-model --max-tokens 4 --output reports-mlx/mlx_probe.json  load_succeeded = true, peak_rss_bytes = 661,520,384
 uv run python scripts/build_skill_graph.py  graphify-out artifacts generated
 uv run pytest tests/test_e2e.py       2 passed, max RSS 54,231,040 bytes
+```
+
+2026-05-31 README / OSS readiness 更新驗證結果：
+
+```text
+uv sync --extra audit --dev           installed audit dependencies
+uv run ruff check .                   all checks passed
+uv run pytest                         15 passed
+uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-demo
+                                      overall_status = finding, f_001 = reentrancy, severity = 3
 ```
 
 端到端測試的記憶體使用低於 16GB 硬體上限；目前測試路徑使用 deterministic fallback。本機 `/Users/william/models/Qwen3.5-9B-MLX-4bit` 已完成 `mlx-lm` 載入 probe，峰值 RSS 661,520,384 bytes。
