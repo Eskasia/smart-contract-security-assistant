@@ -4,7 +4,7 @@ description: "繁體中文整理 0G APAC Hackathon 的 HackQuest 成果提交材
 category: "hackathon"
 number: "009"
 status: draft
-services: ["docs/hackathon", "submission/0g-apac-hackathon", "integrations/0g"]
+services: ["docs/archive/hackathon", "submission/0g-apac-hackathon", "integrations/0g"]
 related: ["hackathon/001", "hackathon/003", "hackathon/004", "hackathon/006", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -45,14 +45,14 @@ live_registered——本專案 `submission-proof.json` 的正式提交狀態，�
 
 | HackQuest 欄位 | 本專案來源檔案 | 目前狀態 |
 |---|---|---|
-| Basic project information | `docs/hackathon/0g-apac-submission.md` | draft ready |
-| GitHub repository link | `docs/hackathon/0g-apac-submission.md` | ready；2026-05-15 GitHub CLI 顯示 PUBLIC |
-| 0G mainnet proof | `docs/hackathon/004-live-0g-proof-record.md` | blocked；待 live deploy/register |
-| Structured form values | `docs/hackathon/hackquest-submission.form.json` | blocked；live proof 與 X post 仍空 |
-| Demo video | `docs/hackathon/006-demo-video-production-checklist.md` | partially ready；public MP4 URL 已公開，正式 live 0G proof 段落仍待補 |
-| README / documentation | `README.md` + `docs/hackathon/007-judge-reproduction-guide.md` | ready except live fields |
-| Public X post | `docs/hackathon/005-public-x-post-template.md` | blocked；待 screenshot/clip 與公開發布 |
-| Judge reproduction | `docs/hackathon/007-judge-reproduction-guide.md` | local ready；live verification blocked |
+| Basic project information | `docs/archive/hackathon/0g-apac-submission.md` | draft ready |
+| GitHub repository link | `docs/archive/hackathon/0g-apac-submission.md` | ready；2026-05-15 GitHub CLI 顯示 PUBLIC |
+| 0G mainnet proof | `docs/archive/hackathon/004-live-0g-proof-record.md` | blocked；待 live deploy/register |
+| Structured form values | `docs/archive/hackathon/hackquest-submission.form.json` | blocked；live proof 與 X post 仍空 |
+| Demo video | `docs/archive/hackathon/006-demo-video-production-checklist.md` | partially ready；public MP4 URL 已公開，正式 live 0G proof 段落仍待補 |
+| README / documentation | `README.md` + `docs/archive/hackathon/007-judge-reproduction-guide.md` | ready except live fields |
+| Public X post | `docs/archive/hackathon/005-public-x-post-template.md` | blocked；待 screenshot/clip 與公開發布 |
+| Judge reproduction | `docs/archive/hackathon/007-judge-reproduction-guide.md` | local ready；live verification blocked |
 
 ## Finalizer Command
 
@@ -71,7 +71,7 @@ python3 scripts/finalize_0g_hackathon_submission.py
 提交前必須全部成立：
 
 1. `submission-proof.json.proof_mode` 等於 `live_registered`。
-2. `docs/hackathon/004-live-0g-proof-record.md` 已填入 registry address、storage root、storage transaction、registration transaction 與公開 Explorer links。
+2. `docs/archive/hackathon/004-live-0g-proof-record.md` 已填入 registry address、storage root、storage transaction、registration transaction 與公開 Explorer links。
 3. `hackquest-submission.form.json` 的 `public_x_post_url` 與 `zero_g_integration_proof` 全部為真實公開資料。
 4. GitHub repo 不再顯示 Private badge，或已提供評審可審查的權限。
 5. Demo video 是公開 YouTube 或 Loom 連結，長度不超過 3 分鐘，畫面包含產品流程與 0G proof。

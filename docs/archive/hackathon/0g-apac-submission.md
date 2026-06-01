@@ -94,7 +94,7 @@ Public X post link:
 ## Final Submission Checklist
 
 - [x] GitHub repository is public.
-- [ ] `README.md` explains the public project overview and `docs/hackathon/007-judge-reproduction-guide.md` explains local reproduction.
+- [ ] `README.md` explains the public project overview and `docs/archive/hackathon/007-judge-reproduction-guide.md` explains local reproduction.
 - [ ] 0G mainnet registry contract address is filled in.
 - [ ] 0G Explorer links open without authentication.
 - [ ] Demo video is 3 minutes or less and shows product flow plus 0G proof.

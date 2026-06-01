@@ -4,7 +4,7 @@ description: "Mandatory public X post text and checklist for the 0G APAC Hackath
 category: "hackathon"
 number: "005"
 status: draft
-services: ["docs/hackathon"]
+services: ["docs/archive/hackathon"]
 related: ["hackathon/001", "hackathon/003", "hackathon/006"]
 last_modified: "2026-05-07"
 ---
@@ -54,4 +54,4 @@ https://eskasia.github.io/smart-contract-security-assistant/scsa-usage-tutorial.
 
 ## References
 
-- `docs/hackathon/003-submission-package-index.md`
+- `docs/archive/hackathon/003-submission-package-index.md`

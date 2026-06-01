@@ -327,7 +327,7 @@ cd frontend && npm run build
 git diff --check
 ```
 
-Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md) and [`docs/reference/public-benchmark-leaderboard.md`](docs/reference/public-benchmark-leaderboard.md).
+Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md).
 
 ## GitHub Actions
 
@@ -361,7 +361,6 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`docs/reference/related-work.md`](docs/reference/related-work.md)
 - [`docs/reference/standards-mapping.md`](docs/reference/standards-mapping.md)
 - [`docs/reference/phase3-advanced-evidence.md`](docs/reference/phase3-advanced-evidence.md)
-- [`docs/reference/public-benchmark-leaderboard.md`](docs/reference/public-benchmark-leaderboard.md)
 - [`docs/release/001-v0.1.0-checklist.md`](docs/release/001-v0.1.0-checklist.md)
 - [`docs/release/002-v0.2.0-checklist.md`](docs/release/002-v0.2.0-checklist.md)
 - [`docs/community/001-v0.1.0-tester-feedback.md`](docs/community/001-v0.1.0-tester-feedback.md)
@@ -369,10 +368,9 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 
 ## Tester Feedback Wanted
 
-The published v0.1.0 release uses issue #12 for independent quickstart
-feedback. Keep that issue scoped to the published v0.1.0 release; v0.2.0
-release readiness is tracked in
-[`docs/release/002-v0.2.0-checklist.md`](docs/release/002-v0.2.0-checklist.md).
+v0.2.0 is published. The v0.1.0 feedback issue #12 remains available for
+historical quickstart feedback only; v0.2.0 feedback should use a new GitHub
+issue linked from the release notes.
 
 https://github.com/Eskasia/smart-contract-security-assistant/issues/12
 

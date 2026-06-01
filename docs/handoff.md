@@ -20,7 +20,7 @@
 - 2026-05-04 已新增 Foundry/Hardhat 原生 build preflight；成功時 Slither 使用專案框架，失敗或工具缺失時回退 solc fallback 並寫入 `analysis_metadata.errors`。
 - 2026-05-04 已新增 `eval/run_public_project_builds.py` 與 `eval/public_benchmark/public-project-builds-10-manifest.json`，可用 10 個 pinned public repos 自動 clone 或讀 local path，初始化 submodules、安裝 npm dependencies、支援 Hardhat 自訂 artifacts/cache 路徑，輸出 analyzer success rate、native build success rate、`forge`/`npx` 可用性與 blocker 統計；本機實測達 `10/10` analyzer 與 `10/10` native build。
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
-- 2026-05-31 已將公開入口收斂為單一 `README.md`；`README.en.md` 與 `README.hackathon.md` 不再作為 GitHub 入口，hackathon reproduction 與 proof 說明保留在 `docs/hackathon/`。
+- 2026-05-31 已將公開入口收斂為單一 `README.md`；`README.en.md` 與 `README.hackathon.md` 不再作為 GitHub 入口，hackathon reproduction 與 proof 說明保留在 `docs/archive/hackathon/`。
 - 2026-05-06 已新增 HTTP API 邊界加固：bearer token、`input_root`、request body limit、固定 CORS origin 與 CLI 啟動參數。
 - 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
 - 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
@@ -36,11 +36,11 @@
 - README 已整理成 SCSA 專屬 evidence workbench 敘事，包含 analyzer/AI 邊界、trace/CI/review workflow、Quick Start、Web Workbench、CLI cookbook、輸出契約、安全邊界與驗證。
 - v0.1.0 release 已存在：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
 - Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
-- Tester outreach 與 feedback tracker 已建立：`docs/community/002-v0.1.0-outreach-kit.md`、`docs/community/003-v0.1.0-feedback-tracker.md`。
+- Tester outreach 與 feedback tracker 已建立：`docs/archive/community/002-v0.1.0-outreach-kit.md`、`docs/archive/community/003-v0.1.0-feedback-tracker.md`。
 - 2026-06-01 Phase 1 合規入口已開始落地：新增 `THIRD_PARTY_NOTICES.md`、`NOTICE`、`tool_matrix.yml`、`standards_mapping.yml`、`docs/reference/tool-attribution.md`、`docs/reference/license-boundary.md`、`docs/reference/related-work.md`、`docs/reference/standards-mapping.md`，並讓 report finding 輸出 `standard_refs`。
 - 2026-06-01 Phase 2 evidence layer 已開始落地：新增 Evidence Graph SQLite tables、finding `evidence_graph`、5 個 SCSA-native post-analysis rules、paired-variant benchmark、RAG groundedness eval、UI evidence provenance 顯示與 CI gate。
 - 2026-06-01 Phase 3 advanced evidence 已開始落地：新增 `exploit_validation`、sandbox-only Foundry reentrancy PoC fixture、fuzz seed suggestions、formal property drafts、DeFi profit signal、EVMbench adapter、SQLite `exploit_validations` 與 UI advanced evidence 顯示。
-- 2026-06-01 PR #15 與 PR #16 已 merge 到 `main`；`main` smoke 通過 `uv run pytest` 116 passed、frontend 35 passed、frontend build completed。下一個 release candidate 建議為 v0.2.0，尚未建立 tag。
+- 2026-06-01 PR #15 與 PR #16 已 merge 到 `main`；`main` smoke 通過 `uv run pytest` 116 passed、frontend 35 passed、frontend build completed。v0.2.0 已發布為 evidence platform release；不是正式 audit certification release。
 
 ## 技術核心
 
@@ -217,16 +217,16 @@ Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、ext
 - License boundary：`docs/reference/license-boundary.md`
 - Related work：`docs/reference/related-work.md`
 - Standards mapping：`docs/reference/standards-mapping.md`
-- Phase 2 benchmark matrix：`docs/reference/public-benchmark-leaderboard.md`
+- Public benchmark leaderboard：`docs/reference/002-public-benchmark-leaderboard.md`
 - Changelog：`CHANGELOG.md`
 - v0.1.0 release checklist：`docs/release/001-v0.1.0-checklist.md`
 - v0.2.0 release checklist：`docs/release/002-v0.2.0-checklist.md`
 - v0.1.0 tester feedback guide：`docs/community/001-v0.1.0-tester-feedback.md`
-- v0.1.0 tester outreach kit：`docs/community/002-v0.1.0-outreach-kit.md`
-- v0.1.0 feedback tracker：`docs/community/003-v0.1.0-feedback-tracker.md`
+- v0.1.0 tester outreach kit：`docs/archive/community/002-v0.1.0-outreach-kit.md`
+- v0.1.0 feedback tracker：`docs/archive/community/003-v0.1.0-feedback-tracker.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`
 - 專案架構書：`docs/design/001-project-architecture.md`
 - Knowledge graph：`docs/knowledge-graph.md`
-- 競品導向優化計畫：`docs/design/004-competitor-optimization-plan.md`
+- 競品導向優化計畫：`docs/archive/design/004-competitor-optimization-plan.md`
 - 驗證程序日誌：`docs/reference/001-validation-procedure-log.md`
 - 公開 benchmark leaderboard：`docs/reference/002-public-benchmark-leaderboard.md`

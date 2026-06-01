@@ -4,7 +4,7 @@ description: "Recording checklist for the required 3-minute product demo and 0G 
 category: "hackathon"
 number: "006"
 status: draft
-services: ["frontend", "integrations/0g", "docs/hackathon"]
+services: ["frontend", "integrations/0g", "docs/archive/hackathon"]
 related: ["hackathon/001", "hackathon/002", "hackathon/003", "hackathon/005", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -49,5 +49,5 @@ draft；public demo video URL 已公開，正式影片必須在 live 0G upload/r
 
 ## References
 
-- `docs/hackathon/0g-demo-script.md`
-- `docs/hackathon/004-live-0g-proof-record.md`
+- `docs/archive/hackathon/0g-demo-script.md`
+- `docs/archive/hackathon/004-live-0g-proof-record.md`

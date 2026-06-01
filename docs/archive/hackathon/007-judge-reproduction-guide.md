@@ -13,7 +13,7 @@ last_modified: "2026-05-07"
 
 ## Status
 
-draft；本地重現流程已驗證，live 0G verification 需等 `docs/hackathon/004-live-0g-proof-record.md` 填入主網資料後執行。
+draft；本地重現流程已驗證，live 0G verification 需等 `docs/archive/hackathon/004-live-0g-proof-record.md` 填入主網資料後執行。
 
 ## Summary
 
@@ -76,7 +76,7 @@ Expected dry-run fields:
 
 ## Live 0G Verification
 
-Use this only after `docs/hackathon/004-live-0g-proof-record.md` has all live fields filled.
+Use this only after `docs/archive/hackathon/004-live-0g-proof-record.md` has all live fields filled.
 
 ```bash
 cd integrations/0g

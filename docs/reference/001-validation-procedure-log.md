@@ -91,7 +91,7 @@ current；本日誌記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 
 - Foundry/Hardhat 原生 build preflight 已於 2026-05-04 用 10 repo pinned manifest 驗證 `10/10` analyzer 與 `10/10` native build；2026-05-06 僅重跑 `--preflight-only`，結果為 `missing_required_tools=[]`。
 - 完整 business-logic symbolic analysis 尚未納入。
 - Live 0G proof 尚未執行；需要 funded 0G mainnet key、`ZERO_G_STORAGE_INDEXER_RPC`、`ZERO_G_REGISTRY_ADDRESS` 與公開 Explorer links。
-- `submission/` 是 `scripts/finalize_0g_hackathon_submission.py` 產生的可重建提交包，release cleanup 已將其列入 `.gitignore`，正式內容以 `docs/hackathon/` 與根目錄 README/config 為準。
+- `submission/` 是 `scripts/finalize_0g_hackathon_submission.py` 產生的可重建提交包，release cleanup 已將其列入 `.gitignore`，正式內容以 `docs/archive/hackathon/` 與根目錄 README/config 為準。
 
 ## References
 
