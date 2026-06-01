@@ -299,6 +299,10 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 | Comparison report | Added, fixed, and persistent findings across two reports |
 | 0G proof package | Optional report hash/proof metadata package for hackathon or external verification workflows |
 
+The public JSON report schema is [`schema/report.schema.json`](schema/report.schema.json).
+It is generated from `smart_contract_audit.validation.schema.REPORT_SCHEMA`;
+CI checks it with `uv run python scripts/sync_report_schema.py --check`.
+
 ## Security Boundaries
 
 - Only scan contracts that you own, maintain, or are explicitly authorized to review.
@@ -344,6 +348,7 @@ CI gates:
 ```bash
 uv run python scripts/check_tool_matrix.py
 uv run python scripts/generate_sbom.py
+uv run python scripts/sync_report_schema.py --check
 uv run ruff check .
 uv run pytest
 uv run python eval/run_eval.py
