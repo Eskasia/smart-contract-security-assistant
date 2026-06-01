@@ -8,6 +8,7 @@ Generated at: 2026-06-01
 | design | 005 | current | UI Design System | 定義 evidence-first security console 的產品氣質、視覺規範、design tokens、ToolSelector 與 UI migration notes。 | 2026-05-31 | `docs/design/005-ui-design-system.md` |
 | guides | 001 | current | 使用說明書 | 說明安裝、分析、API 加固、External tools、GitHub Actions、trace 查詢、MLX probe、Web UI 與輸出檔案。 | 2026-06-01 | `docs/guides/001-usage-manual.md` |
 | readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-06-01 | `README.md` |
+| adoption | 001 | current | Codex for OSS Evidence Index | 記錄 v0.2.1 hardening readiness evidence、邊界與後續 adoption evidence 狀態。 | 2026-06-01 | `docs/adoption/codex-for-oss-evidence.md` |
 | reference | 003 | current | Tool Attribution | 記錄 Slither、Aderyn、Echidna、Medusa、Mythril、Halmos、Foundry 與 Hardhat 的角色、license、bundled 狀態與 SCSA 消費邊界。 | 2026-06-01 | `docs/reference/tool-attribution.md` |
 | reference | 004 | current | License Boundary | 說明 SCSA MIT license 與外部工具 license、bundling、native build、artifact 消費邊界。 | 2026-06-01 | `docs/reference/license-boundary.md` |
 | reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance 的定位差異與 non-goals。 | 2026-06-01 | `docs/reference/related-work.md` |
@@ -24,3 +25,4 @@ Generated at: 2026-06-01
 | archive | 005 | archived | 0G hackathon archive | Archived 0G hackathon submission, proof, demo, issue remediation, and HackQuest materials. | 2026-06-01 | `docs/archive/hackathon/` |
 | archive | 006 | archived | v0.1.0 release readiness checklist | Historical v0.1.0 release checklist. | 2026-06-01 | `docs/archive/release/001-v0.1.0-checklist.md` |
 | archive | 007 | archived | v0.2.0 release readiness checklist | Historical v0.2.0 release checklist. | 2026-06-01 | `docs/archive/release/002-v0.2.0-checklist.md` |
+| archive | 008 | archived | v0.2.1 hardening checklist | v0.2.1 release-candidate hardening checklist and validation record. | 2026-06-01 | `docs/archive/release/003-v0.2.1-hardening-checklist.md` |

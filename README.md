@@ -315,29 +315,21 @@ CI checks it with `uv run python scripts/sync_report_schema.py --check`.
 
 ## Validation
 
-Last full local verification on 2026-06-01:
+v0.2.1 hardening readiness verification on 2026-06-01:
 
 ```text
-commit: PR #19 head commit
-GitHub Actions run ID: PR #19 Checks
+branch: hardening/phase-0-integration
+GitHub Actions run ID: pending until the v0.2.1 hardening PR is opened
 ```
 
 ```text
 uv sync --extra audit --dev          resolved 198 packages, checked 83 packages
 uv run ruff check .                  all checks passed
-uv run pytest                        127 passed
-uv run python eval/run_eval.py       recall_at_k = 1.0
-uv run python eval/run_judge.py      local_average_judge_score = 5.0, external_average_judge_score = 5.0
-uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0
-uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0  unsupported_security_claims = 0
-uv run python eval/run_exploit_validation.py  status = executed_triggered, mode = local_foundry_test
-uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1  seed_count = 1
-uv run python eval/run_formal_property_suggestions.py --min-property-count 1  property_count = 1
-uv run python eval/run_evmbench_adapter.py  exploit_adapter = sandbox_only
-uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, f1 = 0.9259
-uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+uv run pytest                        138 passed
+uv run python scripts/sync_report_schema.py --check  passed
 uv run python scripts/check_tool_matrix.py  passed
 uv run python scripts/generate_sbom.py      generated tool-matrix SBOM and license inventory
+cd frontend && npm ci                installed 274 packages, audited 275 packages, 0 vulnerabilities
 cd frontend && npm run test -- --run 35 passed
 cd frontend && npm run build         completed
 git diff --check                     passed
