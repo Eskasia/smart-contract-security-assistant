@@ -141,6 +141,9 @@ CI evidence:
 Canonical adoption metrics tracker:
 [`docs/adoption/metrics.md`](metrics.md)
 
+Pre-application consistency audit:
+[`docs/adoption/evidence-consistency-audit.md`](evidence-consistency-audit.md)
+
 The tracker is intentionally conservative: repository-owned fixtures and local
 validation runs do not count as external testers, public triage cases,
 testimonials, downloads, or external OSS adoptions.

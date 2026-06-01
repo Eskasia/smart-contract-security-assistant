@@ -119,7 +119,8 @@ replace them, and its MIT license does not relicense external tools.
 
 SCSA promotes only mapped Slither detector output into formal report findings.
 Unmapped Slither detector output is retained in trace evidence and is not
-treated as a report finding until mapped. The current mapped detector subset is:
+treated as a report finding until mapped. The current mapped detector subset
+contains 27 Slither detectors:
 
 | Internal type | Slither detectors |
 |---|---|
