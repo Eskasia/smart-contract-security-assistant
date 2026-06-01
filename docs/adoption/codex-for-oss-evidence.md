@@ -141,6 +141,11 @@ CI evidence:
 Canonical adoption metrics tracker:
 [`docs/adoption/metrics.md`](metrics.md)
 
+Latest weekly adoption update: 2026-06-01. Public GitHub API showed 0 stars and
+0 forks; PyPI JSON still returned 404; no completed tester feedback issue,
+testimonial, public triage case, release asset download, or external OSS
+adoption link is logged.
+
 Pre-application consistency audit:
 [`docs/adoption/evidence-consistency-audit.md`](evidence-consistency-audit.md)
 
