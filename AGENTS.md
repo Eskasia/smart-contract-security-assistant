@@ -1,12 +1,29 @@
 # AGENTS.md
 
-此專案根目錄路徑含尾端空格：`/Users/william/智能合約安全分析助理 `。所有 shell 指令必須使用精確路徑或在已設定的 working directory 內執行。
+## Repository Execution Rules
 
-## 專案狀態
+- Quote paths in shell commands because contributor worktrees may contain spaces.
+- Prefer running commands from the repository root.
+- Do not commit generated reports, local corpora, private audit material, API keys, or secrets.
+- Keep public GitHub content focused on source, tests, CI, docs, benchmark fixtures, and package metadata.
 
-截至 2026-05-31，核心流程已可跑：Slither 串接、external tools registry、source import、finding adapter、JSON schema validation、本地 RAG fallback、MLX-ready generator、SQLite trace、Markdown/JSON report、CLI、HTTP API、React/Vite 前端、Gradio 可選入口、eval 腳本、benchmark gates 與 pytest/Vitest 測試。
+## Codex Goal Workflow
 
-## 常用驗證
+1. Inspect relevant files and tests before editing.
+2. Keep one goal per PR.
+3. Add or update tests before making docs-only capability claims.
+4. Run the verification commands listed for the goal.
+5. Summarize changed files, tests, acceptance status, and residual risk.
+
+## Project Status
+
+As of 2026-06-01, the core flow includes Slither integration, external tools
+registry, source import, finding adapter, JSON schema validation, local RAG
+fallback, MLX-ready generator, SQLite trace, Markdown/JSON reports, CLI, HTTP
+API, React/Vite frontend, optional Gradio entrypoint, eval scripts, benchmark
+gates, pytest tests, and Vitest tests.
+
+## Common Verification
 
 ```bash
 uv sync --extra audit --dev
@@ -20,30 +37,33 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run python eval/run_public_project_builds.py --min-analyzer-success-rate 1.0 --min-native-build-success-rate 1.0
 cd frontend && npm run test -- --run
 cd frontend && npm run build
-/usr/bin/time -l uv run pytest tests/test_e2e.py
 ```
 
-已驗證工具版本：Slither `0.11.5`，solc `0.8.34`。`pytest tests/test_e2e.py` 在 2026-04-30 的最大 resident set size 為 54,231,040 bytes。
+Verified tool versions: Slither `0.11.5`, solc `0.8.34`.
 
-## 主要程式邊界
+## Main Code Boundaries
 
-- CLI：`src/smart_contract_audit/cli.py`
-- 分析主流程：`src/smart_contract_audit/analyzer.py`
-- Slither 串接：`src/smart_contract_audit/slither_runner.py`
-- Finding 映射：`src/smart_contract_audit/finding_adapter.py`
-- RAG：`src/smart_contract_audit/rag/`
-- MLX 介面：`src/smart_contract_audit/llm/mlx_runtime.py`
-- Trace：`src/smart_contract_audit/trace/`
-- 驗證 schema：`src/smart_contract_audit/validation/`
+- CLI: `src/smart_contract_audit/cli.py`
+- Analysis flow: `src/smart_contract_audit/analyzer.py`
+- Slither integration: `src/smart_contract_audit/slither_runner.py`
+- Finding mapping: `src/smart_contract_audit/finding_adapter.py`
+- RAG: `src/smart_contract_audit/rag/`
+- MLX interface: `src/smart_contract_audit/llm/mlx_runtime.py`
+- Trace: `src/smart_contract_audit/trace/`
+- Validation schema: `src/smart_contract_audit/validation/`
 
-## GitHub 清理邊界
+## Git Hygiene
 
-Git 只追蹤核心程式、測試、必要 benchmark fixtures、CI、docs 與 package metadata；`reports*/`、`graphify-out/`、`knowledge-graph-out/`、`.local/`、簡報輸出、Web50 raw corpus、`.ship/`、`.claude/` 為本機可重建產物，不上傳 GitHub。
+- Ignore unrelated local changes.
+- Do not revert user changes unless explicitly requested.
+- Do not stage generated `reports*/`, `graphify-out/`, `knowledge-graph-out/`,
+  `.local/`, presentation exports, raw public-project corpora, `.ship/`, or
+  `.claude/` artifacts.
 
-## 審查限制
+## Documentation Rules
 
-此目錄已有 Git repository 邊界；提交前需檢查 `git status`、`git diff --check`、ruff、pytest、eval 與前端測試/build。
-
-## 文件規則
-
-新增功能後同步更新 `README.md`、`docs/handoff.md` 與 `docs/DOCS_INDEX.md`。避免相對時間，使用 `YYYY-MM-DD`。公開 GitHub 入口維持單一 `README.md`；hackathon 細節放在 `docs/hackathon/`，不要恢復 `README.en.md` 或 `README.hackathon.md`。輸出給使用者時使用繁體中文並保持精簡。
+- New functionality should update `README.md`, `docs/handoff.md`, and
+  `docs/DOCS_INDEX.md` when those files are affected.
+- Use exact dates in `YYYY-MM-DD` format.
+- Keep the public GitHub entrypoint in `README.md`.
+- Do not restore separate `README.en.md` or `README.hackathon.md` entrypoints.
