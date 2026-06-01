@@ -7,7 +7,7 @@
 
 Local-first analysis-artifact workbench for Solidity security triage.
 
-SCSA turns deterministic analyzer output into reviewable security evidence: Slither findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
+SCSA turns deterministic analyzer output into reviewable security evidence: mapped Slither detector findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
 
 本專案協助維護者、審計學習者與小型 Solidity 團隊完成第一輪安全初篩。漏洞事實來自 Slither 與外部安全工具；LLM 只負責把既有 evidence 轉成可讀解釋、攻擊路徑與修復建議。
 
@@ -108,12 +108,30 @@ replace them, and its MIT license does not relicense external tools.
 
 | Project | What it is known for | How SCSA uses or complements it |
 |---|---|---|
-| [Slither](https://github.com/crytic/slither) | Static analysis framework with detector and CI workflows | Primary deterministic finding source and detector mapping |
+| [Slither](https://github.com/crytic/slither) | Static analysis framework with detector and CI workflows | Primary analyzer source; only mapped detector output is promoted into formal report findings |
 | [Aderyn](https://github.com/Cyfrin/aderyn) | Solidity static analyzer with Markdown/JSON/SARIF reports | Optional static finding signal and SARIF artifact tracking |
 | [Echidna](https://github.com/crytic/echidna) | Property-based smart contract fuzzing | Optional invariant/property failure signal |
 | [Medusa](https://github.com/crytic/medusa) | Parallelized coverage-guided Solidity fuzzing | Optional fuzzer failure signal |
 | [Mythril](https://github.com/ConsenSysDiligence/mythril) | Symbolic execution for EVM bytecode | Optional symbolic issue signal |
 | [Halmos](https://github.com/a16z/halmos) | Symbolic testing for EVM smart contracts | Optional trusted Foundry proof-failure signal |
+
+## Supported Finding Promotion Scope
+
+SCSA promotes only mapped Slither detector output into formal report findings.
+Unmapped Slither detector output is retained in trace evidence and is not
+treated as a report finding until mapped. The current mapped detector subset is:
+
+| Internal type | Slither detectors |
+|---|---|
+| `reentrancy` | `reentrancy-eth`, `reentrancy-no-eth`, `reentrancy-benign` |
+| `upgrade_risk` | `unprotected-upgrade`, `uninitialized-state`, `uninitialized-storage`, `missing-inheritance` |
+| `access_control` | `suicidal`, `arbitrary-send-eth` |
+| `privilege_escalation` | `arbitrary-send-erc20`, `arbitrary-send-erc20-permit`, `tx-origin`, `protected-vars` |
+| `unchecked_external_call` | `unchecked-lowlevel`, `unchecked-send`, `unchecked-transfer`, `unused-return` |
+| `dangerous_delegatecall` | `controlled-delegatecall`, `delegatecall-loop` |
+| `array_length_manipulation` | `controlled-array-length` |
+| `price_manipulation` | `divide-before-multiply`, `incorrect-equality`, `timestamp` |
+| `oracle` | `weak-prng`, `incorrect-exp`, `pyth-unchecked-confidence`, `pyth-unchecked-publishtime` |
 
 ## Who This Is For
 

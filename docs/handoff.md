@@ -44,7 +44,7 @@
 
 ## 技術核心
 
-Slither——Solidity 靜態分析工具，負責 deterministic vulnerability finding；LLM 不負責判定漏洞，只負責把 finding 轉成可讀解釋、攻擊路徑與修復建議。
+Slither——Solidity 靜態分析工具；SCSA 只把已映射的 Slither detector output 升格為正式 report finding，未映射 detector output 保留為 trace evidence，不視為正式 finding。LLM 不負責判定漏洞，只負責把 finding 轉成可讀解釋、攻擊路徑與修復建議。
 
 RAG——Retrieval-Augmented Generation，先從審計語料與技術文件 chunk 檢索證據，再把證據放入 prompt，降低生成內容脫離資料來源的風險。
 
