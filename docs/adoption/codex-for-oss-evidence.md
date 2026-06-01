@@ -136,17 +136,12 @@ CI evidence:
 
 ## Adoption metrics
 
-These metrics are intentionally conservative. Unknown means the value was not
-measured in this repo-local evidence run.
+Canonical adoption metrics tracker:
+[`docs/adoption/metrics.md`](metrics.md)
 
-| Metric | Current | Evidence |
-|---|---:|---|
-| GitHub stars | unknown | Not measured in this run |
-| GitHub forks | unknown | Not measured in this run |
-| External testers | 0 | No external tester entries logged yet |
-| Repo-owned public triage case studies | 3 | Case studies 001, 002, and 003 |
-| Feedback issues linked for current adoption phase | 0 | Phase 2 pending |
-| Testimonials | 0 | Phase 2 pending |
+The tracker is intentionally conservative: repository-owned fixtures and local
+validation runs do not count as external testers, public triage cases,
+testimonials, downloads, or external OSS adoptions.
 
 ## External tester evidence
 
