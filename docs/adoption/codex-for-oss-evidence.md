@@ -168,6 +168,9 @@ Planned Phase 2 evidence fields:
 
 ## Testimonials
 
+Testimonials log:
+[`docs/adoption/testimonials.md`](testimonials.md)
+
 No testimonials are recorded for the current adoption phase. Future testimonial
 entries must include explicit permission to quote and must not include private
 contract code, secrets, customer identifiers, or proprietary audit material.

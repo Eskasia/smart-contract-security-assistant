@@ -13,6 +13,7 @@ Generated at: 2026-06-01
 | adoption | 003 | current | Public Triage Protocol | 說明 public triage case 的 authorization link、allowed/disallowed targets、sensitive material handling、sanitization 與 publication checklist。 | 2026-06-01 | `docs/adoption/public-triage-protocol.md` |
 | adoption | 004 | current | Public Triage Cases | 記錄 authorized public triage case log；目前保持空白，不把本機 fixture case 誤算為外部 adoption。 | 2026-06-01 | `docs/adoption/public-triage-cases.md` |
 | adoption | 005 | current | Adoption Metrics | 記錄 Codex for OSS application 的 stars、forks、external testers、public triage cases、feedback issues、testimonials、downloads 與 external OSS adoption 目標與目前來源。 | 2026-06-01 | `docs/adoption/metrics.md` |
+| adoption | 006 | current | Tester Testimonials | 記錄 tester testimonial 的引用規則、80-word quote 限制、授權 evidence link 要求與空白 entry template；目前沒有已授權 testimonial。 | 2026-06-01 | `docs/adoption/testimonials.md` |
 | reference | 003 | current | Tool Attribution | 記錄 Slither、Aderyn、Echidna、Medusa、Mythril、Halmos、Foundry 與 Hardhat 的角色、license、bundled 狀態與 SCSA 消費邊界。 | 2026-06-01 | `docs/reference/tool-attribution.md` |
 | reference | 004 | current | License Boundary | 說明 SCSA MIT license 與外部工具 license、bundling、native build、artifact 消費邊界。 | 2026-06-01 | `docs/reference/license-boundary.md` |
 | reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance 的定位差異與 non-goals。 | 2026-06-01 | `docs/reference/related-work.md` |
