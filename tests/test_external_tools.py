@@ -25,6 +25,9 @@ def test_mythril_result_counts_json_issues(tmp_path: Path) -> None:
     assert results[0].tool_name == "mythril"
     assert results[0].status == "finding"
     assert results[0].findings_count == 1
+    assert results[0].execution_mode == "symbolic"
+    assert results[0].binary_path == "myth"
+    assert results[0].timeout_seconds == 30
     assert Path(results[0].output_path).exists()
 
 
@@ -82,6 +85,7 @@ def test_aderyn_result_counts_json_issues_and_sarif_artifact(tmp_path: Path) -> 
     assert results[0].tool_name == "aderyn"
     assert results[0].status == "finding"
     assert results[0].findings_count == 1
+    assert results[0].execution_mode == "read-only CLI"
     assert results[0].artifact_paths["sarif"].endswith("aderyn.sarif")
 
 
@@ -128,4 +132,6 @@ def test_missing_external_tool_is_skipped(tmp_path: Path) -> None:
     assert results[0].tool_name == "mythril"
     assert results[0].status == "skipped"
     assert results[0].findings_count == 0
+    assert results[0].execution_mode == "symbolic"
+    assert results[0].timeout_seconds == 60
     assert "not installed" in results[0].summary

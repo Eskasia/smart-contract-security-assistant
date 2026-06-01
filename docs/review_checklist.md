@@ -11,7 +11,8 @@
 | Project input | Foundry、Hardhat、nested imports 三個 fixture 均可 Slither 分析；Foundry/Hardhat native build preflight 與 Hardhat 自訂 artifacts/cache path 有單元測試覆蓋 |
 | API boundary | Token auth、`input_root`、body limit 與 non-wildcard CORS 測試通過 |
 | Source import boundary | `POST /api/imports` 與 `scsa import-source` 支援 GitHub/Etherscan/ZIP；拒絕 zip-slip、symlink、nested archive、非 allowlist host、非 allowlist redirect target、oversized remote response；匯入來源分析時強制 `native_build_policy=disabled` |
-| Native build safety | Untrusted API mode 使用 `--native-build-policy disabled`；trusted CLI mode 保留 native build support |
+| Native build safety | CLI/API 預設 `--native-build-policy disabled`；trusted mode 必須由使用者明確指定，且只用於可信本機專案 |
+| API exposure safety | 非本機 host 必須提供 `--api-token`；token 模式不可使用 wildcard CORS；job/event/report size quotas 必須保留 |
 | 0G proof package | `scsa 0g-package` 產生 stable `audit-proof.json`，含 report hash、score、finding count、trace id；contract id 不能逃出 output directory |
 | 0G Storage dry-run | `integrations/0g` 可用 `npm run upload -- <audit-proof.json> --dry-run` 產生 `proof_mode=dry_run`、空 `explorer_links` 的 `submission-proof.json`，並通過 `npm run verify-proof` |
 | 0G Chain registry | `AuditProofRegistry` owner-only；`register-proof.mjs` 嚴格驗證 report hash、storage root、registry address、score bps 與 explorer link key |

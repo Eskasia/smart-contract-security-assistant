@@ -40,9 +40,14 @@ MAX_REVIEW_NOTE_LENGTH = 2_000
 DEFAULT_EXTERNAL_TIMEOUT_SECONDS = 60
 MIN_EXTERNAL_TIMEOUT_SECONDS = 5
 MAX_EXTERNAL_TIMEOUT_SECONDS = 120
+LOCAL_API_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
 class RequestBodyTooLarge(ValueError):
+    pass
+
+
+class AnalysisCapacityExceeded(ValueError):
     pass
 
 
@@ -55,10 +60,13 @@ class ApiConfig:
     api_token: str | None = None
     cors_origin: str = "http://127.0.0.1:5173"
     max_request_bytes: int = 1_048_576
+    max_concurrent_jobs: int = 4
+    max_events_per_job: int = 256
+    max_report_bytes: int = 5_000_000
     max_import_files: int = 128
     max_import_bytes: int = 5_000_000
     max_import_single_file_bytes: int = 1_000_000
-    native_build_policy: str = "trusted"
+    native_build_policy: str = "disabled"
 
     def resolved_trace_db(self) -> Path:
         return self.trace_db or self.output_dir / "analysis_trace.sqlite"
@@ -129,6 +137,15 @@ class AnalysisJobManager:
         job = AnalysisJob(analysis_id=analysis_id, status="queued", **request)
         response_job = replace(job)
         with self._condition:
+            active_jobs = sum(
+                1
+                for record in self._jobs.values()
+                if record.job.status in {"queued", "running"}
+            )
+            if active_jobs >= self.config.max_concurrent_jobs:
+                raise AnalysisCapacityExceeded(
+                    "Active analysis jobs exceed max_concurrent_jobs."
+                )
             self._jobs[analysis_id] = _JobRecord(job=job)
             self._append_event_locked(
                 analysis_id,
@@ -227,7 +244,11 @@ class AnalysisJobManager:
             )
 
     def _append_event_locked(self, analysis_id: str, event: AnalysisEvent) -> None:
-        self._jobs[analysis_id].events.append(event)
+        events = self._jobs[analysis_id].events
+        events.append(event)
+        overflow = len(events) - self.config.max_events_per_job
+        if overflow > 0:
+            del events[:overflow]
         self._condition.notify_all()
 
 
@@ -272,6 +293,12 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
         except RequestBodyTooLarge as exc:
             self._send_request_too_large_response(exc)
+        except AnalysisCapacityExceeded as exc:
+            self._send_error_response(
+                HTTPStatus.TOO_MANY_REQUESTS,
+                "ANALYSIS_CAPACITY_EXCEEDED",
+                str(exc),
+            )
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
         return
@@ -360,7 +387,11 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
 
     def _get_report(self, contract_id: str) -> None:
         try:
-            report = _read_report(self.server.config.output_dir, contract_id)
+            report = _read_report(
+                self.server.config.output_dir,
+                contract_id,
+                self.server.config.max_report_bytes,
+            )
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
             return
@@ -371,7 +402,11 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
 
     def _get_report_markdown(self, contract_id: str) -> None:
         try:
-            markdown = _read_report_markdown(self.server.config.output_dir, contract_id)
+            markdown = _read_report_markdown(
+                self.server.config.output_dir,
+                contract_id,
+                self.server.config.max_report_bytes,
+            )
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
             return
@@ -415,7 +450,11 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            report = _read_report(self.server.config.output_dir, contract_id)
+            report = _read_report(
+                self.server.config.output_dir,
+                contract_id,
+                self.server.config.max_report_bytes,
+            )
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
             return
@@ -446,7 +485,11 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            report = _read_report(self.server.config.output_dir, contract_id)
+            report = _read_report(
+                self.server.config.output_dir,
+                contract_id,
+                self.server.config.max_report_bytes,
+            )
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
             return
@@ -622,8 +665,36 @@ def create_api_server(
     analyzer: AnalyzerFn = analyze_contract,
 ) -> ThreadingHTTPServer:
     resolved_config = config or ApiConfig()
+    _validate_api_config(host, resolved_config)
     resolved_config.output_dir.mkdir(parents=True, exist_ok=True)
     return _SmartContractAPIServer((host, port), resolved_config, analyzer)
+
+
+def _validate_api_config(host: str, config: ApiConfig) -> None:
+    normalized_host = host.strip().lower()
+    if config.native_build_policy not in NATIVE_BUILD_POLICIES:
+        raise ValueError("native_build_policy must be one of: disabled, trusted.")
+    if config.max_request_bytes < 1:
+        raise ValueError("max_request_bytes must be greater than 0.")
+    if config.max_concurrent_jobs < 1:
+        raise ValueError("max_concurrent_jobs must be greater than 0.")
+    if config.max_events_per_job < 1:
+        raise ValueError("max_events_per_job must be greater than 0.")
+    if config.max_report_bytes < 1:
+        raise ValueError("max_report_bytes must be greater than 0.")
+    if not config.api_token and normalized_host not in LOCAL_API_HOSTS:
+        raise ValueError(
+            "Refusing to bind HTTP API to a non-local host without --api-token."
+        )
+    if config.api_token and config.cors_origin == "*":
+        raise ValueError(
+            "cors_origin '*' cannot be used with --api-token; configure a fixed "
+            "--cors-origin."
+        )
+    if config.cors_origin == "*" and normalized_host not in LOCAL_API_HOSTS:
+        raise ValueError(
+            "cors_origin '*' is only allowed for a tokenless local demo host."
+        )
 
 
 def run_api_server(
@@ -636,10 +707,13 @@ def run_api_server(
     api_token: str | None = None,
     cors_origin: str = "http://127.0.0.1:5173",
     max_request_bytes: int = 1_048_576,
+    max_concurrent_jobs: int = 4,
+    max_events_per_job: int = 256,
+    max_report_bytes: int = 5_000_000,
     max_import_files: int = 128,
     max_import_bytes: int = 5_000_000,
     max_import_single_file_bytes: int = 1_000_000,
-    native_build_policy: str = "trusted",
+    native_build_policy: str = "disabled",
 ) -> None:
     server = create_api_server(
         host=host,
@@ -652,6 +726,9 @@ def run_api_server(
             api_token=api_token,
             cors_origin=cors_origin,
             max_request_bytes=max_request_bytes,
+            max_concurrent_jobs=max_concurrent_jobs,
+            max_events_per_job=max_events_per_job,
+            max_report_bytes=max_report_bytes,
             max_import_files=max_import_files,
             max_import_bytes=max_import_bytes,
             max_import_single_file_bytes=max_import_single_file_bytes,
@@ -668,7 +745,7 @@ def _parse_create_analysis(
     payload: dict[str, Any],
     input_root: Path | None = None,
     import_root: Path | None = None,
-    default_native_build_policy: str = "trusted",
+    default_native_build_policy: str = "disabled",
 ) -> dict[str, Any]:
     input_path = payload.get("input_path")
     if not isinstance(input_path, str) or not input_path.strip():
@@ -801,21 +878,36 @@ def _path_parts(path: str) -> list[str]:
     return [unquote(part) for part in parsed.path.strip("/").split("/") if part]
 
 
-def _read_report(output_dir: Path, contract_id: str) -> dict[str, Any] | None:
-    report_text = _read_report_file_text(output_dir, contract_id, ".json")
+def _read_report(
+    output_dir: Path,
+    contract_id: str,
+    max_report_bytes: int,
+) -> dict[str, Any] | None:
+    report_text = _read_report_file_text(output_dir, contract_id, ".json", max_report_bytes)
     if report_text is None:
         return None
     return json.loads(report_text)
 
 
-def _read_report_markdown(output_dir: Path, contract_id: str) -> str | None:
-    return _read_report_file_text(output_dir, contract_id, ".md")
+def _read_report_markdown(
+    output_dir: Path,
+    contract_id: str,
+    max_report_bytes: int,
+) -> str | None:
+    return _read_report_file_text(output_dir, contract_id, ".md", max_report_bytes)
 
 
-def _read_report_file_text(output_dir: Path, contract_id: str, suffix: str) -> str | None:
+def _read_report_file_text(
+    output_dir: Path,
+    contract_id: str,
+    suffix: str,
+    max_report_bytes: int,
+) -> str | None:
     report_path = _report_path(output_dir, contract_id, suffix)
     if not report_path.exists():
         return None
+    if report_path.stat().st_size > max_report_bytes:
+        raise ValueError("Report exceeds max_report_bytes.")
     return report_path.read_text(encoding="utf-8")
 
 

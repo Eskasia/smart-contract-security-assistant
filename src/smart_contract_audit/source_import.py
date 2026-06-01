@@ -5,7 +5,9 @@ import binascii
 import io
 import json
 import re
+import shutil
 import stat
+import time
 import urllib.parse
 import urllib.request
 import uuid
@@ -254,6 +256,29 @@ def import_explorer_source(
         source_kind="etherscan_api",
         limits=resolved_limits,
     )
+
+
+def cleanup_import_staging(
+    destination_root: Path,
+    *,
+    ttl_seconds: int = 86_400,
+    now: float | None = None,
+) -> list[Path]:
+    if ttl_seconds < 0:
+        raise ValueError("ttl_seconds must be greater than or equal to 0.")
+    root = destination_root.expanduser().resolve()
+    if not root.exists():
+        return []
+    cutoff = (time.time() if now is None else now) - ttl_seconds
+    removed: list[Path] = []
+    for child in sorted(root.iterdir()):
+        if not child.is_dir() or not child.name.startswith("import_"):
+            continue
+        if child.stat().st_mtime > cutoff:
+            continue
+        shutil.rmtree(child)
+        removed.append(child)
+    return removed
 
 
 def parse_github_archive_request(github_url: str) -> GitHubArchiveRequest:

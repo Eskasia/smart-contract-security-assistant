@@ -22,9 +22,9 @@
 - 2026-05-04 已新增 `scsa compare-reports`，可輸出新增、修復、持續存在 findings、安全分數差異與 CI fail gate。
 - 2026-05-31 已將公開入口收斂為單一 `README.md`；`README.en.md` 與 `README.hackathon.md` 不再作為 GitHub 入口，hackathon reproduction 與 proof 說明保留在 `docs/archive/hackathon/`。
 - 2026-05-06 已新增 HTTP API 邊界加固：bearer token、`input_root`、request body limit、固定 CORS origin 與 CLI 啟動參數。
-- 2026-05-06 已新增 native build policy：`trusted` 保留 Foundry/Hardhat 原生 build，`disabled` 略過 build scripts 並使用 Slither/solc fallback。
+- 2026-06-01 已收斂 native build policy 安全預設：`disabled` 是 CLI/API 預設，`trusted` 只保留給使用者明確指定的本機可信 Foundry/Hardhat 專案。
 - 2026-05-06 前端已新增 native build policy 與 API token 控制；token 存在時改用 polling，避免 EventSource 無法帶 Authorization header。
-- 2026-05-17 已新增 report endpoint `contract_id` path segment 驗證、`native_build_policy=disabled` server-side 上限、HTTP trace sensitive field redaction、CORS `Authorization` preflight、前端 API path segment encoding，並移除 `api.ts` 對 persisted settings 內 `apiToken` 的讀取；API token 不再寫入 `localStorage`。
+- 2026-06-01 已新增 API fail-closed：非本機 host 未提供 `--api-token` 時拒絕啟動，token 模式拒絕 wildcard CORS，並加入 max concurrent jobs、event buffer 與 report read size 上限。
 - 2026-05-17 已新增前端新分析 transient state reset、trace request race guard、SSE terminal status 補抓 job/report；避免舊 findings、舊 trace 或較慢 trace response 覆寫新狀態。
 - 2026-05-17 已新增前端 live workflow 修正：pending report 狀態會同步 job queued/running/error，完成 report commit 會清空串流 explanation buffer，polling 改為單飛 `setTimeout`，submit/review API 失敗會顯示 HTTP 狀態對應的安全錯誤訊息；pending 或尚無正式 trace id 階段禁用整份 report review 儲存，`/reports/{contract_id}?finding={finding_id}` 可載入 report 並聚焦目標 finding，無效 finding query 會在 report 載入後清除；短狀態訊息已改用 `role=status`，選取 finding 會標記 `aria-current`，手機版 trace panel 會顯示目前 finding 摘要。
 - 2026-05-17 已依 Slither、Aderyn、Echidna、SmartBugs、SolidityScan、SolidityGuard、Eagle Audit 與 audit.new 競品缺口補強三項：GitHub/Etherscan/ZIP 匯入、Echidna/External tools API 與前端開關、公開 benchmark Markdown leaderboard。
@@ -34,8 +34,8 @@
 - 2026-05-07 已新增 0G hackathon proof flow：`scsa 0g-package` 產生 `audit-proof.json`，`integrations/0g` 提供 Storage upload、registry deploy/register 與 proof verify scripts，`scsa 0g-attach-proof` 可把 `submission-proof.json` 回寫到 report metadata，前端右欄可顯示 0G Proof panel；live deployment 欄位仍為 pending。
 - OSS readiness 基礎文件已存在：`LICENSE`、`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md`、`.github/ISSUE_TEMPLATE/*`、`.github/pull_request_template.md`。
 - README 已整理成 SCSA 專屬 evidence workbench 敘事，包含 analyzer/AI 邊界、trace/CI/review workflow、Quick Start、Web Workbench、CLI cookbook、輸出契約、安全邊界與驗證。
-- v0.1.0 release 已存在：`CHANGELOG.md` 與 `docs/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
-- Release 後外部使用證據收集文件已建立：`docs/community/001-v0.1.0-tester-feedback.md`。
+- v0.1.0 release 已存在：`CHANGELOG.md` 與 `docs/archive/release/001-v0.1.0-checklist.md` 記錄 v0.1.0 scope、deferred issues、驗證命令與 GitHub release 步驟。
+- Release 後外部使用證據收集文件已建立：`docs/archive/community/001-v0.1.0-tester-feedback.md`。
 - Tester outreach 與 feedback tracker 已建立：`docs/archive/community/002-v0.1.0-outreach-kit.md`、`docs/archive/community/003-v0.1.0-feedback-tracker.md`。
 - 2026-06-01 Phase 1 合規入口已開始落地：新增 `THIRD_PARTY_NOTICES.md`、`NOTICE`、`tool_matrix.yml`、`standards_mapping.yml`、`docs/reference/tool-attribution.md`、`docs/reference/license-boundary.md`、`docs/reference/related-work.md`、`docs/reference/standards-mapping.md`，並讓 report finding 輸出 `standard_refs`。
 - 2026-06-01 Phase 2 evidence layer 已開始落地：新增 Evidence Graph SQLite tables、finding `evidence_graph`、5 個 SCSA-native post-analysis rules、paired-variant benchmark、RAG groundedness eval、UI evidence provenance 顯示與 CI gate。
@@ -52,13 +52,13 @@ MLX——Apple Silicon 本地推理 runtime，本專案以 4-bit 權重量化估
 
 Trace——SQLite 分析追蹤表，保存 finding、raw Slither output、RAG chunks、prompt、LLM output、報告品質 judge score、token usage、partial 狀態、review status 與 review note，用於除錯與報告回溯；`scsa trace-dashboard` 可列出 trace id、dataset version、model version、review status。
 
-HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、Markdown report download、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。
+HTTP API——本機 stdlib `ThreadingHTTPServer`，加固入口命令為 `uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --max-concurrent-jobs 4 --max-events-per-job 256 --max-report-bytes 5000000 --native-build-policy disabled`；支援 analysis job、SSE stream、JSON report、Markdown report download、SQLite trace lookup、整份 report review status 與逐條 finding review 寫回。外部 host 必須提供 bearer token，token 模式必須使用固定 CORS origin。
 
-Source import——`POST /api/imports` 與 `scsa import-source` 支援 GitHub archive、Etherscan API 與 ZIP；匯入後回傳 `input_path`、`import_id`、`source_kind`、`extracted_files`、`total_bytes`、`trust_level=untrusted`，前端可直接把 `input_path` 接到 `POST /api/analyses`。匯入目錄預設為 `reports-api/imports` 或 API `output_dir/imports`，可用 `--imports-dir` 與 import size limits 調整。遠端匯入會禁用環境 proxy、在 redirect 前檢查 target host、讀取後驗證 final response URL，並在超過 `max_total_bytes + 65,536` bytes 時拒絕回應。
+Source import——`POST /api/imports` 與 `scsa import-source` 支援 GitHub archive、Etherscan mainnet/sepolia API allowlist 與 ZIP；匯入後回傳 `input_path`、`import_id`、`source_kind`、`extracted_files`、`total_bytes`、`trust_level=untrusted`，前端可直接把 `input_path` 接到 `POST /api/analyses`。匯入目錄預設為 `reports-api/imports` 或 API `output_dir/imports`，可用 `--imports-dir` 與 import size limits 調整；過期 staging 目錄可用 `uv run scsa clean-imports --imports-dir reports-api/imports --ttl-seconds 86400` 清理。遠端匯入會禁用環境 proxy、在 redirect 前檢查 target host、讀取後驗證 final response URL，並在超過 `max_total_bytes + 65,536` bytes 時拒絕回應。
 
 Report——Markdown/JSON 會輸出 security score、逐條 finding review status/note、vulnerable code snippet、自然語言 explanation、attack path、fix suggestion、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total tokens；前端可複製 `/reports/{contract_id}?finding={finding_id}` deep link 並下載 JSON/Markdown report，下載使用 `Authorization` header，不把 API token 放入 URL；security score 是合約風險量化分數，judge score 評估報告完整度。
 
-External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna/Medusa 是智能合約 fuzz 工具，Aderyn 是 Rust 靜態分析器，Halmos 是 Foundry symbolic testing runner；Mythril JSON issues、Echidna/Medusa failed/falsified properties、Aderyn JSON issues 與 Halmos proof failures 會轉成正式 finding 與 trace row，Aderyn SARIF 只以 `artifact_paths.sarif` 記錄 artifact path。CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒；`halmos` 需要 trusted Foundry project，未安裝時結果為 `skipped`。
+External tools——Mythril 是 EVM bytecode 符號執行工具，Echidna/Medusa 是智能合約 fuzz 工具，Aderyn 是 Rust 靜態分析器，Halmos 是 Foundry symbolic testing runner；Mythril JSON issues、Echidna/Medusa failed/falsified properties、Aderyn JSON issues 與 Halmos proof failures 會轉成正式 finding 與 trace row，Aderyn SARIF 只以 `artifact_paths.sarif` 記錄 artifact path。CLI 用 `--external-tool`，HTTP API 用 `external_tools` 與 `external_timeout_seconds`，server 會去重、套用 allowlist 並把 timeout 限制在 5–120 秒；report 會記錄 execution mode、binary path、command、timeout、duration、status 與 output/artifact paths；`halmos` 需要 trusted Foundry project，未安裝時結果為 `skipped`。
 
 Standards mapping——`standards_mapping.yml` 是 internal finding type 到 OWASP Smart Contract Top 10、SCWE、SCSVS 與 SWC 的 deterministic mapping；JSON report 每個 finding 會輸出 `standard_refs`，Markdown report 會顯示 Standards 行。找不到 mapping 時輸出空陣列，不由 LLM 補值。
 
@@ -204,7 +204,7 @@ uv run scsa analyze tests/contracts/VulnerableVault.sol --out-dir reports-demo
 2. 再跑 `uv run pytest tests/test_slither.py tests/test_project_input.py` 確認 Slither/solc 串接與專案級 import 解析。
 3. 最後跑 `uv run python eval/run_eval.py`、`uv run python eval/run_judge.py`、`uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5 --leaderboard-output docs/reference/002-public-benchmark-leaderboard.md --leaderboard-date 2026-05-17`、`/usr/bin/time -l uv run pytest tests/test_e2e.py`。
 
-前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
+前端驗證：`cd frontend && npm install && npm run build && npm run test`。API 啟動：`uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --max-concurrent-jobs 4 --max-events-per-job 256 --max-report-bytes 5000000 --native-build-policy disabled`。開發預覽：`cd frontend && npm run dev`，預設 URL 為 `http://127.0.0.1:5173`，API proxy 目標為 `http://127.0.0.1:8787`。
 
 Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、external tools、RAG、report、trace、review 與 CI 的能力/證據關係。
 圖譜產物：`uv run python scripts/build_knowledge_graph.py` 產生本機 `knowledge-graph-out/`，該目錄不追蹤到 GitHub。
@@ -219,9 +219,9 @@ Knowledge graph：`docs/knowledge-graph.md` 記錄 source import、Slither、ext
 - Standards mapping：`docs/reference/standards-mapping.md`
 - Public benchmark leaderboard：`docs/reference/002-public-benchmark-leaderboard.md`
 - Changelog：`CHANGELOG.md`
-- v0.1.0 release checklist：`docs/release/001-v0.1.0-checklist.md`
-- v0.2.0 release checklist：`docs/release/002-v0.2.0-checklist.md`
-- v0.1.0 tester feedback guide：`docs/community/001-v0.1.0-tester-feedback.md`
+- v0.1.0 release checklist：`docs/archive/release/001-v0.1.0-checklist.md`
+- v0.2.0 release checklist：`docs/archive/release/002-v0.2.0-checklist.md`
+- v0.1.0 tester feedback guide：`docs/archive/community/001-v0.1.0-tester-feedback.md`
 - v0.1.0 tester outreach kit：`docs/archive/community/002-v0.1.0-outreach-kit.md`
 - v0.1.0 feedback tracker：`docs/archive/community/003-v0.1.0-feedback-tracker.md`
 - 使用說明書：`docs/guides/001-usage-manual.md`

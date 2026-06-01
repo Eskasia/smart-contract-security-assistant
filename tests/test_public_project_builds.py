@@ -62,8 +62,9 @@ def test_public_project_builds_summarizes_local_manifest(tmp_path: Path) -> None
         encoding="utf-8",
     )
 
-    def fake_analyzer(project_path: Path, **_: Any) -> FakeReport:
+    def fake_analyzer(project_path: Path, **kwargs: Any) -> FakeReport:
         assert project_path.name == "foundry"
+        assert kwargs["native_build_policy"] == "trusted"
         return FakeReport(
             {
                 "overall_status": "no_finding",

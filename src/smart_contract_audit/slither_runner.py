@@ -125,7 +125,7 @@ def get_slither_version() -> str | None:
 def run_slither(
     contract_path: Path,
     timeout_seconds: int = 300,
-    native_build_policy: str = "trusted",
+    native_build_policy: str = "disabled",
 ) -> SlitherRunResult:
     if shutil.which("slither") is None:
         raise SlitherRunError("slither executable not found; install with `uv sync --extra audit`.")

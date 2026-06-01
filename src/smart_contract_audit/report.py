@@ -53,7 +53,12 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                 [
                     f"- `{result.tool_name}`: `{result.status}`, "
                     f"findings `{result.findings_count}`",
+                    f"  - Execution mode: `{result.execution_mode or 'unknown'}`",
+                    f"  - Binary path: `{result.binary_path or 'not resolved'}`",
+                    f"  - Timeout seconds: `{result.timeout_seconds}`",
+                    f"  - Duration ms: `{result.duration_ms}`",
                     f"  - Summary: {result.summary}",
+                    f"  - Command: `{_format_command(result.command)}`",
                     f"  - Output: `{result.output_path or 'not generated'}`",
                 ]
             )
@@ -213,6 +218,10 @@ def _format_exploit_validation(validation: object) -> str:
     mode = validation.get("mode", "sandbox_only")
     human_review = validation.get("human_review_required", True)
     return f"`{status}` / `{mode}` / human review `{human_review}`"
+
+
+def _format_command(command: list[str]) -> str:
+    return " ".join(command) if command else "not run"
 
 
 def _format_count(items: object, label: str) -> str:

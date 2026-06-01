@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import stat
 import urllib.request
 import zipfile
@@ -14,6 +15,7 @@ from smart_contract_audit.cli import main
 from smart_contract_audit.source_import import (
     ImportLimits,
     _AllowlistedRedirectHandler,
+    cleanup_import_staging,
     import_explorer_source,
     import_github_source,
     stage_zip_archive,
@@ -281,7 +283,7 @@ def test_cli_analyze_passes_external_tool_configuration(
             "model_path": None,
             "external_tools": ("echidna",),
             "external_timeout_seconds": 99,
-            "native_build_policy": "trusted",
+            "native_build_policy": "disabled",
         }
     ]
 
@@ -336,6 +338,29 @@ def test_cli_import_source_prints_staged_input_path(
     assert payload["source_kind"] == "zip_base64"
     assert payload["input_path"] == str(staged_file)
     assert payload["trust_level"] == "untrusted"
+
+
+def test_clean_import_staging_removes_only_expired_import_dirs(tmp_path: Path) -> None:
+    imports_dir = tmp_path / "imports"
+    expired = imports_dir / "import_111111111111-old"
+    fresh = imports_dir / "import_222222222222-fresh"
+    unrelated = imports_dir / "manual"
+    expired.mkdir(parents=True)
+    fresh.mkdir()
+    unrelated.mkdir()
+    old_time = 1_000.0
+    fresh_time = 2_000.0
+    for path, timestamp in ((expired, old_time), (fresh, fresh_time), (unrelated, old_time)):
+        path.touch()
+        path.chmod(0o755)
+        os.utime(path, (timestamp, timestamp))
+
+    removed = cleanup_import_staging(imports_dir, ttl_seconds=500, now=1_600.0)
+
+    assert removed == [expired.resolve()]
+    assert not expired.exists()
+    assert fresh.exists()
+    assert unrelated.exists()
 
 
 def _zip_bytes(files: dict[str, str]) -> bytes:

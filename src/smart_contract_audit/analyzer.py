@@ -51,7 +51,7 @@ def analyze_contract(
     external_tools: tuple[str, ...] = (),
     external_timeout_seconds: int = 60,
     external_tool_runner: ExternalToolRunner = run_external_tools,
-    native_build_policy: str = "trusted",
+    native_build_policy: str = "disabled",
 ) -> AnalysisReport:
     started = time.perf_counter()
     errors: list[str] = []
@@ -236,6 +236,7 @@ def _preflight_external_tools(
                     status="skipped",
                     findings_count=0,
                     summary="halmos requires a trusted Foundry project; skipped optional analysis.",
+                    execution_mode="native build dependent",
                 )
             )
             continue

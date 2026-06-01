@@ -116,6 +116,9 @@ class ExternalToolResult:
     status: str
     findings_count: int
     summary: str
+    execution_mode: str = ""
+    binary_path: str = ""
+    timeout_seconds: int = 0
     output_path: str = ""
     artifact_paths: dict[str, str] = field(default_factory=dict)
     error: str = ""

@@ -14,21 +14,21 @@ integrations. Python and npm package dependency licenses are covered by the
 generated SBOM/license inventory artifacts under `reports/sbom/` and
 `reports/licenses/`.
 
-| Tool | Category | Required | Bundled | License | Role in SCSA |
-|---|---|---:|---:|---|---|
-| Slither | static analysis | true | false | AGPL-3.0 | Primary deterministic finding source. |
-| Aderyn | static analysis | false | false | GPL-3.0 | Optional static finding signal and SARIF artifact source. |
-| Echidna | fuzzing | false | false | AGPL-3.0 | Optional property/invariant failure signal. |
-| Medusa | fuzzing | false | false | AGPL-3.0 | Optional coverage-guided fuzzer failure signal. |
-| Mythril | symbolic execution | false | false | MIT | Optional symbolic issue and SWC signal. |
-| Halmos | symbolic testing | false | false | AGPL-3.0 | Optional trusted Foundry proof-failure signal. |
-| Foundry | native build | false | false | Apache-2.0 OR MIT | Optional trusted project build preflight. |
-| Hardhat | native build | false | false | MIT | Optional trusted project build preflight. |
+| Tool | Category | Execution mode | Required | Bundled | License | Role in SCSA |
+|---|---|---|---:|---:|---|---|
+| Slither | static analysis | read-only CLI by default; native build dependent only when trusted mode is explicit | true | false | AGPL-3.0 | Primary deterministic finding source. |
+| Aderyn | static analysis | read-only CLI | false | false | GPL-3.0 | Optional static finding signal and SARIF artifact source. |
+| Echidna | fuzzing | fuzzer | false | false | AGPL-3.0 | Optional property/invariant failure signal. |
+| Medusa | fuzzing | fuzzer | false | false | AGPL-3.0 | Optional coverage-guided fuzzer failure signal. |
+| Mythril | symbolic execution | symbolic | false | false | MIT | Optional symbolic issue and SWC signal. |
+| Halmos | symbolic testing | native build dependent | false | false | AGPL-3.0 | Optional trusted Foundry proof-failure signal. |
+| Foundry | native build | native build dependent | false | false | Apache-2.0 OR MIT | Optional trusted project build preflight. |
+| Hardhat | native build | native build dependent | false | false | MIT | Optional trusted project build preflight. |
 
 ## Consumption Boundary
 
 - Findings created by external tools are normalized into SCSA's report schema.
-- External raw output and artifact paths remain traceable.
+- External raw output, binary path, command, timeout, duration, status, and artifact paths remain traceable in reports.
 - A missing optional tool is recorded as `skipped`, not silently converted into a failed SCSA finding.
 - Halmos requires trusted Foundry mode; imported or untrusted sources cannot enable that path.
 

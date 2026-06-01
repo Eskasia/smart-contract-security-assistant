@@ -17,7 +17,7 @@ or build systems.
 - AGPL/GPL tools are documented as external, non-bundled tools.
 - Python and npm dependency license inventories are generated artifacts under `reports/sbom/` and `reports/licenses/`; they are not fully enumerated in `THIRD_PARTY_NOTICES.md`.
 - Tool output is consumed as evidence or artifact paths; SCSA ownership claims apply only to normalization and review workflow code.
-- Native Foundry and Hardhat builds can execute project scripts; keep untrusted imports on `native_build_policy=disabled`.
+- Native Foundry and Hardhat builds can execute project scripts; `native_build_policy=disabled` is the default, imported sources force it, and `trusted` must be explicitly selected for trusted local projects.
 - Before bundling, redistributing, or vendoring any external tool, re-check its upstream license and security posture.
 
 ## Current External Tool Classes

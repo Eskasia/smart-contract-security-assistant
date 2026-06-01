@@ -135,7 +135,7 @@ def test_slither_uses_successful_native_foundry_build(
     monkeypatch.setattr("smart_contract_audit.slither_runner.shutil.which", fake_which)
     monkeypatch.setattr("smart_contract_audit.slither_runner.subprocess.run", fake_run)
 
-    result = run_slither(project)
+    result = run_slither(project, native_build_policy="trusted")
 
     assert result.raw_json["success"] is True
     assert any(command[:2] == ["forge", "build"] for command, _ in commands)
