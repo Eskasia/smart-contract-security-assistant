@@ -384,6 +384,7 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 - [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md)
 - [`docs/maintainer-workflow.md`](docs/maintainer-workflow.md)
+- [`docs/adoption/codex-for-oss-evidence.md`](docs/adoption/codex-for-oss-evidence.md)
 - [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)
 - [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)
 - [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)
