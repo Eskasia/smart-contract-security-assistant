@@ -4,6 +4,20 @@ version = "0.2.0"
 description = "Local-first Solidity security triage assistant with Slither, RAG, MLX-ready generation, and traceable reports."
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+keywords = ["solidity", "security", "slither", "smart-contracts", "audit"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = [
     "jsonschema>=4.22",
 ]
@@ -34,6 +48,12 @@ web = [
 
 [project.scripts]
 scsa = "smart_contract_audit.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Eskasia/smart-contract-security-assistant"
+Repository = "https://github.com/Eskasia/smart-contract-security-assistant"
+Issues = "https://github.com/Eskasia/smart-contract-security-assistant/issues"
+Documentation = "https://github.com/Eskasia/smart-contract-security-assistant#readme"
 
 [dependency-groups]
 dev = [

@@ -141,6 +141,35 @@ treated as a report finding until mapped. The current mapped detector subset is:
 - Audit learners who want traceable examples of findings and explanations.
 - Small audit teams that need structured report handoff before deeper review.
 
+## Installation
+
+Install from a source checkout for local development:
+
+```bash
+git clone https://github.com/Eskasia/smart-contract-security-assistant.git
+cd smart-contract-security-assistant
+uv sync --extra audit --dev
+uv run scsa --help
+```
+
+Install the current GitHub source as a CLI package:
+
+```bash
+python -m pip install \
+  "smart-contract-security-assistant[audit] @ git+https://github.com/Eskasia/smart-contract-security-assistant.git"
+scsa --help
+```
+
+Future package note: PyPI publishing is not enabled yet. After an approved PyPI
+release exists, the expected install command is:
+
+```bash
+python -m pip install "smart-contract-security-assistant[audit]"
+```
+
+Do not count PyPI downloads as adoption evidence until a public package release
+and package-hosted download counter exist.
+
 ## Quick Start
 
 Prerequisites:

@@ -8,7 +8,7 @@ Generated at: 2026-06-01
 | design | 005 | current | UI Design System | 定義 evidence-first security console 的產品氣質、視覺規範、design tokens、ToolSelector 與 UI migration notes。 | 2026-05-31 | `docs/design/005-ui-design-system.md` |
 | guides | 001 | current | 使用說明書 | 說明安裝、分析、API 加固、External tools、GitHub Actions、trace 查詢、MLX probe、Web UI 與輸出檔案。 | 2026-06-01 | `docs/guides/001-usage-manual.md` |
 | templates | 001 | current | SCSA PR Triage GitHub Action | 提供外部 Solidity maintainer 可 copy-paste 的 manual GitHub Actions workflow，預設 `--native-build-policy disabled` 並要求 owned/maintained/authorized target。 | 2026-06-01 | `docs/templates/scsa-pr-triage.yml` |
-| readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-06-01 | `README.md` |
+| readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、安裝、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-06-01 | `README.md` |
 | adoption | 001 | current | Codex for OSS Evidence | 記錄 Codex for OSS application evidence、maintainer workflow、case studies、security boundary、benchmark/CI evidence 與 adoption metrics placeholder。 | 2026-06-01 | `docs/adoption/codex-for-oss-evidence.md` |
 | adoption | 002 | current | Tester Onboarding | 說明外部 tester 的授權規則、fixture 測試、authorized repo 測試、回饋欄位與禁止提交的敏感資料。 | 2026-06-01 | `docs/adoption/tester-onboarding.md` |
 | adoption | 003 | current | Public Triage Protocol | 說明 public triage case 的 authorization link、allowed/disallowed targets、sensitive material handling、sanitization 與 publication checklist。 | 2026-06-01 | `docs/adoption/public-triage-protocol.md` |
