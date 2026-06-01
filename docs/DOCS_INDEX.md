@@ -17,6 +17,7 @@ Generated at: 2026-06-01
 | adoption | 006 | current | Tester Testimonials | 記錄 tester testimonial 的引用規則、80-word quote 限制、授權 evidence link 要求與空白 entry template；目前沒有已授權 testimonial。 | 2026-06-01 | `docs/adoption/testimonials.md` |
 | adoption | 007 | current | Feedback Processing | 說明 tester feedback 如何經 intake、classification、SLA、PR、release notes 與 metrics update 轉成可驗證維護證據。 | 2026-06-01 | `docs/adoption/feedback-processing.md` |
 | adoption | 008 | current | Outreach Kit | 提供 Solidity OSS maintainer、audit learner、Web3 社群、GitHub issue 與 tester follow-up 的安全 outreach 模板，要求 authorized-use boundary 與 public feedback issue。 | 2026-06-01 | `docs/adoption/outreach-kit.md` |
+| adoption | 009 | current | External OSS Adoptions | 記錄 public、verifiable external OSS adoption；目前保持空白，不把 stars、forks、downloads、fixtures、local validation 或 one-off feedback 誤算為 external adoption。 | 2026-06-01 | `docs/adoption/external-adoptions.md` |
 | reference | 003 | current | Tool Attribution | 記錄 Slither、Aderyn、Echidna、Medusa、Mythril、Halmos、Foundry 與 Hardhat 的角色、license、bundled 狀態與 SCSA 消費邊界。 | 2026-06-01 | `docs/reference/tool-attribution.md` |
 | reference | 004 | current | License Boundary | 說明 SCSA MIT license 與外部工具 license、bundling、native build、artifact 消費邊界。 | 2026-06-01 | `docs/reference/license-boundary.md` |
 | reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance 的定位差異與 non-goals。 | 2026-06-01 | `docs/reference/related-work.md` |
