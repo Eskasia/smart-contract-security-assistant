@@ -1,0 +1,37 @@
+name: SCSA PR Triage
+
+# Use this workflow only on repositories, contracts, or pull requests that you
+# own, maintain, or are explicitly authorized to review. Keep native build
+# execution disabled for untrusted PR, imported, or third-party source.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Solidity file or project directory to analyze; must be owned, maintained, or authorized.
+        required: true
+        default: contracts
+
+jobs:
+  scsa:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install SCSA from GitHub
+        run: |
+          python -m pip install "smart-contract-security-assistant[audit] @ git+https://github.com/Eskasia/smart-contract-security-assistant.git"
+      - name: Run SCSA
+        run: |
+          scsa analyze "${{ inputs.target }}" --out-dir reports-scsa --native-build-policy disabled
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scsa-reports
+          path: reports-scsa/

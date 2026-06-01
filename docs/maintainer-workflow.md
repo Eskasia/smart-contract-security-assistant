@@ -11,6 +11,7 @@ Related references:
 - [README](../README.md)
 - [SECURITY.md](../SECURITY.md)
 - [Public report schema](../schema/report.schema.json)
+- [Reusable SCSA PR triage GitHub Action](templates/scsa-pr-triage.yml)
 
 ## Authorized-Use Boundary
 
@@ -48,6 +49,11 @@ Review checklist:
 - Check whether findings come from mapped detector output.
 - Check trace evidence before accepting or rejecting each finding.
 - Keep `--native-build-policy disabled` unless the project is local and trusted.
+
+For external maintainers who want a copy-paste GitHub Actions entrypoint, use
+[`docs/templates/scsa-pr-triage.yml`](templates/scsa-pr-triage.yml). The
+template is manual-only, requires an explicit target path, uploads
+`scsa-reports`, and keeps native build execution disabled by default.
 
 ## Workflow B: Issue Triage From a User-Reported Solidity Bug
 
