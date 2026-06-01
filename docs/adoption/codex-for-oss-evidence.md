@@ -155,6 +155,9 @@ Tester onboarding:
 Feedback processing workflow:
 [`docs/adoption/feedback-processing.md`](feedback-processing.md)
 
+Outreach kit:
+[`docs/adoption/outreach-kit.md`](outreach-kit.md)
+
 Public triage protocol and case log:
 [`docs/adoption/public-triage-protocol.md`](public-triage-protocol.md),
 [`docs/adoption/public-triage-cases.md`](public-triage-cases.md)
