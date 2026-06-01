@@ -14,6 +14,8 @@ Machine-readable mapping lives in `standards_mapping.yml`.
 - Finding-specific `reference` values remain in the report for backward compatibility.
 - If no mapping exists, SCSA emits `standard_refs: []`.
 - SCSA does not invent a standard reference from LLM text.
+- Standards mapping applies after analyzer output has been normalized into a
+  mapped finding type; it is not a claim of full Slither detector coverage.
 - Every high-severity normalized finding type must map to at least one OWASP or SWC reference.
 - Mapping rows intentionally avoid detector-specific SWC overclaiming; narrow SWC references stay in the finding's analyzer-provided `reference` field unless the normalized type is specific enough.
 

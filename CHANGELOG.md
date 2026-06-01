@@ -4,17 +4,37 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
-## Unreleased
+## v0.2.1 - Unreleased
 
-### Changed
+### Security
 
 - Defaulted CLI/API analysis to `native_build_policy=disabled`; trusted native
   builds now require explicit opt-in.
-- Added HTTP API fail-closed checks for non-local hosts without `--api-token`,
-  token-authenticated wildcard CORS, job concurrency, event buffering, and
-  report read size.
+- Added HTTP API fail-closed checks for tokenless `/api/*` access by default,
+  non-local hosts without `--api-token`, mismatched request origins, non-JSON
+  write bodies, token-authenticated wildcard CORS, job concurrency, event
+  buffering, and report read size.
+
+### Changed
+
+- Clarified that only mapped Slither detector output is promoted into formal
+  report findings; unmapped Slither output remains trace evidence until mapped.
+- Added `scripts/sync_report_schema.py --check` so the public
+  `schema/report.schema.json` stays synchronized with the internal
+  `REPORT_SCHEMA`.
+- Cleaned `AGENTS.md` into a public contributor/Codex operating guide without
+  local machine paths.
 - Archived historical release/community docs and kept `schema/report.schema.json`
   as the single public schema directory.
+
+### Validation
+
+- `uv run ruff check .` — all checks passed
+- `uv run pytest` — 138 passed
+- `uv run python scripts/sync_report_schema.py --check`
+- `cd frontend && npm ci` — 274 packages installed, 0 vulnerabilities
+- `cd frontend && npm run test -- --run` — 35 passed
+- `cd frontend && npm run build` — completed
 
 ## v0.2.0 - 2026-06-01
 

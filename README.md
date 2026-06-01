@@ -7,7 +7,7 @@
 
 Local-first analysis-artifact workbench for Solidity security triage.
 
-SCSA turns deterministic analyzer output into reviewable security evidence: Slither findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
+SCSA turns deterministic analyzer output into reviewable security evidence: mapped Slither detector findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
 
 本專案協助維護者、審計學習者與小型 Solidity 團隊完成第一輪安全初篩。漏洞事實來自 Slither 與外部安全工具；LLM 只負責把既有 evidence 轉成可讀解釋、攻擊路徑與修復建議。
 
@@ -108,12 +108,31 @@ replace them, and its MIT license does not relicense external tools.
 
 | Project | What it is known for | How SCSA uses or complements it |
 |---|---|---|
-| [Slither](https://github.com/crytic/slither) | Static analysis framework with detector and CI workflows | Primary deterministic finding source and detector mapping |
+| [Slither](https://github.com/crytic/slither) | Static analysis framework with detector and CI workflows | Primary analyzer source; only mapped detector output is promoted into formal report findings |
 | [Aderyn](https://github.com/Cyfrin/aderyn) | Solidity static analyzer with Markdown/JSON/SARIF reports | Optional static finding signal and SARIF artifact tracking |
 | [Echidna](https://github.com/crytic/echidna) | Property-based smart contract fuzzing | Optional invariant/property failure signal |
 | [Medusa](https://github.com/crytic/medusa) | Parallelized coverage-guided Solidity fuzzing | Optional fuzzer failure signal |
 | [Mythril](https://github.com/ConsenSysDiligence/mythril) | Symbolic execution for EVM bytecode | Optional symbolic issue signal |
 | [Halmos](https://github.com/a16z/halmos) | Symbolic testing for EVM smart contracts | Optional trusted Foundry proof-failure signal |
+
+## Supported Finding Promotion Scope
+
+SCSA promotes only mapped Slither detector output into formal report findings.
+Unmapped Slither detector output is retained in trace evidence and is not
+treated as a report finding until mapped. The current mapped detector subset
+contains 27 Slither detectors:
+
+| Internal type | Slither detectors |
+|---|---|
+| `reentrancy` | `reentrancy-eth`, `reentrancy-no-eth`, `reentrancy-benign` |
+| `upgrade_risk` | `unprotected-upgrade`, `uninitialized-state`, `uninitialized-storage`, `missing-inheritance` |
+| `access_control` | `suicidal`, `arbitrary-send-eth` |
+| `privilege_escalation` | `arbitrary-send-erc20`, `arbitrary-send-erc20-permit`, `tx-origin`, `protected-vars` |
+| `unchecked_external_call` | `unchecked-lowlevel`, `unchecked-send`, `unchecked-transfer`, `unused-return` |
+| `dangerous_delegatecall` | `controlled-delegatecall`, `delegatecall-loop` |
+| `array_length_manipulation` | `controlled-array-length` |
+| `price_manipulation` | `divide-before-multiply`, `incorrect-equality`, `timestamp` |
+| `oracle` | `weak-prng`, `incorrect-exp`, `pyth-unchecked-confidence`, `pyth-unchecked-publishtime` |
 
 ## Who This Is For
 
@@ -122,6 +141,35 @@ replace them, and its MIT license does not relicense external tools.
 - Web3 teams that need repeatable local security triage.
 - Audit learners who want traceable examples of findings and explanations.
 - Small audit teams that need structured report handoff before deeper review.
+
+## Installation
+
+Install from a source checkout for local development:
+
+```bash
+git clone https://github.com/Eskasia/smart-contract-security-assistant.git
+cd smart-contract-security-assistant
+uv sync --extra audit --dev
+uv run scsa --help
+```
+
+Install the current GitHub source as a CLI package:
+
+```bash
+python -m pip install \
+  "smart-contract-security-assistant[audit] @ git+https://github.com/Eskasia/smart-contract-security-assistant.git"
+scsa --help
+```
+
+Future package note: PyPI publishing is not enabled yet. After an approved PyPI
+release exists, the expected install command is:
+
+```bash
+python -m pip install "smart-contract-security-assistant[audit]"
+```
+
+Do not count PyPI downloads as adoption evidence until a public package release
+and package-hosted download counter exist.
 
 ## Quick Start
 
@@ -186,6 +234,10 @@ uv run scsa api \
   --max-report-bytes 5000000 \
   --native-build-policy disabled
 ```
+
+API `/api/*` requests require `--api-token` by default. Tokenless local demos
+must opt in with `--allow-tokenless-local-demo`; analysis paths outside
+`--input-root` must opt in with `--allow-any-input-root`.
 
 Start the frontend:
 
@@ -277,41 +329,37 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 | Comparison report | Added, fixed, and persistent findings across two reports |
 | 0G proof package | Optional report hash/proof metadata package for hackathon or external verification workflows |
 
+The public JSON report schema is [`schema/report.schema.json`](schema/report.schema.json).
+It is generated from `smart_contract_audit.validation.schema.REPORT_SCHEMA`;
+CI checks it with `uv run python scripts/sync_report_schema.py --check`.
+
 ## Security Boundaries
 
 - Only scan contracts that you own, maintain, or are explicitly authorized to review.
 - Do not upload private keys, secrets, customer contracts, proprietary audit reports, or unauthorized third-party code.
 - `POST /api/imports` rejects path traversal, symlink entries, special files, nested archives, unsafe redirects, non-allowlisted hosts, and oversized remote responses.
 - Imported sources are treated as untrusted and always run with `native_build_policy=disabled`.
-- The HTTP API fail-closes on non-local hosts without `--api-token`, rejects token-authenticated wildcard CORS, and supports fixed CORS origin, `input_root`, request body limit, import size limits, job concurrency cap, event buffer cap, report read size cap, and server-side native build policy ceiling.
+- The HTTP API requires bearer token auth for `/api/*` by default, fail-closes on non-local hosts without `--api-token`, rejects mismatched request origins, rejects non-JSON write bodies, rejects token-authenticated wildcard CORS, and supports fixed CORS origin, `input_root`, explicit tokenless local demo opt-in, explicit any-input-root opt-in, request body limit, import size limits, job concurrency cap, event buffer cap, report read size cap, and server-side native build policy ceiling.
 - Halmos requires trusted Foundry project mode; untrusted/imported sources cannot enable that flow.
 - Generated explanations can be incomplete or wrong; use trace rows and analyzer evidence as the review anchor.
 
 ## Validation
 
-Last full local verification on 2026-06-01:
+v0.2.1 hardening readiness verification on 2026-06-01:
 
 ```text
-commit: PR #19 head commit
-GitHub Actions run ID: PR #19 Checks
+branch: hardening/phase-0-integration
+GitHub Actions run ID: pending until the v0.2.1 hardening PR is opened
 ```
 
 ```text
 uv sync --extra audit --dev          resolved 198 packages, checked 83 packages
 uv run ruff check .                  all checks passed
-uv run pytest                        127 passed
-uv run python eval/run_eval.py       recall_at_k = 1.0
-uv run python eval/run_judge.py      local_average_judge_score = 5.0, external_average_judge_score = 5.0
-uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0
-uv run python eval/run_rag_groundedness.py --max-unsupported-security-claims 0  unsupported_security_claims = 0
-uv run python eval/run_exploit_validation.py  status = executed_triggered, mode = local_foundry_test
-uv run python eval/run_fuzz_seed_suggestions.py --min-seed-count 1  seed_count = 1
-uv run python eval/run_formal_property_suggestions.py --min-property-count 1  property_count = 1
-uv run python eval/run_evmbench_adapter.py  exploit_adapter = sandbox_only
-uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-score-gap 30 --min-recall 0.5 --min-f1 0.5  supported_hit_rate = 1.0, f1 = 0.9259
-uv run python eval/run_public_project_builds.py --preflight-only  missing_required_tools = []
+uv run pytest                        138 passed
+uv run python scripts/sync_report_schema.py --check  passed
 uv run python scripts/check_tool_matrix.py  passed
 uv run python scripts/generate_sbom.py      generated tool-matrix SBOM and license inventory
+cd frontend && npm ci                installed 274 packages, audited 275 packages, 0 vulnerabilities
 cd frontend && npm run test -- --run 35 passed
 cd frontend && npm run build         completed
 git diff --check                     passed
@@ -322,6 +370,7 @@ CI gates:
 ```bash
 uv run python scripts/check_tool_matrix.py
 uv run python scripts/generate_sbom.py
+uv run python scripts/sync_report_schema.py --check
 uv run ruff check .
 uv run pytest
 uv run python eval/run_eval.py
@@ -339,7 +388,7 @@ cd frontend && npm run build
 git diff --check
 ```
 
-Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md).
+Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md) and [`docs/reference/benchmark-reproducibility.md`](docs/reference/benchmark-reproducibility.md).
 
 ## GitHub Actions
 
@@ -364,6 +413,8 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
 - [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 - [`docs/DOCS_INDEX.md`](docs/DOCS_INDEX.md)
+- [`docs/maintainer-workflow.md`](docs/maintainer-workflow.md)
+- [`docs/adoption/codex-for-oss-evidence.md`](docs/adoption/codex-for-oss-evidence.md)
 - [`docs/guides/001-usage-manual.md`](docs/guides/001-usage-manual.md)
 - [`docs/design/001-project-architecture.md`](docs/design/001-project-architecture.md)
 - [`docs/design/005-ui-design-system.md`](docs/design/005-ui-design-system.md)

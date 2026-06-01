@@ -1,44 +1,288 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "required": [
-    "report_version",
-    "overall_status",
-    "contract_id",
-    "review_status",
-    "requires_human_review",
-    "business_logic_review_required",
-    "review_reason",
-    "findings",
-    "analysis_metadata",
-    "security_score",
-    "score_formula_version",
-    "score_factors",
-    "external_tool_results",
-    "evidence_graph_summary"
-  ],
-  "properties": {
-    "report_version": {"type": "string"},
-    "overall_status": {"enum": ["finding", "no_finding", "partial_analysis", "error"]},
-    "contract_id": {"type": "string"},
-    "review_status": {"enum": ["pending_human_review", "approved", "rejected", "blocked"]},
-    "requires_human_review": {"type": "boolean"},
-    "business_logic_review_required": {"type": "boolean"},
-    "review_reason": {"type": "string"},
-    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
-    "security_score": {"type": "number", "minimum": 0, "maximum": 100},
-    "score_formula_version": {"type": "string"},
-    "score_factors": {"type": "object"},
-    "external_tool_results": {
-      "type": "array",
-      "items": {"$ref": "#/$defs/external_tool_result"}
-    },
-    "evidence_graph_summary": {"type": "object"},
-    "analysis_metadata": {"type": "object"}
-  },
   "$defs": {
+    "exploit_validation": {
+      "properties": {
+        "asset_delta": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "execution_log_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "human_review_required": {
+          "type": "boolean"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "poc_artifact_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profit_delta": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "safety_notes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "not_attempted",
+            "generated",
+            "executed_triggered",
+            "executed_not_triggered",
+            "failed_to_compile",
+            "failed_to_run",
+            "blocked_by_policy",
+            "requires_human_review"
+          ]
+        },
+        "supported_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "test_framework": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transaction_sequence": {
+          "type": "array"
+        },
+        "triggered": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "mode",
+        "human_review_required",
+        "safety_notes",
+        "supported_by"
+      ],
+      "type": "object"
+    },
+    "external_tool_result": {
+      "properties": {
+        "artifact_paths": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "binary_path": {
+          "type": "string"
+        },
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "error": {
+          "type": "string"
+        },
+        "execution_mode": {
+          "type": "string"
+        },
+        "findings_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "output_path": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "skipped",
+            "passed",
+            "finding",
+            "error"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tool_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_name",
+        "command",
+        "status",
+        "findings_count",
+        "summary",
+        "execution_mode",
+        "binary_path",
+        "timeout_seconds",
+        "output_path",
+        "artifact_paths",
+        "error",
+        "duration_ms"
+      ],
+      "type": "object"
+    },
     "finding": {
-      "type": "object",
+      "properties": {
+        "attack_path": {
+          "type": "string"
+        },
+        "completion_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "defi_profit_signal": {
+          "type": "object"
+        },
+        "detector_name": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "evidence_graph": {
+          "type": "object"
+        },
+        "explanation": {
+          "type": "string"
+        },
+        "explanation_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "exploit_validation": {
+          "$ref": "#/$defs/exploit_validation"
+        },
+        "external_judge_score": {
+          "maximum": 5,
+          "minimum": 0,
+          "type": "number"
+        },
+        "finding_confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "finding_id": {
+          "type": "string"
+        },
+        "fix_suggestion": {
+          "type": "string"
+        },
+        "formal_property_suggestions": {
+          "items": {
+            "$ref": "#/$defs/formal_property"
+          },
+          "type": "array"
+        },
+        "fuzz_seed_suggestions": {
+          "items": {
+            "$ref": "#/$defs/fuzz_seed"
+          },
+          "type": "array"
+        },
+        "local_judge_score": {
+          "maximum": 5,
+          "minimum": 0,
+          "type": "number"
+        },
+        "location": {
+          "required": [
+            "file",
+            "function",
+            "line_start",
+            "line_end"
+          ],
+          "type": "object"
+        },
+        "native_rule_results": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "partial": {
+          "type": "boolean"
+        },
+        "prompt_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reference": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "remediation_code": {
+          "type": "string"
+        },
+        "review_note": {
+          "type": "string"
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "true_positive",
+            "false_positive",
+            "accepted_risk",
+            "fixed"
+          ]
+        },
+        "severity": {
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "standard_refs": {
+          "items": {
+            "$ref": "#/$defs/standard_ref"
+          },
+          "type": "array"
+        },
+        "static_tool_source": {
+          "type": "string"
+        },
+        "total_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "vulnerability_type": {
+          "type": "string"
+        },
+        "vulnerable_code": {
+          "type": "string"
+        }
+      },
       "required": [
         "finding_id",
         "vulnerability_type",
@@ -71,95 +315,41 @@
         "formal_property_suggestions",
         "defi_profit_signal"
       ],
-      "properties": {
-        "finding_id": {"type": "string"},
-        "vulnerability_type": {"type": "string"},
-        "severity": {"type": "integer", "minimum": 1, "maximum": 3},
-        "location": {"type": "object", "required": ["file", "function", "line_start", "line_end"]},
-        "evidence": {"type": "string"},
-        "reference": {"type": "array", "items": {"type": "string"}},
-        "finding_confidence": {"type": "number", "minimum": 0, "maximum": 1},
-        "explanation_confidence": {"type": "number", "minimum": 0, "maximum": 1},
-        "explanation": {"type": "string"},
-        "attack_path": {"type": "string"},
-        "fix_suggestion": {"type": "string"},
-        "remediation_code": {"type": "string"},
-        "vulnerable_code": {"type": "string"},
-        "static_tool_source": {"type": "string"},
-        "detector_name": {"type": "string"},
-        "partial": {"type": "boolean"},
-        "local_judge_score": {"type": "number", "minimum": 0, "maximum": 5},
-        "external_judge_score": {"type": "number", "minimum": 0, "maximum": 5},
-        "prompt_tokens": {"type": "integer", "minimum": 0},
-        "completion_tokens": {"type": "integer", "minimum": 0},
-        "total_tokens": {"type": "integer", "minimum": 0},
-        "review_status": {
-          "enum": ["unreviewed", "true_positive", "false_positive", "accepted_risk", "fixed"]
-        },
-        "review_note": {"type": "string"},
-        "standard_refs": {
-          "type": "array",
-          "items": {"$ref": "#/$defs/standard_ref"}
-        },
-        "evidence_graph": {"type": "object"},
-        "native_rule_results": {"type": "array", "items": {"type": "object"}},
-        "exploit_validation": {"$ref": "#/$defs/exploit_validation"},
-        "fuzz_seed_suggestions": {
-          "type": "array",
-          "items": {"$ref": "#/$defs/fuzz_seed"}
-        },
-        "formal_property_suggestions": {
-          "type": "array",
-          "items": {"$ref": "#/$defs/formal_property"}
-        },
-        "defi_profit_signal": {"type": "object"}
-      }
-    },
-    "exploit_validation": {
-      "type": "object",
-      "required": ["status", "mode", "human_review_required", "safety_notes", "supported_by"],
-      "properties": {
-        "status": {
-          "enum": [
-            "not_attempted",
-            "generated",
-            "executed_triggered",
-            "executed_not_triggered",
-            "failed_to_compile",
-            "failed_to_run",
-            "blocked_by_policy",
-            "requires_human_review"
-          ]
-        },
-        "mode": {"type": "string"},
-        "poc_artifact_path": {"type": ["string", "null"]},
-        "test_framework": {"type": ["string", "null"]},
-        "triggered": {"type": ["boolean", "null"]},
-        "profit_delta": {"type": ["object", "null"]},
-        "asset_delta": {"type": "array", "items": {"type": "object"}},
-        "transaction_sequence": {"type": "array"},
-        "execution_log_path": {"type": ["string", "null"]},
-        "human_review_required": {"type": "boolean"},
-        "safety_notes": {"type": "array", "items": {"type": "string"}},
-        "supported_by": {"type": "array", "items": {"type": "string"}}
-      }
-    },
-    "fuzz_seed": {
-      "type": "object",
-      "required": ["finding_id", "seed_id", "target_function", "supported_by"],
-      "properties": {
-        "finding_id": {"type": "string"},
-        "seed_id": {"type": "string"},
-        "target_function": {"type": "string"},
-        "preconditions": {"type": "array", "items": {"type": "string"}},
-        "sequence": {"type": "array"},
-        "expected_signal": {"type": "string"},
-        "status": {"type": "string"},
-        "supported_by": {"type": "array", "items": {"type": "string"}}
-      }
+      "type": "object"
     },
     "formal_property": {
-      "type": "object",
+      "properties": {
+        "compile_status": {
+          "type": "string"
+        },
+        "finding_id": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "property_text": {
+          "type": "string"
+        },
+        "review_notes": {
+          "type": "string"
+        },
+        "status": {
+          "const": "draft"
+        },
+        "supported_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "verification_status": {
+          "type": "string"
+        }
+      },
       "required": [
         "property_id",
         "finding_id",
@@ -168,61 +358,254 @@
         "verification_status",
         "supported_by"
       ],
+      "type": "object"
+    },
+    "fuzz_seed": {
       "properties": {
-        "property_id": {"type": "string"},
-        "finding_id": {"type": "string"},
-        "format": {"type": "string"},
-        "status": {"const": "draft"},
-        "property_text": {"type": "string"},
-        "compile_status": {"type": "string"},
-        "verification_status": {"type": "string"},
-        "supported_by": {"type": "array", "items": {"type": "string"}},
-        "review_notes": {"type": "string"}
-      }
+        "expected_signal": {
+          "type": "string"
+        },
+        "finding_id": {
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "seed_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string"
+        },
+        "supported_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "target_function": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "finding_id",
+        "seed_id",
+        "target_function",
+        "supported_by"
+      ],
+      "type": "object"
     },
     "standard_ref": {
-      "type": "object",
-      "required": ["standard", "id", "label", "confidence"],
       "properties": {
-        "standard": {"type": "string"},
-        "id": {"type": "string"},
-        "label": {"type": "string"},
-        "confidence": {"type": "string"}
-      }
-    },
-    "external_tool_result": {
-      "type": "object",
-      "required": [
-        "tool_name",
-        "command",
-        "status",
-        "findings_count",
-        "summary",
-        "execution_mode",
-        "binary_path",
-        "timeout_seconds",
-        "output_path",
-        "artifact_paths",
-        "error",
-        "duration_ms"
-      ],
-      "properties": {
-        "tool_name": {"type": "string"},
-        "command": {"type": "array", "items": {"type": "string"}},
-        "status": {"enum": ["skipped", "passed", "finding", "error"]},
-        "findings_count": {"type": "integer", "minimum": 0},
-        "summary": {"type": "string"},
-        "execution_mode": {"type": "string"},
-        "binary_path": {"type": "string"},
-        "timeout_seconds": {"type": "integer", "minimum": 0},
-        "output_path": {"type": "string"},
-        "artifact_paths": {
-          "type": "object",
-          "additionalProperties": {"type": "string"}
+        "confidence": {
+          "type": "string"
         },
-        "error": {"type": "string"},
-        "duration_ms": {"type": "integer", "minimum": 0}
-      }
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "standard",
+        "id",
+        "label",
+        "confidence"
+      ],
+      "type": "object"
     }
-  }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "analysis_metadata": {
+      "properties": {
+        "analysis_trace_id": {
+          "type": "string"
+        },
+        "completion_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "context_tokens_used": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "dataset_version": {
+          "type": "string"
+        },
+        "entry_path": {
+          "type": "string"
+        },
+        "errors": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "external_average_judge_score": {
+          "maximum": 5,
+          "minimum": 0,
+          "type": "number"
+        },
+        "input_kind": {
+          "type": "string"
+        },
+        "local_average_judge_score": {
+          "maximum": 5,
+          "minimum": 0,
+          "type": "number"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "partial_analysis": {
+          "type": "boolean"
+        },
+        "project_root": {
+          "type": "string"
+        },
+        "project_type": {
+          "type": "string"
+        },
+        "prompt_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rag_mode": {
+          "type": "string"
+        },
+        "slither_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "solc_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_files_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_duration_ms": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_tokens": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dataset_version",
+        "model_version",
+        "solc_version",
+        "slither_version",
+        "partial_analysis",
+        "analysis_trace_id",
+        "context_tokens_used",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "local_average_judge_score",
+        "external_average_judge_score",
+        "rag_mode",
+        "total_duration_ms",
+        "input_kind",
+        "project_type",
+        "entry_path",
+        "project_root",
+        "source_files_count",
+        "errors"
+      ],
+      "type": "object"
+    },
+    "business_logic_review_required": {
+      "type": "boolean"
+    },
+    "contract_id": {
+      "type": "string"
+    },
+    "evidence_graph_summary": {
+      "type": "object"
+    },
+    "external_tool_results": {
+      "items": {
+        "$ref": "#/$defs/external_tool_result"
+      },
+      "type": "array"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "type": "array"
+    },
+    "overall_status": {
+      "enum": [
+        "finding",
+        "no_finding",
+        "partial_analysis",
+        "error"
+      ]
+    },
+    "report_version": {
+      "type": "string"
+    },
+    "requires_human_review": {
+      "type": "boolean"
+    },
+    "review_reason": {
+      "type": "string"
+    },
+    "review_status": {
+      "enum": [
+        "pending_human_review",
+        "approved",
+        "rejected",
+        "blocked"
+      ]
+    },
+    "score_factors": {
+      "type": "object"
+    },
+    "score_formula_version": {
+      "type": "string"
+    },
+    "security_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "number"
+    }
+  },
+  "required": [
+    "report_version",
+    "overall_status",
+    "contract_id",
+    "review_status",
+    "requires_human_review",
+    "business_logic_review_required",
+    "review_reason",
+    "findings",
+    "analysis_metadata",
+    "security_score",
+    "score_formula_version",
+    "score_factors",
+    "external_tool_results",
+    "evidence_graph_summary"
+  ],
+  "type": "object"
 }

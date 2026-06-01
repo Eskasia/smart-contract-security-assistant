@@ -36,6 +36,8 @@ jobs:
         run: uv run python scripts/check_tool_matrix.py
       - name: Generate SBOM and license inventory
         run: uv run python scripts/generate_sbom.py
+      - name: Report schema sync check
+        run: uv run python scripts/sync_report_schema.py --check
       - name: Lint
         run: uv run ruff check .
       - name: Test
