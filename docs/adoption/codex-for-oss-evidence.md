@@ -152,6 +152,9 @@ results.
 Tester onboarding:
 [`docs/adoption/tester-onboarding.md`](tester-onboarding.md)
 
+Feedback processing workflow:
+[`docs/adoption/feedback-processing.md`](feedback-processing.md)
+
 Public triage protocol and case log:
 [`docs/adoption/public-triage-protocol.md`](public-triage-protocol.md),
 [`docs/adoption/public-triage-cases.md`](public-triage-cases.md)
