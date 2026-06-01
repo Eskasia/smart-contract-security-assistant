@@ -188,6 +188,9 @@ contract code, secrets, customer identifiers, or proprietary audit material.
 
 ## Application text
 
+Application package:
+[`docs/adoption/codex-for-oss-application.md`](codex-for-oss-application.md)
+
 Short application summary:
 
 ```text
