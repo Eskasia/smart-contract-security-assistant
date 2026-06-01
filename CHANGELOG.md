@@ -10,9 +10,10 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
 - Defaulted CLI/API analysis to `native_build_policy=disabled`; trusted native
   builds now require explicit opt-in.
-- Added HTTP API fail-closed checks for non-local hosts without `--api-token`,
-  token-authenticated wildcard CORS, job concurrency, event buffering, and
-  report read size.
+- Added HTTP API fail-closed checks for tokenless `/api/*` access by default,
+  non-local hosts without `--api-token`, mismatched request origins, non-JSON
+  write bodies, token-authenticated wildcard CORS, job concurrency, event
+  buffering, and report read size.
 - Archived historical release/community docs and kept `schema/report.schema.json`
   as the single public schema directory.
 

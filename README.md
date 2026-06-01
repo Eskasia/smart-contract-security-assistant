@@ -187,6 +187,10 @@ uv run scsa api \
   --native-build-policy disabled
 ```
 
+API `/api/*` requests require `--api-token` by default. Tokenless local demos
+must opt in with `--allow-tokenless-local-demo`; analysis paths outside
+`--input-root` must opt in with `--allow-any-input-root`.
+
 Start the frontend:
 
 ```bash
@@ -283,7 +287,7 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 - Do not upload private keys, secrets, customer contracts, proprietary audit reports, or unauthorized third-party code.
 - `POST /api/imports` rejects path traversal, symlink entries, special files, nested archives, unsafe redirects, non-allowlisted hosts, and oversized remote responses.
 - Imported sources are treated as untrusted and always run with `native_build_policy=disabled`.
-- The HTTP API fail-closes on non-local hosts without `--api-token`, rejects token-authenticated wildcard CORS, and supports fixed CORS origin, `input_root`, request body limit, import size limits, job concurrency cap, event buffer cap, report read size cap, and server-side native build policy ceiling.
+- The HTTP API requires bearer token auth for `/api/*` by default, fail-closes on non-local hosts without `--api-token`, rejects mismatched request origins, rejects non-JSON write bodies, rejects token-authenticated wildcard CORS, and supports fixed CORS origin, `input_root`, explicit tokenless local demo opt-in, explicit any-input-root opt-in, request body limit, import size limits, job concurrency cap, event buffer cap, report read size cap, and server-side native build policy ceiling.
 - Halmos requires trusted Foundry project mode; untrusted/imported sources cannot enable that flow.
 - Generated explanations can be incomplete or wrong; use trace rows and analyzer evidence as the review anchor.
 

@@ -87,7 +87,7 @@ def test_http_api_analysis_report_trace_review_and_sse(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir),
+        config=_demo_config(output_dir),
         analyzer=fake_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -176,7 +176,7 @@ def test_http_api_rejects_invalid_payload_and_review_status(tmp_path: Path) -> N
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports"),
+        config=_demo_config(tmp_path / "reports"),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -305,9 +305,88 @@ def test_http_api_allows_wildcard_cors_only_for_tokenless_local_demo(
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", cors_origin="*"),
+        config=ApiConfig(
+            output_dir=tmp_path / "reports",
+            allow_tokenless_local_demo=True,
+            cors_origin="*",
+        ),
     )
     server.server_close()
+
+
+def test_http_api_rejects_wildcard_cors_without_explicit_demo_flag(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="--allow-tokenless-local-demo"):
+        create_api_server(
+            host="127.0.0.1",
+            port=0,
+            config=ApiConfig(output_dir=tmp_path / "reports", cors_origin="*"),
+        )
+
+
+def test_api_rejects_write_without_token_by_default(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports"),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol"},
+            expect_error=401,
+        )
+        assert error["error"]["code"] == "UNAUTHORIZED"
+
+        error = _json_request(
+            f"{base_url}/api/reports/missing/review",
+            method="PATCH",
+            payload={"review_status": "approved"},
+            expect_error=401,
+        )
+        assert error["error"]["code"] == "UNAUTHORIZED"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_api_allows_tokenless_demo_only_with_explicit_flag(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+
+    def fake_analyzer(**kwargs: Any) -> AnalysisReport:
+        return _empty_report(kwargs, "contract_api_tokenless_demo")
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=_demo_config(tmp_path / "reports"),
+        analyzer=fake_analyzer,
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        created = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+        )
+        assert _wait_for_terminal_job(base_url, created["analysis_id"])["status"] == (
+            "no_finding"
+        )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
 
 
 def test_http_api_defaults_native_build_policy_to_disabled(tmp_path: Path) -> None:
@@ -322,7 +401,7 @@ def test_http_api_defaults_native_build_policy_to_disabled(tmp_path: Path) -> No
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports"),
+        config=_demo_config(tmp_path / "reports"),
         analyzer=fake_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -345,6 +424,35 @@ def test_http_api_defaults_native_build_policy_to_disabled(tmp_path: Path) -> No
         thread.join(timeout=3)
 
 
+def test_run_api_server_defaults_native_build_policy_disabled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configs: list[ApiConfig] = []
+
+    class _FakeServer:
+        def serve_forever(self) -> None:
+            return
+
+        def server_close(self) -> None:
+            return
+
+    def fake_create_api_server(
+        *,
+        host: str,
+        port: int,
+        config: ApiConfig,
+    ) -> _FakeServer:
+        configs.append(config)
+        return _FakeServer()
+
+    monkeypatch.setattr(http_api_module, "create_api_server", fake_create_api_server)
+
+    http_api_module.run_api_server(output_dir=tmp_path / "reports")
+
+    assert configs[0].native_build_policy == "disabled"
+
+
 def test_http_api_caps_event_buffer_per_job(tmp_path: Path) -> None:
     contract = tmp_path / "Vault.sol"
     contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
@@ -355,7 +463,7 @@ def test_http_api_caps_event_buffer_per_job(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", max_events_per_job=2),
+        config=_demo_config(tmp_path / "reports", max_events_per_job=2),
         analyzer=fake_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -382,7 +490,11 @@ def test_http_api_rejects_oversized_json_body(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", max_request_bytes=8),
+        config=ApiConfig(
+            output_dir=tmp_path / "reports",
+            allow_tokenless_local_demo=True,
+            max_request_bytes=8,
+        ),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -412,7 +524,11 @@ def test_http_api_rejects_input_outside_allowed_root(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", input_root=allowed),
+        config=ApiConfig(
+            output_dir=tmp_path / "reports",
+            input_root=allowed,
+            allow_tokenless_local_demo=True,
+        ),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -433,6 +549,90 @@ def test_http_api_rejects_input_outside_allowed_root(tmp_path: Path) -> None:
         thread.join(timeout=3)
 
 
+def test_api_rejects_analysis_without_input_root_by_default(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+            headers={"Authorization": "Bearer dev-token"},
+            expect_error=422,
+        )
+        assert error["error"]["code"] == "VALIDATION_ERROR"
+        assert "input_root" in error["error"]["message"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_api_rejects_mismatched_origin(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol"},
+            headers={
+                "Authorization": "Bearer dev-token",
+                "Origin": "http://malicious.example",
+            },
+            expect_error=403,
+        )
+        assert error["error"]["code"] == "FORBIDDEN_ORIGIN"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_api_rejects_non_json_content_type_for_post(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": "Vault.sol"},
+            headers={
+                "Authorization": "Bearer dev-token",
+                "Content-Type": "text/plain",
+            },
+            expect_error=415,
+        )
+        assert error["error"]["code"] == "UNSUPPORTED_MEDIA_TYPE"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 def test_http_api_rejects_native_build_policy_upgrade(tmp_path: Path) -> None:
     contract = tmp_path / "Vault.sol"
     contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
@@ -441,6 +641,8 @@ def test_http_api_rejects_native_build_policy_upgrade(tmp_path: Path) -> None:
         port=0,
         config=ApiConfig(
             output_dir=tmp_path / "reports",
+            allow_tokenless_local_demo=True,
+            allow_any_input_root=True,
             native_build_policy="disabled",
         ),
     )
@@ -503,7 +705,11 @@ def test_http_api_imports_archive_and_passes_external_tool_settings(tmp_path: Pa
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir, native_build_policy="trusted"),
+        config=ApiConfig(
+            output_dir=output_dir,
+            allow_tokenless_local_demo=True,
+            native_build_policy="trusted",
+        ),
         analyzer=fake_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -628,7 +834,7 @@ def test_http_api_imports_remote_payload_contracts(tmp_path: Path, monkeypatch) 
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir),
+        config=ApiConfig(output_dir=output_dir, allow_tokenless_local_demo=True),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -705,7 +911,7 @@ def test_http_api_rejects_path_like_report_id(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir),
+        config=ApiConfig(output_dir=output_dir, allow_tokenless_local_demo=True),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -752,7 +958,7 @@ def test_http_api_rejects_when_max_concurrent_jobs_is_reached(tmp_path: Path) ->
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=tmp_path / "reports", max_concurrent_jobs=1),
+        config=_demo_config(tmp_path / "reports", max_concurrent_jobs=1),
         analyzer=blocking_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -789,7 +995,11 @@ def test_http_api_rejects_report_reads_over_max_report_bytes(tmp_path: Path) -> 
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir, max_report_bytes=1),
+        config=ApiConfig(
+            output_dir=output_dir,
+            allow_tokenless_local_demo=True,
+            max_report_bytes=1,
+        ),
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -835,6 +1045,12 @@ def _empty_report(kwargs: dict[str, Any], contract_id: str) -> AnalysisReport:
             errors=[],
         ),
     )
+
+
+def _demo_config(output_dir: Path, **kwargs: Any) -> ApiConfig:
+    kwargs.setdefault("allow_tokenless_local_demo", True)
+    kwargs.setdefault("allow_any_input_root", True)
+    return ApiConfig(output_dir=output_dir, **kwargs)
 
 
 def _finding() -> Finding:

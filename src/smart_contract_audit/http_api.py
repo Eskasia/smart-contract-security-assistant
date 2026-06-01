@@ -47,6 +47,10 @@ class RequestBodyTooLarge(ValueError):
     pass
 
 
+class UnsupportedMediaType(ValueError):
+    pass
+
+
 class AnalysisCapacityExceeded(ValueError):
     pass
 
@@ -58,6 +62,8 @@ class ApiConfig:
     input_root: Path | None = None
     imports_dir: Path | None = None
     api_token: str | None = None
+    allow_tokenless_local_demo: bool = False
+    allow_any_input_root: bool = False
     cors_origin: str = "http://127.0.0.1:5173"
     max_request_bytes: int = 1_048_576
     max_concurrent_jobs: int = 4
@@ -132,6 +138,7 @@ class AnalysisJobManager:
             self.config.input_root,
             self.config.resolved_imports_dir(),
             self.config.native_build_policy,
+            self.config.allow_any_input_root,
         )
         analysis_id = f"analysis_{uuid.uuid4().hex[:12]}"
         job = AnalysisJob(analysis_id=analysis_id, status="queued", **request)
@@ -270,6 +277,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
     server: _SmartContractAPIServer
 
     def do_OPTIONS(self) -> None:
+        if not self._validate_origin():
+            return
         self.send_response(HTTPStatus.NO_CONTENT)
         self._send_common_headers()
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
@@ -277,6 +286,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self) -> None:
+        if not self._validate_origin():
+            return
         if not self._authorize_request():
             return
         path = _path_parts(self.path)
@@ -299,6 +310,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
                 "ANALYSIS_CAPACITY_EXCEEDED",
                 str(exc),
             )
+        except UnsupportedMediaType as exc:
+            self._send_unsupported_media_type_response(exc)
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
         return
@@ -329,6 +342,8 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         self._send_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found.")
 
     def do_PATCH(self) -> None:
+        if not self._validate_origin():
+            return
         if not self._authorize_request():
             return
         path = _path_parts(self.path)
@@ -350,11 +365,33 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
 
     def _authorize_request(self) -> bool:
         token = self.server.config.api_token
-        if not token:
+        if token and self.headers.get("Authorization", "") == f"Bearer {token}":
             return True
-        if self.headers.get("Authorization", "") == f"Bearer {token}":
+        if not token and self.server.config.allow_tokenless_local_demo:
+            host = str(self.server.server_address[0]).strip().lower()
+            if host in LOCAL_API_HOSTS:
+                return True
+        message = (
+            "API token required. Provide --api-token or explicitly enable "
+            "--allow-tokenless-local-demo for local demos."
+        )
+        if token:
+            message = "Invalid API token."
+        self._send_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", message)
+        return False
+
+    def _validate_origin(self) -> bool:
+        request_origin = self.headers.get("Origin")
+        if not request_origin:
             return True
-        self._send_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API token.")
+        allowed_origin = self.server.config.cors_origin
+        if allowed_origin == "*" or request_origin == allowed_origin:
+            return True
+        self._send_error_response(
+            HTTPStatus.FORBIDDEN,
+            "FORBIDDEN_ORIGIN",
+            "Request Origin does not match configured CORS origin.",
+        )
         return False
 
     def _get_analysis(self, analysis_id: str) -> None:
@@ -445,6 +482,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
         except RequestBodyTooLarge as exc:
             self._send_request_too_large_response(exc)
             return
+        except UnsupportedMediaType as exc:
+            self._send_unsupported_media_type_response(exc)
+            return
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
             return
@@ -479,6 +519,9 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             review_status, review_note = _parse_finding_review(payload)
         except RequestBodyTooLarge as exc:
             self._send_request_too_large_response(exc)
+            return
+        except UnsupportedMediaType as exc:
+            self._send_unsupported_media_type_response(exc)
             return
         except ValueError as exc:
             self._send_validation_error_response(str(exc))
@@ -529,6 +572,10 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             raise RequestBodyTooLarge("Request body exceeds max_request_bytes.")
         if length <= 0:
             return {}
+        content_type = self.headers.get("Content-Type", "")
+        media_type = content_type.split(";", 1)[0].strip().lower()
+        if media_type != "application/json":
+            raise UnsupportedMediaType("Request body Content-Type must be application/json.")
         raw = self.rfile.read(length)
         try:
             payload = json.loads(raw.decode("utf-8"))
@@ -640,6 +687,13 @@ class _SmartContractAPIHandler(BaseHTTPRequestHandler):
             str(exc),
         )
 
+    def _send_unsupported_media_type_response(self, exc: UnsupportedMediaType) -> None:
+        self._send_error_response(
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+            "UNSUPPORTED_MEDIA_TYPE",
+            str(exc),
+        )
+
     def _send_validation_error_response(self, message: str) -> None:
         self._send_error_response(
             HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -682,6 +736,8 @@ def _validate_api_config(host: str, config: ApiConfig) -> None:
         raise ValueError("max_events_per_job must be greater than 0.")
     if config.max_report_bytes < 1:
         raise ValueError("max_report_bytes must be greater than 0.")
+    if config.allow_tokenless_local_demo and normalized_host not in LOCAL_API_HOSTS:
+        raise ValueError("--allow-tokenless-local-demo requires a local host.")
     if not config.api_token and normalized_host not in LOCAL_API_HOSTS:
         raise ValueError(
             "Refusing to bind HTTP API to a non-local host without --api-token."
@@ -691,9 +747,13 @@ def _validate_api_config(host: str, config: ApiConfig) -> None:
             "cors_origin '*' cannot be used with --api-token; configure a fixed "
             "--cors-origin."
         )
-    if config.cors_origin == "*" and normalized_host not in LOCAL_API_HOSTS:
+    if (
+        config.cors_origin == "*"
+        and (normalized_host not in LOCAL_API_HOSTS or not config.allow_tokenless_local_demo)
+    ):
         raise ValueError(
-            "cors_origin '*' is only allowed for a tokenless local demo host."
+            "cors_origin '*' is only allowed with --allow-tokenless-local-demo "
+            "on a local host."
         )
 
 
@@ -705,6 +765,8 @@ def run_api_server(
     input_root: Path | None = None,
     imports_dir: Path | None = None,
     api_token: str | None = None,
+    allow_tokenless_local_demo: bool = False,
+    allow_any_input_root: bool = False,
     cors_origin: str = "http://127.0.0.1:5173",
     max_request_bytes: int = 1_048_576,
     max_concurrent_jobs: int = 4,
@@ -724,6 +786,8 @@ def run_api_server(
             input_root=input_root,
             imports_dir=imports_dir,
             api_token=api_token,
+            allow_tokenless_local_demo=allow_tokenless_local_demo,
+            allow_any_input_root=allow_any_input_root,
             cors_origin=cors_origin,
             max_request_bytes=max_request_bytes,
             max_concurrent_jobs=max_concurrent_jobs,
@@ -746,11 +810,17 @@ def _parse_create_analysis(
     input_root: Path | None = None,
     import_root: Path | None = None,
     default_native_build_policy: str = "disabled",
+    allow_any_input_root: bool = False,
 ) -> dict[str, Any]:
     input_path = payload.get("input_path")
     if not isinstance(input_path, str) or not input_path.strip():
         raise ValueError("input_path must be a non-empty string.")
-    input_path, imported_source = _validate_allowed_input_path(input_path, input_root, import_root)
+    input_path, imported_source = _validate_allowed_input_path(
+        input_path,
+        input_root,
+        import_root,
+        allow_any_input_root=allow_any_input_root,
+    )
 
     rag_mode = payload.get("rag_mode", "balanced")
     if rag_mode not in RAG_MODES:
@@ -798,19 +868,28 @@ def _validate_allowed_input_path(
     input_path: str,
     input_root: Path | None,
     import_root: Path | None,
+    *,
+    allow_any_input_root: bool = False,
 ) -> tuple[str, bool]:
     resolved = Path(input_path).expanduser().resolve()
     resolved_import_root = import_root.expanduser().resolve() if import_root is not None else None
     imported_source = (
         resolved_import_root is not None and resolved.is_relative_to(resolved_import_root)
     )
-    if input_root is None:
+    if allow_any_input_root:
         return str(resolved), imported_source
-    allowed_roots = [input_root.expanduser().resolve()]
+    allowed_roots = []
+    if input_root is not None:
+        allowed_roots.append(input_root.expanduser().resolve())
     if resolved_import_root is not None:
         allowed_roots.append(resolved_import_root)
     if any(resolved.is_relative_to(root) for root in allowed_roots):
         return str(resolved), imported_source
+    if input_root is None:
+        message = "input_path requires input_root or allow_any_input_root."
+        if resolved_import_root is not None:
+            message = f"{message} Imported sources under imports_dir are allowed."
+        raise ValueError(message)
     message = f"input_path must be inside input_root: {allowed_roots[0]}"
     if resolved_import_root is not None:
         message = f"{message} or imports_dir: {resolved_import_root}"

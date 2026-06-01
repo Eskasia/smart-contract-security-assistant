@@ -165,6 +165,8 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument("--trace-db", type=Path)
     api.add_argument("--input-root", type=Path)
     api.add_argument("--api-token")
+    api.add_argument("--allow-tokenless-local-demo", action="store_true")
+    api.add_argument("--allow-any-input-root", action="store_true")
     api.add_argument("--cors-origin", default="http://127.0.0.1:5173")
     api.add_argument("--max-request-bytes", type=int, default=1_048_576)
     api.add_argument("--max-concurrent-jobs", type=int, default=4)
@@ -347,6 +349,8 @@ def main(argv: list[str] | None = None) -> None:
                 trace_db=args.trace_db,
                 input_root=args.input_root,
                 api_token=args.api_token,
+                allow_tokenless_local_demo=args.allow_tokenless_local_demo,
+                allow_any_input_root=args.allow_any_input_root,
                 cors_origin=args.cors_origin,
                 max_request_bytes=args.max_request_bytes,
                 max_concurrent_jobs=args.max_concurrent_jobs,
