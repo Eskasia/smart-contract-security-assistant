@@ -4,7 +4,7 @@ description: "Fill-in record for 0G mainnet registry, storage, transaction, and 
 category: "hackathon"
 number: "004"
 status: draft
-services: ["integrations/0g", "README.md", "docs/hackathon"]
+services: ["integrations/0g", "README.md", "docs/archive/hackathon"]
 related: ["hackathon/001", "hackathon/002", "hackathon/003", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -17,7 +17,7 @@ draft；live 0G proof 尚未執行，以下欄位不得用假地址、dry-run se
 
 ## Summary
 
-本文件是 HackQuest 「0G Integration Proof」的單一事實來源。完成 live upload/register 後，把相同欄位同步回 `docs/hackathon/0g-apac-submission.md`、HackQuest 表單與 `submission/0g-apac-hackathon/`；只有公開 README 需要顯示 live proof links 時才同步 `README.md`。
+本文件是 HackQuest 「0G Integration Proof」的單一事實來源。完成 live upload/register 後，把相同欄位同步回 `docs/archive/hackathon/0g-apac-submission.md`、HackQuest 表單與 `submission/0g-apac-hackathon/`；只有公開 README 需要顯示 live proof links 時才同步 `README.md`。
 
 ## Live Proof Fields
 
@@ -99,9 +99,9 @@ Expected result: `{"ok": true, ...}` and all three Explorer links open publicly.
 After live registration, copy the same values to:
 
 - `README.md` only when public proof links are added to the GitHub entry page
-- `docs/hackathon/0g-apac-submission.md`
-- `docs/hackathon/hackquest-submission.form.json`
-- `docs/hackathon/003-submission-package-index.md`
+- `docs/archive/hackathon/0g-apac-submission.md`
+- `docs/archive/hackathon/hackquest-submission.form.json`
+- `docs/archive/hackathon/003-submission-package-index.md`
 - `submission/0g-apac-hackathon/`
 
 ## References

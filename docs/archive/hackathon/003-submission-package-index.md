@@ -4,7 +4,7 @@ description: "Maps every 0G APAC Hackathon requirement to the local file that sa
 category: "hackathon"
 number: "003"
 status: draft
-services: ["README.md", "docs/hackathon", "integrations/0g"]
+services: ["README.md", "docs/archive/hackathon", "integrations/0g"]
 related: ["hackathon/001", "hackathon/002", "hackathon/004", "hackathon/005", "hackathon/006", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -23,18 +23,18 @@ draft；文件包已齊備，提交有效性仍取決於 live 0G mainnet contrac
 
 | Rule item | Required output | Local file | Status |
 |---|---|---|---|
-| Basic project information | Project name, one-sentence description, short summary, selected track | `docs/hackathon/0g-apac-submission.md` | ready |
-| Code repository | Public GitHub repository link and visibility evidence | `docs/hackathon/0g-apac-submission.md` | ready; GitHub CLI check on 2026-05-15 returned PUBLIC |
-| 0G integration proof | Mainnet registry address, Explorer links, storage root, tx hashes | `docs/hackathon/004-live-0g-proof-record.md` | blocked until live deployment |
-| Demo video | Public video link, 3 minutes or less | `docs/hackathon/006-demo-video-production-checklist.md` | public URL ready; live 0G proof scene still blocked |
-| README / documentation | Overview, architecture, 0G modules, reproduction steps, reviewer notes | `README.md` and `docs/hackathon/007-judge-reproduction-guide.md` | ready except live fields |
-| Public X post | Post text with screenshot or demo clip, hashtags, tags | `docs/hackathon/005-public-x-post-template.md` | pending posting |
-| Frontend demo URL | Public non-localhost product demo URL | `docs/hackathon/0g-apac-submission.md` and JSON form | ready; https://eskasia.github.io/smart-contract-security-assistant/ returned HTTP 200 |
-| Bonus materials | API notes, validation notes, tutorial path | `docs/reference/001-validation-procedure-log.md` and `docs/hackathon/007-judge-reproduction-guide.md` | ready |
+| Basic project information | Project name, one-sentence description, short summary, selected track | `docs/archive/hackathon/0g-apac-submission.md` | ready |
+| Code repository | Public GitHub repository link and visibility evidence | `docs/archive/hackathon/0g-apac-submission.md` | ready; GitHub CLI check on 2026-05-15 returned PUBLIC |
+| 0G integration proof | Mainnet registry address, Explorer links, storage root, tx hashes | `docs/archive/hackathon/004-live-0g-proof-record.md` | blocked until live deployment |
+| Demo video | Public video link, 3 minutes or less | `docs/archive/hackathon/006-demo-video-production-checklist.md` | public URL ready; live 0G proof scene still blocked |
+| README / documentation | Overview, architecture, 0G modules, reproduction steps, reviewer notes | `README.md` and `docs/archive/hackathon/007-judge-reproduction-guide.md` | ready except live fields |
+| Public X post | Post text with screenshot or demo clip, hashtags, tags | `docs/archive/hackathon/005-public-x-post-template.md` | pending posting |
+| Frontend demo URL | Public non-localhost product demo URL | `docs/archive/hackathon/0g-apac-submission.md` and JSON form | ready; https://eskasia.github.io/smart-contract-security-assistant/ returned HTTP 200 |
+| Bonus materials | API notes, validation notes, tutorial path | `docs/reference/001-validation-procedure-log.md` and `docs/archive/hackathon/007-judge-reproduction-guide.md` | ready |
 
 ## Invalid Submission Conditions
 
-- `docs/hackathon/004-live-0g-proof-record.md` still has blank live 0G fields.
+- `docs/archive/hackathon/004-live-0g-proof-record.md` still has blank live 0G fields.
 - Demo video only shows slides or local dry-run proof.
 - X post lacks `#0GHackathon`, `#BuildOn0G`, `@0G_labs`, `@0g_CN`, `@0g_Eco`, or `@HackQuest_`.
 - Repository becomes private again or judges cannot access it.
@@ -57,11 +57,11 @@ draft；文件包已齊備，提交有效性仍取決於 live 0G mainnet contrac
 
 ## Single Source Sync Rule
 
-`docs/hackathon/004-live-0g-proof-record.md` is the source of truth for all 0G proof fields. After it is filled, copy values to HackQuest Markdown, HackQuest JSON, and this submission folder in one edit; update `README.md` only if the public overview needs live proof links.
+`docs/archive/hackathon/004-live-0g-proof-record.md` is the source of truth for all 0G proof fields. After it is filled, copy values to HackQuest Markdown, HackQuest JSON, and this submission folder in one edit; update `README.md` only if the public overview needs live proof links.
 
 ## References
 
 - `README.md`
-- `docs/hackathon/0g-apac-submission.md`
-- `docs/hackathon/0g-demo-script.md`
+- `docs/archive/hackathon/0g-apac-submission.md`
+- `docs/archive/hackathon/0g-demo-script.md`
 - `docs/reference/001-validation-procedure-log.md`

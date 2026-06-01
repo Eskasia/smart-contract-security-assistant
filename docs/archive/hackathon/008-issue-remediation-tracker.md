@@ -4,7 +4,7 @@ description: "Tracks each issue from /Users/william/0g-apac-hackathon-issues.md 
 category: "hackathon"
 number: "008"
 status: draft
-services: ["README.md", "docs/hackathon", "config", "integrations/0g", "submission"]
+services: ["README.md", "docs/archive/hackathon", "config", "integrations/0g", "submission"]
 related: ["hackathon/001", "hackathon/003", "hackathon/004", "hackathon/006", "hackathon/007"]
 last_modified: "2026-05-07"
 ---
@@ -23,15 +23,15 @@ draft；可由 repo 修改完成的敘事、配置、表單草稿、提交包一
 
 | ID | Issue | Status | Evidence |
 |---|---|---|---|
-| 01 | live 0G proof 尚未執行 | blocked by funded 0G key and live deploy | `docs/hackathon/004-live-0g-proof-record.md` is single source of truth |
+| 01 | live 0G proof 尚未執行 | blocked by funded 0G key and live deploy | `docs/archive/hackathon/004-live-0g-proof-record.md` is single source of truth |
 | 02 | HackQuest 表單空欄位 | blocked by live proof and X URL | `frontend_demo_url` and `demo_video_url` are filled; 0G proof and X post fields stay empty until true values exist |
 | 03 | Demo video 尚未產出 | partially remediated | public MP4 URL returned `video/mp4` HTTP 200 on 2026-05-16; final live 0G scene still depends on live_registered proof |
-| 04 | Demo script 允許 dry-run 畫面 | remediated | `docs/hackathon/0g-demo-script.md` formal scenes use live proof only; dry-run moved to appendix |
-| 05 | Public X post 尚未發布 | blocked by media/posting | `docs/hackathon/005-public-x-post-template.md` includes demo URL and media checklist |
-| 06 | README 語氣偏 pending | remediated without false completion claims | `README.md` keeps general project positioning; live proof blockers remain in `docs/hackathon/004-live-0g-proof-record.md` |
+| 04 | Demo script 允許 dry-run 畫面 | remediated | `docs/archive/hackathon/0g-demo-script.md` formal scenes use live proof only; dry-run moved to appendix |
+| 05 | Public X post 尚未發布 | blocked by media/posting | `docs/archive/hackathon/005-public-x-post-template.md` includes demo URL and media checklist |
+| 06 | README 語氣偏 pending | remediated without false completion claims | `README.md` keeps general project positioning; live proof blockers remain in `docs/archive/hackathon/004-live-0g-proof-record.md` |
 | 07 | 文件狀態仍是 draft | blocked by P0 external items | Status stays draft until live proof/video/X/demo are real |
 | 08 | dry-run 與 live proof 敘事混合 | remediated | Main submission path is live_registered; dry-run is reviewer reproduction only |
-| 09 | 0G proof 欄位未同步 | remediated structurally | `docs/hackathon/004-live-0g-proof-record.md` declared as single source of truth |
+| 09 | 0G proof 欄位未同步 | remediated structurally | `docs/archive/hackathon/004-live-0g-proof-record.md` declared as single source of truth |
 | 10 | frontend demo URL 未確定 | remediated | GitHub Pages URL `https://eskasia.github.io/smart-contract-security-assistant/` returned HTTP 200 on 2026-05-15 |
 | 11 | Explorer base URL 不統一 | remediated | ChainScan defaults added for tx/address; StorageScan documented separately |
 | 12 | Storage indexer RPC 範例空白 | remediated | `ZERO_G_STORAGE_INDEXER_RPC=https://indexer-storage-turbo.0g.ai` |
@@ -54,6 +54,6 @@ draft；可由 repo 修改完成的敘事、配置、表單草稿、提交包一
 
 - `/Users/william/0g-apac-hackathon-issues.md`
 - `README.md`
-- `docs/hackathon/004-live-0g-proof-record.md`
+- `docs/archive/hackathon/004-live-0g-proof-record.md`
 - `config/0g-hackathon.example.json`
 - `integrations/0g/.env.example`

@@ -27,8 +27,8 @@
     "proof_registration_explorer_link": ""
   },
   "reviewer_notes": {
-    "local_reproduction": "See README.md and docs/hackathon/007-judge-reproduction-guide.md.",
-    "live_proof_record": "See docs/hackathon/004-live-0g-proof-record.md after mainnet deployment.",
+    "local_reproduction": "See README.md and docs/archive/hackathon/007-judge-reproduction-guide.md.",
+    "live_proof_record": "See docs/archive/hackathon/004-live-0g-proof-record.md after mainnet deployment.",
     "repository_visibility_check": "GitHub CLI check on 2026-05-15 returned PUBLIC.",
     "frontend_demo_check": "GitHub Pages URL and built JS/CSS assets returned HTTP 200 on 2026-05-15.",
     "demo_video_check": "GitHub Pages MP4 URL returned HTTP 200 video/mp4 on 2026-05-16; final 0G proof scene still depends on live 0G deployment.",

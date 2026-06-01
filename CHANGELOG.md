@@ -4,7 +4,7 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
-## v0.2.0 - Unreleased
+## v0.2.0 - 2026-06-01
 
 ### Added
 
@@ -24,8 +24,8 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
 ### Changed
 
-- Treat v0.2.0 as the next release candidate because the merged scope is a
-  platform expansion, not a patch update to v0.1.0.
+- Released v0.2.0 as the evidence platform release because the merged scope is
+  a platform expansion, not a patch update to v0.1.0.
 - Keep issue #12 as the v0.1.0 tester feedback entry because it links to the
   already published v0.1.0 release.
 
@@ -57,7 +57,7 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 - Consolidated public project positioning into the main `README.md` as the
   single GitHub entry point for SCSA's local evidence workbench narrative.
 - Moved hackathon-specific reproduction and live proof references to
-  `docs/hackathon/` instead of maintaining a separate hackathon README.
+  `docs/archive/hackathon/` instead of maintaining a separate hackathon README.
 
 ### Validation
 

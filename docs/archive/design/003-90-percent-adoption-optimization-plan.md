@@ -159,5 +159,5 @@ Checkpoint C：Task 07–09 完成後，測試 PR 可看到安全分數差異、
 - `eval/public_benchmark/public-project-builds-10-manifest.json`
 - `src/smart_contract_audit/config.py`
 - `docs/design/001-project-architecture.md`
-- `docs/design/002-frontend-architecture.md`
+- `docs/archive/design/002-frontend-architecture.md`
 - Hugging Face：`mwritescode/slither-audited-smart-contracts`
