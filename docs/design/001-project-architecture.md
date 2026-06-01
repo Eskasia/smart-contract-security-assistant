@@ -4,16 +4,16 @@ description: "描述 Solidity 安全初篩 MVP 的模組邊界、資料流、儲
 category: "design"
 number: "001"
 status: current
-services: ["src/smart_contract_audit", "schemas", "eval", ".github/workflows"]
+services: ["src/smart_contract_audit", "schema", "eval", ".github/workflows"]
 related: ["guides/001", "reference/001"]
-last_modified: "2026-04-30"
+last_modified: "2026-06-01"
 ---
 
 # 001 — 專案架構書
 
 ## Status
 
-current；架構描述已核對 `src/smart_contract_audit/`、`schemas/finding_schema.json`、`eval/`、`.github/workflows/ci.yml` 與 2026-04-30 驗證結果。
+current；架構描述已核對 `src/smart_contract_audit/`、`schema/report.schema.json`、`eval/`、`.github/workflows/ci.yml` 與 2026-06-01 安全預設收斂。
 
 ## Summary
 
@@ -126,7 +126,7 @@ flowchart TD
 
 - `src/smart_contract_audit/analyzer.py`
 - `src/smart_contract_audit/cli.py`
-- `schemas/finding_schema.json`
+- `schema/report.schema.json`
 - `.github/workflows/ci.yml`
 - `docs/guides/001-usage-manual.md`
 - `docs/reference/001-validation-procedure-log.md`

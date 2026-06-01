@@ -11,6 +11,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 import smart_contract_audit.http_api as http_api_module
 from smart_contract_audit.http_api import ApiConfig, create_api_server
 from smart_contract_audit.models import AnalysisMetadata, AnalysisReport, Finding, Location
@@ -266,6 +268,116 @@ def test_http_api_requires_token_when_configured(tmp_path: Path) -> None:
         thread.join(timeout=3)
 
 
+def test_http_api_rejects_external_host_without_token(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="--api-token"):
+        create_api_server(
+            host="0.0.0.0",
+            port=0,
+            config=ApiConfig(output_dir=tmp_path / "reports"),
+        )
+
+
+def test_http_api_allows_external_host_with_token(tmp_path: Path) -> None:
+    server = create_api_server(
+        host="0.0.0.0",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", api_token="dev-token"),
+    )
+    server.server_close()
+
+
+def test_http_api_rejects_token_with_wildcard_cors(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="--cors-origin"):
+        create_api_server(
+            host="127.0.0.1",
+            port=0,
+            config=ApiConfig(
+                output_dir=tmp_path / "reports",
+                api_token="dev-token",
+                cors_origin="*",
+            ),
+        )
+
+
+def test_http_api_allows_wildcard_cors_only_for_tokenless_local_demo(
+    tmp_path: Path,
+) -> None:
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", cors_origin="*"),
+    )
+    server.server_close()
+
+
+def test_http_api_defaults_native_build_policy_to_disabled(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    analyzer_calls: list[dict[str, Any]] = []
+
+    def fake_analyzer(**kwargs: Any) -> AnalysisReport:
+        analyzer_calls.append(kwargs)
+        return _empty_report(kwargs, "contract_api_defaults")
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports"),
+        analyzer=fake_analyzer,
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        created = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+        )
+        assert _wait_for_terminal_job(base_url, created["analysis_id"])["status"] == (
+            "no_finding"
+        )
+        assert analyzer_calls[0]["native_build_policy"] == "disabled"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_caps_event_buffer_per_job(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+
+    def fake_analyzer(**kwargs: Any) -> AnalysisReport:
+        return _empty_report(kwargs, "contract_api_events")
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", max_events_per_job=2),
+        analyzer=fake_analyzer,
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        created = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+        )
+        _wait_for_terminal_job(base_url, created["analysis_id"])
+        events = _read_sse_events(f"{base_url}/api/analyses/{created['analysis_id']}/stream")
+        assert len(events) <= 2
+        assert events[-1]["type"] == "done"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 def test_http_api_rejects_oversized_json_body(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
@@ -391,7 +503,7 @@ def test_http_api_imports_archive_and_passes_external_tool_settings(tmp_path: Pa
     server = create_api_server(
         host="127.0.0.1",
         port=0,
-        config=ApiConfig(output_dir=output_dir),
+        config=ApiConfig(output_dir=output_dir, native_build_policy="trusted"),
         analyzer=fake_analyzer,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -624,6 +736,105 @@ def test_http_api_rejects_path_like_report_id(tmp_path: Path) -> None:
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
+
+
+def test_http_api_rejects_when_max_concurrent_jobs_is_reached(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    started = threading.Event()
+    release = threading.Event()
+
+    def blocking_analyzer(**kwargs: Any) -> AnalysisReport:
+        started.set()
+        release.wait(timeout=3)
+        return _empty_report(kwargs, "contract_api_capacity")
+
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=tmp_path / "reports", max_concurrent_jobs=1),
+        analyzer=blocking_analyzer,
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        first = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+        )
+        assert first["status"] == "queued"
+        assert started.wait(timeout=3)
+
+        error = _json_request(
+            f"{base_url}/api/analyses",
+            method="POST",
+            payload={"input_path": str(contract)},
+            expect_error=429,
+        )
+        assert error["error"]["code"] == "ANALYSIS_CAPACITY_EXCEEDED"
+    finally:
+        release.set()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def test_http_api_rejects_report_reads_over_max_report_bytes(tmp_path: Path) -> None:
+    output_dir = tmp_path / "reports"
+    output_dir.mkdir()
+    (output_dir / "large.json").write_text("{}", encoding="utf-8")
+    server = create_api_server(
+        host="127.0.0.1",
+        port=0,
+        config=ApiConfig(output_dir=output_dir, max_report_bytes=1),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        error = _json_request(
+            f"{base_url}/api/reports/large",
+            expect_error=422,
+        )
+        assert "max_report_bytes" in error["error"]["message"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def _empty_report(kwargs: dict[str, Any], contract_id: str) -> AnalysisReport:
+    return AnalysisReport(
+        report_version="1.0",
+        overall_status="no_finding",
+        contract_id=contract_id,
+        review_status="pending_human_review",
+        requires_human_review=True,
+        business_logic_review_required=False,
+        review_reason="Human review required.",
+        findings=[],
+        analysis_metadata=AnalysisMetadata(
+            dataset_version="dataset_v1",
+            model_version="fallback",
+            solc_version="0.8.34",
+            slither_version="0.11.5",
+            partial_analysis=False,
+            analysis_trace_id=f"trace_{contract_id}",
+            context_tokens_used=1,
+            prompt_tokens=2,
+            completion_tokens=3,
+            total_tokens=5,
+            local_average_judge_score=5.0,
+            external_average_judge_score=5.0,
+            rag_mode=kwargs.get("rag_mode", "balanced"),
+            total_duration_ms=7,
+            errors=[],
+        ),
+    )
 
 
 def _finding() -> Finding:

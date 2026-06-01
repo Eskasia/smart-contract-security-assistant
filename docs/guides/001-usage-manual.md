@@ -6,7 +6,7 @@ number: "001"
 status: current
 services: ["src/smart_contract_audit", "data/dataset_v1.0", "eval"]
 related: ["design/001", "reference/001"]
-last_modified: "2026-05-24"
+last_modified: "2026-06-01"
 ---
 
 # 001 — 使用說明書
@@ -54,9 +54,9 @@ uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 | `--dataset-chunks` | 指定 RAG chunk JSONL，預設 `data/dataset_v1.0/chunks/chunks.jsonl` |
 | `--rag-mode` | 可選 `quality`、`balanced`、`fast`、`fallback`，預設 `balanced` |
 | `--model-path` | 指定 MLX 模型路徑；未指定時可走 deterministic fallback |
-| `--native-build-policy` | 可選 `trusted` 或 `disabled`；`disabled` 會略過 Foundry/Hardhat build scripts 並用 Slither/solc fallback |
+| `--native-build-policy` | 可選 `trusted` 或 `disabled`，預設 `disabled`；`trusted` 會執行 Foundry/Hardhat build scripts，只能用於明確信任的本機專案 |
 
-輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；Foundry/Hardhat 在 `trusted` 模式會先嘗試原生 build，失敗時回退 Slither/solc 並寫入錯誤原因；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
+輸入限制：支援單一 `.sol`、Foundry、Hardhat 與 generic nested import 專案；預設不執行 native build scripts；Foundry/Hardhat 只有在顯式 `trusted` 模式會先嘗試原生 build，失敗時回退 Slither/solc 並寫入錯誤原因；單檔最多 500 行，專案最多 500 個 Solidity 檔與 100,000 行。
 
 ## HTTP API 加固啟動
 
@@ -69,10 +69,13 @@ uv run scsa api \
   --api-token dev-token \
   --cors-origin http://127.0.0.1:5173 \
   --max-request-bytes 1048576 \
+  --max-concurrent-jobs 4 \
+  --max-events-per-job 256 \
+  --max-report-bytes 5000000 \
   --native-build-policy disabled
 ```
 
-`--native-build-policy disabled` 會略過未信任 Foundry/Hardhat 專案的 build scripts，改用 Slither/solc fallback；前端設定 API token 後會改用 polling，因為瀏覽器 EventSource 無法帶 Authorization header。
+`--native-build-policy disabled` 是 API 預設值，會略過未信任 Foundry/Hardhat 專案的 build scripts，改用 Slither/solc fallback。`--host 0.0.0.0` 或其他非本機 host 必須搭配 `--api-token`；`--api-token` 不能搭配 `--cors-origin "*"`。前端設定 API token 後會改用 polling，因為瀏覽器 EventSource 無法帶 Authorization header。
 
 Report 讀取端點為 `GET /api/reports/{contract_id}`，Markdown 下載端點為 `GET /api/reports/{contract_id}/markdown`；兩者都使用同一組 bearer token、CORS 與 `contract_id` path segment 驗證。前端下載 JSON/Markdown 時使用 `Authorization` header，不會把 API token 放入 deep link。
 
@@ -115,7 +118,15 @@ uv run python eval/run_public_benchmark.py --min-supported-hit-rate 0.95 --min-s
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports --external-tool mythril --external-tool echidna
 ```
 
-Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz 工具。Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 findings 與 trace row，工具不存在時以 `skipped` 記錄。
+Mythril——EVM bytecode 符號執行工具；Echidna——智能合約 fuzz 工具。Mythril JSON issues 與 Echidna failed/falsified properties 會轉成正式 findings 與 trace row，工具不存在時以 `skipped` 記錄。JSON/Markdown report 會記錄 external tool 的 execution mode、binary path、command、timeout、duration、status、output path 與 artifact paths。
+
+## Import Staging Cleanup
+
+```bash
+uv run scsa clean-imports --imports-dir reports-api/imports --ttl-seconds 86400
+```
+
+此命令只刪除 `import_` 開頭且超過 TTL 的 staging 目錄，不會刪除手動建立的其他資料夾。
 
 ## GitHub Actions
 
@@ -150,7 +161,7 @@ uv run python scripts/validate_chunks.py <output-chunks.jsonl> --max-unknown-rat
 
 ```bash
 uv sync --extra audit --extra web --dev
-uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --native-build-policy disabled
+uv run scsa api --host 127.0.0.1 --port 8787 --out-dir reports-api --input-root "$PWD" --api-token dev-token --cors-origin http://127.0.0.1:5173 --max-request-bytes 1048576 --max-concurrent-jobs 4 --max-events-per-job 256 --max-report-bytes 5000000 --native-build-policy disabled
 cd frontend && npm run dev
 ```
 

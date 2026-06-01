@@ -4,7 +4,7 @@ description: "規劃智能合約安全分析助理的報告審查型前端架構
 category: "design"
 number: "002"
 status: draft
-services: ["src/smart_contract_audit/http_api.py", "src/smart_contract_audit/web.py", "src/smart_contract_audit/report.py", "src/smart_contract_audit/trace", "schemas"]
+services: ["src/smart_contract_audit/http_api.py", "src/smart_contract_audit/web.py", "src/smart_contract_audit/report.py", "src/smart_contract_audit/trace", "schema"]
 related: ["design/001", "guides/001", "reference/001"]
 last_modified: "2026-05-04"
 ---

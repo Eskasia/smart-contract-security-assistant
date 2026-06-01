@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Security Policy](https://img.shields.io/badge/security-policy-teal)](SECURITY.md)
 
-Local-first evidence workbench for Solidity security triage.
+Local-first analysis-artifact workbench for Solidity security triage.
 
 SCSA turns deterministic analyzer output into reviewable security evidence: Slither findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
 
@@ -20,7 +20,7 @@ Smart contract review often produces fragmented evidence: scanner JSON, terminal
 Core design:
 
 - Evidence first: raw tool output, normalized findings, source ranges, tool signals, retrieved context, claims, generated explanations, and reviewer notes stay inspectable.
-- Local first: source code and generated artifacts remain on the machine running the analysis.
+- Local-first artifacts: reports, traces, Evidence Graph rows, and generated review artifacts stay on the machine running the analysis; GitHub/Etherscan import and solc preparation may use network access when explicitly invoked.
 - Deterministic before AI: LLM output explains findings; analyzer output remains the security fact source.
 - Human in the loop: every report is a triage handoff for qualified review.
 - CI-ready: report comparison, public benchmark, RAG eval, judge eval, frontend tests, and build checks can fail regressions.
@@ -32,11 +32,11 @@ Core design:
 | Primary use | Local Solidity finding triage before manual audit or pull-request review |
 | Core analyzer | Slither |
 | Optional tools | Aderyn, Echidna, Medusa, Mythril, Halmos |
-| Inputs | `.sol`, Foundry, Hardhat, nested imports, GitHub archive, Etherscan API, ZIP |
+| Inputs | `.sol`, Foundry, Hardhat, nested imports, GitHub archive, Etherscan mainnet/sepolia API allowlist, ZIP |
 | Outputs | JSON report, Markdown report, SQLite trace, Evidence Graph tables, exploit validation records, fuzz/property suggestions, external-tool artifacts, Aderyn SARIF path |
 | Interfaces | CLI, local HTTP API, React/Vite workbench, legacy Gradio UI |
 | AI boundary | AI explains evidence; AI does not create vulnerability facts |
-| Trust boundary | Imported sources are untrusted unless explicitly trusted by the caller |
+| Trust boundary | Imported sources are untrusted and force `native_build_policy=disabled`; trusted native build mode must be explicitly requested for local trusted projects |
 
 ## Third-Party Tooling and Attribution
 
@@ -181,6 +181,9 @@ uv run scsa api \
   --api-token dev-token \
   --cors-origin http://127.0.0.1:5173 \
   --max-request-bytes 1048576 \
+  --max-concurrent-jobs 4 \
+  --max-events-per-job 256 \
+  --max-report-bytes 5000000 \
   --native-build-policy disabled
 ```
 
@@ -199,10 +202,10 @@ The workbench supports source import, analysis submit, SSE/polling status, exter
 ## CLI Cookbook
 
 ```bash
-# Analyze a single contract or project
+# Analyze a single contract or project with native builds disabled by default
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports
 
-# Use a safe default for imported or untrusted projects
+# Keep imported or untrusted projects on the safe default
 uv run scsa analyze <contract.sol|project-dir> --out-dir reports --native-build-policy disabled
 
 # Attach optional external tools when their binaries are installed
@@ -212,7 +215,8 @@ uv run scsa analyze <contract.sol|project-dir> --out-dir reports \
   --external-tool medusa \
   --external-tool mythril
 
-# Enable Halmos only for a trusted Foundry project
+# Enable trusted native build mode only for an explicitly trusted Foundry project.
+# This executes project build scripts and is a high-risk operation for untrusted code.
 uv run scsa analyze <foundry-project-dir> --out-dir reports \
   --native-build-policy trusted \
   --external-tool halmos
@@ -222,11 +226,14 @@ uv run scsa import-source \
   --github-url https://github.com/OpenZeppelin/openzeppelin-contracts \
   --out-dir reports-api/imports
 
-# Import verified contract source from Etherscan-compatible API
+# Import verified contract source from the default Etherscan mainnet/sepolia allowlist
 uv run scsa import-source \
   --etherscan-api-host api.etherscan.io \
   --address 0x0000000000000000000000000000000000000000 \
   --out-dir reports-api/imports
+
+# Remove expired guarded source-import staging directories
+uv run scsa clean-imports --imports-dir reports-api/imports --ttl-seconds 86400
 
 # Compare two reports for CI regression gates
 uv run scsa compare-reports reports/base.json reports/head.json \
@@ -266,7 +273,7 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 | Markdown report | Human-readable audit triage handoff with standards, native rules, and groundedness per finding |
 | SQLite trace | Raw analyzer output, Evidence Graph nodes/edges/claims, exploit validation rows, normalized finding, RAG chunks, prompt, generation output, and review notes |
 | Phase 3 artifacts | Sandbox-only PoC validation JSON/logs, fuzz seed notes, formal property drafts, and EVMbench detect/exploit adapter summaries |
-| External-tool artifacts | Tool-specific JSON/text output and SARIF artifact paths |
+| External-tool artifacts | Tool-specific JSON/text output, execution mode, binary path, command, timeout, duration, status, and SARIF artifact paths |
 | Comparison report | Added, fixed, and persistent findings across two reports |
 | 0G proof package | Optional report hash/proof metadata package for hackathon or external verification workflows |
 
@@ -275,8 +282,8 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 - Only scan contracts that you own, maintain, or are explicitly authorized to review.
 - Do not upload private keys, secrets, customer contracts, proprietary audit reports, or unauthorized third-party code.
 - `POST /api/imports` rejects path traversal, symlink entries, special files, nested archives, unsafe redirects, non-allowlisted hosts, and oversized remote responses.
-- Imported sources are treated as untrusted and should run with `native_build_policy=disabled` unless explicitly trusted by the caller.
-- The HTTP API supports bearer token, fixed CORS origin, `input_root`, request body limit, import size limits, and server-side native build policy ceiling.
+- Imported sources are treated as untrusted and always run with `native_build_policy=disabled`.
+- The HTTP API fail-closes on non-local hosts without `--api-token`, rejects token-authenticated wildcard CORS, and supports fixed CORS origin, `input_root`, request body limit, import size limits, job concurrency cap, event buffer cap, report read size cap, and server-side native build policy ceiling.
 - Halmos requires trusted Foundry project mode; untrusted/imported sources cannot enable that flow.
 - Generated explanations can be incomplete or wrong; use trace rows and analyzer evidence as the review anchor.
 
@@ -285,9 +292,14 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 Last full local verification on 2026-06-01:
 
 ```text
+commit: PR #19 head commit
+GitHub Actions run ID: PR #19 Checks
+```
+
+```text
 uv sync --extra audit --dev          resolved 198 packages, checked 83 packages
 uv run ruff check .                  all checks passed
-uv run pytest                        116 passed
+uv run pytest                        127 passed
 uv run python eval/run_eval.py       recall_at_k = 1.0
 uv run python eval/run_judge.py      local_average_judge_score = 5.0, external_average_judge_score = 5.0
 uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70  paired_pass_rate = 1.0
@@ -361,9 +373,6 @@ Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit 
 - [`docs/reference/related-work.md`](docs/reference/related-work.md)
 - [`docs/reference/standards-mapping.md`](docs/reference/standards-mapping.md)
 - [`docs/reference/phase3-advanced-evidence.md`](docs/reference/phase3-advanced-evidence.md)
-- [`docs/release/001-v0.1.0-checklist.md`](docs/release/001-v0.1.0-checklist.md)
-- [`docs/release/002-v0.2.0-checklist.md`](docs/release/002-v0.2.0-checklist.md)
-- [`docs/community/001-v0.1.0-tester-feedback.md`](docs/community/001-v0.1.0-tester-feedback.md)
 - [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md)
 
 ## Tester Feedback Wanted

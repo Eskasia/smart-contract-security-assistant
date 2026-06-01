@@ -27,7 +27,7 @@ SCSA treats Mythril and Halmos output as optional symbolic signals. It records
 symbolic issues, proof failures, and assertion failures as evidence rather than
 merging them into opaque AI output.
 
-Halmos is restricted to trusted Foundry project mode.
+Halmos is restricted to explicit trusted Foundry project mode because it depends on native build behavior.
 
 ## RAG and LLM Assistance
 

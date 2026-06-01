@@ -16,6 +16,7 @@ from .report_compare import (
 )
 from .source_import import (
     ImportLimits,
+    cleanup_import_staging,
     import_explorer_source,
     import_github_source,
     import_local_archive,
@@ -42,7 +43,7 @@ def main(argv: list[str] | None = None) -> None:
     analyze.add_argument(
         "--native-build-policy",
         choices=["trusted", "disabled"],
-        default="trusted",
+        default="disabled",
     )
     analyze.add_argument(
         "--external-tool",
@@ -67,6 +68,13 @@ def main(argv: list[str] | None = None) -> None:
     import_source.add_argument("--max-files", type=int, default=128)
     import_source.add_argument("--max-total-bytes", type=int, default=5_000_000)
     import_source.add_argument("--max-single-file-bytes", type=int, default=1_000_000)
+
+    clean_imports = subparsers.add_parser(
+        "clean-imports",
+        help="Remove expired source import staging directories.",
+    )
+    clean_imports.add_argument("--imports-dir", type=Path, default=Path("reports-api/imports"))
+    clean_imports.add_argument("--ttl-seconds", type=int, default=86_400)
 
     clean = subparsers.add_parser("clean-reports", help="Extract and chunk raw reports into JSONL.")
     clean.add_argument("raw_reports_dir", type=Path)
@@ -159,6 +167,9 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument("--api-token")
     api.add_argument("--cors-origin", default="http://127.0.0.1:5173")
     api.add_argument("--max-request-bytes", type=int, default=1_048_576)
+    api.add_argument("--max-concurrent-jobs", type=int, default=4)
+    api.add_argument("--max-events-per-job", type=int, default=256)
+    api.add_argument("--max-report-bytes", type=int, default=5_000_000)
     api.add_argument("--imports-dir", type=Path)
     api.add_argument("--max-import-files", type=int, default=128)
     api.add_argument("--max-import-bytes", type=int, default=5_000_000)
@@ -166,7 +177,7 @@ def main(argv: list[str] | None = None) -> None:
     api.add_argument(
         "--native-build-policy",
         choices=["trusted", "disabled"],
-        default="trusted",
+        default="disabled",
     )
 
     args = parser.parse_args(argv)
@@ -212,6 +223,23 @@ def main(argv: list[str] | None = None) -> None:
                 limits=limits,
             )
         print(json.dumps(imported.to_dict(), ensure_ascii=False, indent=2))
+    elif args.command == "clean-imports":
+        removed = cleanup_import_staging(
+            args.imports_dir,
+            ttl_seconds=args.ttl_seconds,
+        )
+        print(
+            json.dumps(
+                {
+                    "imports_dir": str(args.imports_dir),
+                    "ttl_seconds": args.ttl_seconds,
+                    "removed_count": len(removed),
+                    "removed_paths": [str(path) for path in removed],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     elif args.command == "clean-reports":
         chunks = []
         for path in sorted(args.raw_reports_dir.iterdir()):
@@ -311,18 +339,24 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "api":
         from .http_api import run_api_server
 
-        run_api_server(
-            host=args.host,
-            port=args.port,
-            output_dir=args.out_dir,
-            trace_db=args.trace_db,
-            input_root=args.input_root,
-            api_token=args.api_token,
-            cors_origin=args.cors_origin,
-            max_request_bytes=args.max_request_bytes,
-            imports_dir=args.imports_dir,
-            max_import_files=args.max_import_files,
-            max_import_bytes=args.max_import_bytes,
-            max_import_single_file_bytes=args.max_import_single_file_bytes,
-            native_build_policy=args.native_build_policy,
-        )
+        try:
+            run_api_server(
+                host=args.host,
+                port=args.port,
+                output_dir=args.out_dir,
+                trace_db=args.trace_db,
+                input_root=args.input_root,
+                api_token=args.api_token,
+                cors_origin=args.cors_origin,
+                max_request_bytes=args.max_request_bytes,
+                max_concurrent_jobs=args.max_concurrent_jobs,
+                max_events_per_job=args.max_events_per_job,
+                max_report_bytes=args.max_report_bytes,
+                imports_dir=args.imports_dir,
+                max_import_files=args.max_import_files,
+                max_import_bytes=args.max_import_bytes,
+                max_import_single_file_bytes=args.max_import_single_file_bytes,
+                native_build_policy=args.native_build_policy,
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc

@@ -4,6 +4,18 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
+## Unreleased
+
+### Changed
+
+- Defaulted CLI/API analysis to `native_build_policy=disabled`; trusted native
+  builds now require explicit opt-in.
+- Added HTTP API fail-closed checks for non-local hosts without `--api-token`,
+  token-authenticated wildcard CORS, job concurrency, event buffering, and
+  report read size.
+- Archived historical release/community docs and kept `schema/report.schema.json`
+  as the single public schema directory.
+
 ## v0.2.0 - 2026-06-01
 
 ### Added
@@ -20,7 +32,7 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
   sandbox-only exploit validation, fuzz/property suggestions, EVMbench adapter,
   SBOM/license inventory generation, frontend tests, and frontend build.
 - v0.2.0 release readiness checklist in
-  `docs/release/002-v0.2.0-checklist.md`.
+  `docs/archive/release/002-v0.2.0-checklist.md`.
 
 ### Changed
 
@@ -50,7 +62,7 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
   automation use cases.
 - Public maintainer triage for oversized PR #1, split into focused follow-up
   issues #4 through #8 under the `v0.1.0` milestone.
-- v0.1.0 release readiness checklist in `docs/release/001-v0.1.0-checklist.md`.
+- v0.1.0 release readiness checklist in `docs/archive/release/001-v0.1.0-checklist.md`.
 
 ### Changed
 

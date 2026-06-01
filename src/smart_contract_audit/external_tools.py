@@ -18,6 +18,7 @@ BinaryResolver = Callable[[str], str | None]
 class ExternalToolSpec:
     name: str
     binary: str
+    execution_mode: str
     output_suffix: str
     command_builder: Callable[[str, Path, Path, int], list[str]]
     finding_counter: Callable[[str], int]
@@ -74,6 +75,7 @@ TOOL_REGISTRY: dict[str, ExternalToolSpec] = {
     "mythril": ExternalToolSpec(
         name="mythril",
         binary="myth",
+        execution_mode="symbolic",
         output_suffix=".json",
         command_builder=_mythril_command,
         finding_counter=lambda raw_output: _count_json_findings(raw_output, "mythril"),
@@ -81,6 +83,7 @@ TOOL_REGISTRY: dict[str, ExternalToolSpec] = {
     "echidna": ExternalToolSpec(
         name="echidna",
         binary="echidna",
+        execution_mode="fuzzer",
         output_suffix=".json",
         command_builder=_echidna_command,
         finding_counter=lambda raw_output: _count_json_findings(raw_output, "echidna"),
@@ -88,6 +91,7 @@ TOOL_REGISTRY: dict[str, ExternalToolSpec] = {
     "aderyn": ExternalToolSpec(
         name="aderyn",
         binary="aderyn",
+        execution_mode="read-only CLI",
         output_suffix=".json",
         command_builder=_aderyn_command,
         finding_counter=lambda raw_output: _count_json_findings(raw_output, "aderyn"),
@@ -96,6 +100,7 @@ TOOL_REGISTRY: dict[str, ExternalToolSpec] = {
     "medusa": ExternalToolSpec(
         name="medusa",
         binary="medusa",
+        execution_mode="fuzzer",
         output_suffix=".json",
         command_builder=_medusa_command,
         finding_counter=lambda raw_output: _count_json_findings(raw_output, "medusa"),
@@ -103,6 +108,7 @@ TOOL_REGISTRY: dict[str, ExternalToolSpec] = {
     "halmos": ExternalToolSpec(
         name="halmos",
         binary="halmos",
+        execution_mode="native build dependent",
         output_suffix=".txt",
         command_builder=_halmos_command,
         finding_counter=lambda raw_output: _count_halmos_failures(raw_output),
@@ -159,6 +165,8 @@ def _run_known_tool(
             status="skipped",
             findings_count=0,
             summary=f"{spec.name} not installed; skipped optional external analysis.",
+            execution_mode=spec.execution_mode,
+            timeout_seconds=timeout_seconds,
         )
 
     output_path = output_dir / f"{spec.name}{spec.output_suffix}"
@@ -173,6 +181,9 @@ def _run_known_tool(
             status="error",
             findings_count=0,
             summary=f"{spec.name} exceeded {timeout_seconds} seconds.",
+            execution_mode=spec.execution_mode,
+            binary_path=binary_path,
+            timeout_seconds=timeout_seconds,
             error=str(exc),
             duration_ms=_elapsed_ms(started),
         )
@@ -183,6 +194,9 @@ def _run_known_tool(
             status="error",
             findings_count=0,
             summary=f"{spec.name} failed to start.",
+            execution_mode=spec.execution_mode,
+            binary_path=binary_path,
+            timeout_seconds=timeout_seconds,
             error=str(exc),
             duration_ms=_elapsed_ms(started),
         )
@@ -206,6 +220,9 @@ def _run_known_tool(
         status=status,
         findings_count=findings_count,
         summary=_summary(spec.name, status, findings_count),
+        execution_mode=spec.execution_mode,
+        binary_path=binary_path,
+        timeout_seconds=timeout_seconds,
         output_path=str(output_path),
         artifact_paths=artifact_paths,
         error=completed.stderr if status == "error" else "",
@@ -252,6 +269,7 @@ def _unsupported_tool(tool_name: str) -> ExternalToolResult:
         status="skipped",
         findings_count=0,
         summary=f"{tool_name} is not supported by this integration.",
+        execution_mode="unsupported",
     )
 
 

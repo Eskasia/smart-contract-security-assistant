@@ -87,6 +87,7 @@ def _run_case(
             project_path,
             output_dir=reports_dir / case_id,
             rag_mode=rag_mode,
+            native_build_policy="trusted",
         ).to_dict()
         errors = report.get("analysis_metadata", {}).get("errors", [])
         overall_status = str(report.get("overall_status", "error"))
