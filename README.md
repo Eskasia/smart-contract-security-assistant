@@ -387,7 +387,7 @@ cd frontend && npm run build
 git diff --check
 ```
 
-Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md).
+Latest recorded public benchmark summary: 50 cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1. Phase 2 paired variants currently cover 15 pairs across 5 vulnerability types with `paired_pass_rate = 1.0`; groundedness eval requires `unsupported_security_claims = 0`. See [`docs/reference/002-public-benchmark-leaderboard.md`](docs/reference/002-public-benchmark-leaderboard.md) and [`docs/reference/benchmark-reproducibility.md`](docs/reference/benchmark-reproducibility.md).
 
 ## GitHub Actions
 

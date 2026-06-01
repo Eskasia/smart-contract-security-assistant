@@ -117,6 +117,8 @@ Benchmark evidence:
 
 - Public benchmark leaderboard:
   [`docs/reference/002-public-benchmark-leaderboard.md`](../reference/002-public-benchmark-leaderboard.md)
+- Benchmark reproducibility:
+  [`docs/reference/benchmark-reproducibility.md`](../reference/benchmark-reproducibility.md)
 - Latest recorded public benchmark summary: 50 cases, 100.00%
   supported-label hit rate, 86.21% precision, 100.00% recall, and 92.59% F1.
 - Phase 2 paired variants currently cover 15 pairs across 5 vulnerability

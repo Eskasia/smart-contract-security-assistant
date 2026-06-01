@@ -26,6 +26,7 @@ Generated at: 2026-06-01
 | reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-05-31 | `docs/knowledge-graph.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。 | 2026-05-24 | `docs/reference/001-validation-procedure-log.md` |
 | reference | 002 | current | Public Benchmark Leaderboard | 記錄 HF Slither50、paired variants、public project build preflight 的 gate、summary、confusion matrix、precision、recall、F1 與逐案結果。 | 2026-06-01 | `docs/reference/002-public-benchmark-leaderboard.md` |
+| reference | 007 | current | Benchmark Reproducibility | 說明 HF Slither50 v2、paired variants、RAG groundedness 的 dataset、mapped detector scope、commands、metrics、gates、limitations 與 last verified run。 | 2026-06-01 | `docs/reference/benchmark-reproducibility.md` |
 | review | 001 | current | Review Checklist | 記錄 API boundary、native build policy、0G proof、benchmark metrics、CI、project input、report 與 judge 審查門檻。 | 2026-06-01 | `docs/review_checklist.md` |
 | archive | 001 | archived | v0.1.0 tester feedback guide | v0.1.0 feedback instructions retained for historical release context. | 2026-06-01 | `docs/archive/community/001-v0.1.0-tester-feedback.md` |
 | archive | 002 | archived | v0.1.0 tester outreach kit | v0.1.0 outreach message templates and evidence rules retained for historical release context. | 2026-06-01 | `docs/archive/community/002-v0.1.0-outreach-kit.md` |
