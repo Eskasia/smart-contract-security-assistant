@@ -154,6 +154,9 @@ External tester evidence is pending Phase 2. Current repo evidence does not
 claim external users, production deployments, downloads, or third-party audit
 results.
 
+Tester onboarding:
+[`docs/adoption/tester-onboarding.md`](tester-onboarding.md)
+
 Planned Phase 2 evidence fields:
 
 - Tester GitHub handle

@@ -1,0 +1,95 @@
+name: Tester feedback
+description: Share authorized external testing feedback for SCSA.
+title: "[Tester Feedback]: "
+labels:
+  - tester-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only for repository fixtures or code you own, maintain, or are explicitly authorized to review. Do not include secrets, private keys, proprietary contracts, customer code, private audit reports, or unauthorized third-party code.
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: Authorization confirmation
+      options:
+        - label: I own, maintain, or am explicitly authorized to test and discuss the repository or fixture described in this issue.
+          required: true
+        - label: I removed secrets, private keys, proprietary code, customer data, and private audit material from this issue.
+          required: true
+        - label: I did not run SCSA against unauthorized third-party code or deployed contracts.
+          required: true
+    validations:
+      required: true
+  - type: input
+    id: repo_tested
+    attributes:
+      label: Repo tested
+      description: Use a public URL, "repository fixture", or a redacted owned/authorized repository description.
+      placeholder: "repository fixture: tests/contracts/VulnerableVault.sol"
+    validations:
+      required: true
+  - type: textarea
+    id: authorization_basis
+    attributes:
+      label: Authorization basis
+      description: Explain why you were allowed to run the test and share this feedback.
+      placeholder: "I maintain this repository / I own this contract / I ran only the bundled fixture."
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Paste the exact command you ran. Redact private paths if needed.
+      placeholder: |
+        uv run scsa analyze tests/contracts/VulnerableVault.sol \
+          --out-dir reports-tester-fixture \
+          --native-build-policy disabled
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - finding
+        - no_finding
+        - error
+        - blocked
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Python version, Node version, and SCSA version or commit.
+      placeholder: |
+        OS:
+        Python:
+        Node:
+        SCSA version or commit:
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Include report usefulness, false positives, false negatives, and installation blockers.
+      placeholder: |
+        Report usefulness 1-5:
+        False positives:
+        False negatives:
+        Installation blockers:
+        Other notes:
+    validations:
+      required: true
+  - type: textarea
+    id: testimonial
+    attributes:
+      label: Optional testimonial
+      description: Optional. Only include text that may be quoted publicly.
+      placeholder: "Optional quote and attribution permission."
+    validations:
+      required: false

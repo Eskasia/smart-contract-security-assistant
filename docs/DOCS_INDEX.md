@@ -9,6 +9,7 @@ Generated at: 2026-06-01
 | guides | 001 | current | 使用說明書 | 說明安裝、分析、API 加固、External tools、GitHub Actions、trace 查詢、MLX probe、Web UI 與輸出檔案。 | 2026-06-01 | `docs/guides/001-usage-manual.md` |
 | readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-06-01 | `README.md` |
 | adoption | 001 | current | Codex for OSS Evidence | 記錄 Codex for OSS application evidence、maintainer workflow、case studies、security boundary、benchmark/CI evidence 與 adoption metrics placeholder。 | 2026-06-01 | `docs/adoption/codex-for-oss-evidence.md` |
+| adoption | 002 | current | Tester Onboarding | 說明外部 tester 的授權規則、fixture 測試、authorized repo 測試、回饋欄位與禁止提交的敏感資料。 | 2026-06-01 | `docs/adoption/tester-onboarding.md` |
 | reference | 003 | current | Tool Attribution | 記錄 Slither、Aderyn、Echidna、Medusa、Mythril、Halmos、Foundry 與 Hardhat 的角色、license、bundled 狀態與 SCSA 消費邊界。 | 2026-06-01 | `docs/reference/tool-attribution.md` |
 | reference | 004 | current | License Boundary | 說明 SCSA MIT license 與外部工具 license、bundling、native build、artifact 消費邊界。 | 2026-06-01 | `docs/reference/license-boundary.md` |
 | reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance 的定位差異與 non-goals。 | 2026-06-01 | `docs/reference/related-work.md` |
