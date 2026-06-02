@@ -4,7 +4,7 @@ All notable changes to Smart Contract Security Assistant are documented here.
 
 This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 
-## v0.2.1 - Unreleased
+## v0.2.1 - 2026-06-01
 
 ### Security
 
@@ -30,11 +30,12 @@ This project uses human-readable release notes. Dates use `YYYY-MM-DD`.
 ### Validation
 
 - `uv run ruff check .` — all checks passed
-- `uv run pytest` — 138 passed
+- `uv run pytest` — 140 passed
 - `uv run python scripts/sync_report_schema.py --check`
 - `cd frontend && npm ci` — 274 packages installed, 0 vulnerabilities
 - `cd frontend && npm run test -- --run` — 35 passed
 - `cd frontend && npm run build` — completed
+- `uv build` — built source distribution and wheel artifacts
 
 ## v0.2.0 - 2026-06-01
 

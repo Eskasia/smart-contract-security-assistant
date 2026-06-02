@@ -36,7 +36,7 @@ Snapshot date: 2026-06-01
 | Monthly downloads | 0; PyPI JSON returned 404 on 2026-06-01 and GitHub releases have no assets |
 | External OSS adoptions | 0 public adoption links |
 | Latest published release | v0.2.0 evidence platform release |
-| Hardening status | v0.2.1 hardening release candidate docs exist; tag pending |
+| Hardening status | v0.2.1 final hardening release readiness docs exist; tag and GitHub release pending |
 | Benchmark evidence | 50 public cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, 92.59% F1 |
 
 ## Why this repo qualifies
