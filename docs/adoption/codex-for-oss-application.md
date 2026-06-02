@@ -24,7 +24,7 @@ safe external tester feedback processing.
 
 ## Current evidence snapshot
 
-Snapshot date: 2026-06-01
+Snapshot date: 2026-06-02
 
 | Item | Current evidence |
 |---|---|
@@ -33,10 +33,10 @@ Snapshot date: 2026-06-01
 | External testers | 0 logged current-phase external testers |
 | Public triage cases | 0 authorized public triage cases |
 | Testimonials | 0 permissioned testimonials |
-| Monthly downloads | 0; PyPI JSON returned 404 on 2026-06-01 and GitHub releases have no assets |
+| Monthly downloads | 0 counted; PyPI package `smart-contract-security-assistant` is published at `0.2.1`, but no package-hosted download counter is logged |
 | External OSS adoptions | 0 public adoption links |
-| Latest published release | v0.2.0 evidence platform release |
-| Hardening status | v0.2.1 final hardening release readiness docs exist; tag and GitHub release pending |
+| Latest published release | v0.2.1 hardening release |
+| Hardening status | v0.2.1 tag, GitHub Release, release assets, and PyPI package are published |
 | Benchmark evidence | 50 public cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, 92.59% F1 |
 
 ## Why this repo qualifies

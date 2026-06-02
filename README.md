@@ -161,15 +161,16 @@ python -m pip install \
 scsa --help
 ```
 
-Future package note: PyPI publishing is not enabled yet. After an approved PyPI
-release exists, the expected install command is:
+Install the latest published package from PyPI:
 
 ```bash
 python -m pip install "smart-contract-security-assistant[audit]"
 ```
 
-Do not count PyPI downloads as adoption evidence until a public package release
-and package-hosted download counter exist.
+Package page: <https://pypi.org/project/smart-contract-security-assistant/>
+
+Do not count PyPI downloads as adoption evidence until a package-hosted download
+counter or another explicit public download source exists.
 
 ## Quick Start
 

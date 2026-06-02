@@ -54,9 +54,9 @@ Release evidence:
 
 - v0.2.0 is published as the evidence platform release, not audit
   certification.
-- v0.2.1 hardening is release-ready for tagging after the finalization PR is
-  merged and GitHub Actions is green. It covers API fail-closed defaults, mapped
-  detector claim boundaries, public schema sync, and public AGENTS cleanup.
+- v0.2.1 hardening is published as a GitHub Release and PyPI package. It covers
+  API fail-closed defaults, mapped detector claim boundaries, public schema
+  sync, and public AGENTS cleanup.
 - Checklist:
   [`docs/archive/release/003-v0.2.1-hardening-checklist.md`](../archive/release/003-v0.2.1-hardening-checklist.md)
 
@@ -141,9 +141,10 @@ CI evidence:
 Canonical adoption metrics tracker:
 [`docs/adoption/metrics.md`](metrics.md)
 
-Latest weekly adoption update: 2026-06-01. Public GitHub API showed 0 stars and
-0 forks; PyPI JSON still returned 404; no completed tester feedback issue,
-testimonial, public triage case, release asset download, or external OSS
+Latest weekly adoption update: 2026-06-02. The PyPI package is published at
+`0.2.1`, and the GitHub `v0.2.1` release includes source distribution and wheel
+assets. No package-hosted monthly download counter, completed tester feedback
+issue, testimonial, public triage case, release asset download, or external OSS
 adoption link is logged.
 
 Pre-application consistency audit:
