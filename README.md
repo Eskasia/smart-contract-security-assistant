@@ -345,23 +345,22 @@ CI checks it with `uv run python scripts/sync_report_schema.py --check`.
 
 ## Validation
 
-v0.2.1 hardening readiness verification on 2026-06-01:
+v0.2.1 final hardening release readiness verification on 2026-06-01:
 
 ```text
-branch: hardening/phase-0-integration
-GitHub Actions run ID: pending until the v0.2.1 hardening PR is opened
+branch: codex/release-v0.2.1-hardening-finalization
+GitHub Actions: finalization PR and post-merge main CI must pass before tagging
+release tag: pending maintainer release step
 ```
 
 ```text
-uv sync --extra audit --dev          resolved 198 packages, checked 83 packages
 uv run ruff check .                  all checks passed
-uv run pytest                        138 passed
+uv run pytest                        140 passed
 uv run python scripts/sync_report_schema.py --check  passed
-uv run python scripts/check_tool_matrix.py  passed
-uv run python scripts/generate_sbom.py      generated tool-matrix SBOM and license inventory
 cd frontend && npm ci                installed 274 packages, audited 275 packages, 0 vulnerabilities
 cd frontend && npm run test -- --run 35 passed
 cd frontend && npm run build         completed
+uv build                             built sdist and wheel artifacts
 git diff --check                     passed
 ```
 

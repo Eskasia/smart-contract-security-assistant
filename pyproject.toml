@@ -1,6 +1,6 @@
 [project]
 name = "smart-contract-security-assistant"
-version = "0.2.0"
+version = "0.2.1"
 description = "Local-first Solidity security triage assistant with Slither, RAG, MLX-ready generation, and traceable reports."
 readme = "README.md"
 requires-python = ">=3.11"

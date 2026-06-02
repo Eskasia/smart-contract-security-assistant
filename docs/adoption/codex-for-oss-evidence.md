@@ -38,25 +38,25 @@ Core repository evidence:
 
 ## Current validation status
 
-Latest local verification recorded for the v0.2.1 hardening release candidate:
+Latest local verification recorded for v0.2.1 final hardening release readiness:
 
 - Date: 2026-06-01
 - `uv run ruff check .`: passed
-- `uv run pytest`: 138 passed
+- `uv run pytest`: 140 passed
 - `uv run python scripts/sync_report_schema.py --check`: passed
-- `uv run python scripts/check_tool_matrix.py`: passed
-- `uv run python scripts/generate_sbom.py`: generated SBOM/license artifacts
+- `cd frontend && npm ci`: installed 274 packages, audited 275 packages, 0 vulnerabilities
 - `cd frontend && npm run test -- --run`: 35 passed
 - `cd frontend && npm run build`: passed
+- `uv build`: built source distribution and wheel artifacts
 - `git diff --check`: passed
 
 Release evidence:
 
 - v0.2.0 is published as the evidence platform release, not audit
   certification.
-- v0.2.1 hardening is a release candidate covering API fail-closed defaults,
-  mapped detector claim boundaries, public schema sync, and public AGENTS
-  cleanup.
+- v0.2.1 hardening is release-ready for tagging after the finalization PR is
+  merged and GitHub Actions is green. It covers API fail-closed defaults, mapped
+  detector claim boundaries, public schema sync, and public AGENTS cleanup.
 - Checklist:
   [`docs/archive/release/003-v0.2.1-hardening-checklist.md`](../archive/release/003-v0.2.1-hardening-checklist.md)
 

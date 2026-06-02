@@ -37,4 +37,4 @@ Generated at: 2026-06-01
 | archive | 005 | archived | 0G hackathon archive | Archived 0G hackathon submission, proof, demo, issue remediation, and HackQuest materials. | 2026-06-01 | `docs/archive/hackathon/` |
 | archive | 006 | archived | v0.1.0 release readiness checklist | Historical v0.1.0 release checklist. | 2026-06-01 | `docs/archive/release/001-v0.1.0-checklist.md` |
 | archive | 007 | archived | v0.2.0 release readiness checklist | Historical v0.2.0 release checklist. | 2026-06-01 | `docs/archive/release/002-v0.2.0-checklist.md` |
-| archive | 008 | archived | v0.2.1 hardening checklist | v0.2.1 release-candidate hardening checklist and validation record. | 2026-06-01 | `docs/archive/release/003-v0.2.1-hardening-checklist.md` |
+| archive | 008 | archived | v0.2.1 hardening checklist | v0.2.1 final hardening release readiness checklist and validation record. | 2026-06-01 | `docs/archive/release/003-v0.2.1-hardening-checklist.md` |
