@@ -1,13 +1,14 @@
-name: Tester feedback
-description: Share authorized external testing feedback for SCSA.
-title: "[Tester Feedback]: "
+name: External tester feedback
+description: Share authorized external tester feedback for SCSA.
+title: "[External Tester Feedback]: "
 labels:
-  - tester-feedback
+  - triage
+  - documentation
 body:
   - type: markdown
     attributes:
       value: |
-        Use this form only for repository fixtures or code you own, maintain, or are explicitly authorized to review. Do not include secrets, private keys, proprietary contracts, customer code, private audit reports, or unauthorized third-party code.
+        Use this form only for repository fixtures or code you own, maintain, or are explicitly authorized to review and discuss. Do not include secrets, private keys, proprietary contracts, customer code, private audit reports, customer data, or unauthorized third-party code.
   - type: checkboxes
     id: authorization
     attributes:
@@ -15,16 +16,24 @@ body:
       options:
         - label: I own, maintain, or am explicitly authorized to test and discuss the repository or fixture described in this issue.
           required: true
-        - label: I removed secrets, private keys, proprietary code, customer data, and private audit material from this issue.
+        - label: I removed secrets, private keys, proprietary code, private audit material, and customer data from this issue.
           required: true
         - label: I did not run SCSA against unauthorized third-party code or deployed contracts.
           required: true
     validations:
       required: true
   - type: input
-    id: repo_tested
+    id: tester_github
     attributes:
-      label: Repo tested
+      label: Tester GitHub handle
+      description: Use the GitHub handle for the person who ran the test.
+      placeholder: "@octocat"
+    validations:
+      required: true
+  - type: input
+    id: repository_tested
+    attributes:
+      label: Repository tested
       description: Use a public URL, "repository fixture", or a redacted owned/authorized repository description.
       placeholder: "repository fixture: tests/contracts/VulnerableVault.sol"
     validations:
@@ -37,10 +46,18 @@ body:
       placeholder: "I maintain this repository / I own this contract / I ran only the bundled fixture."
     validations:
       required: true
+  - type: input
+    id: install_method
+    attributes:
+      label: Install method
+      description: Describe how you installed or ran SCSA.
+      placeholder: "git clone + uv sync --extra audit --dev"
+    validations:
+      required: true
   - type: textarea
     id: command
     attributes:
-      label: Command
+      label: Command run
       description: Paste the exact command you ran. Redact private paths if needed.
       placeholder: |
         uv run scsa analyze tests/contracts/VulnerableVault.sol \
@@ -53,43 +70,58 @@ body:
     attributes:
       label: Result
       options:
-        - finding
-        - no_finding
-        - error
-        - blocked
-        - other
+        - pass
+        - fail
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: Include OS, Python version, Node version, and SCSA version or commit.
+      description: Include OS, Python, Node, solc, and SCSA versions.
       placeholder: |
         OS:
         Python:
         Node:
+        solc:
         SCSA version or commit:
     validations:
       required: true
   - type: textarea
-    id: feedback
+    id: report_artifact_summary
     attributes:
-      label: Feedback
-      description: Include report usefulness, false positives, false negatives, and installation blockers.
+      label: Report artifact summary
+      description: Summarize generated artifacts without pasting private code, local paths, secrets, or customer data.
       placeholder: |
-        Report usefulness 1-5:
-        False positives:
-        False negatives:
-        Installation blockers:
-        Other notes:
+        Output directory:
+        JSON report generated: yes/no
+        Markdown report generated: yes/no
+        SQLite trace generated: yes/no
+        High-level result summary:
     validations:
       required: true
   - type: textarea
-    id: testimonial
+    id: usability_feedback
     attributes:
-      label: Optional testimonial
-      description: Optional. Only include text that may be quoted publicly.
-      placeholder: "Optional quote and attribution permission."
+      label: Usability feedback
+      description: Include setup, command, report readability, false-positive, false-negative, and docs feedback.
+      placeholder: |
+        Install/setup feedback:
+        Command clarity:
+        Report usefulness 1-5:
+        False positives:
+        False negatives:
+        Documentation gaps:
+        Other notes:
     validations:
-      required: false
+      required: true
+  - type: dropdown
+    id: permission_to_quote
+    attributes:
+      label: Permission to quote
+      description: May maintainers quote your feedback publicly with your GitHub handle?
+      options:
+        - "no"
+        - "yes"
+    validations:
+      required: true

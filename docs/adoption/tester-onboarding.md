@@ -112,11 +112,19 @@ content.
 
 Open a tester feedback issue with:
 
+- Your tester GitHub handle.
+- The repository tested.
 - The exact command you ran.
+- The install method you used.
 - The authorization basis for the repository or fixture.
-- The result: success, finding, no finding, error, or blocked.
-- Whether the report was useful for reviewer triage.
-- Any false positives, false negatives, or installation blockers.
+- OS, Python, Node, and solc versions.
+- The result: pass or fail.
+- A report artifact summary that does not include secrets, private code, private
+  paths, customer data, or proprietary audit material.
+- Usability feedback, including setup clarity, command clarity, report
+  usefulness, false positives, false negatives, docs gaps, or installation
+  blockers.
+- Permission to quote: yes or no.
 
 Use the GitHub issue template:
 
@@ -146,15 +154,18 @@ Prefer short summaries, redacted snippets, and public fixture output.
 - Repo tested:
 - Authorization basis:
 - Command run:
+- Install method:
 - OS:
 - Python version:
 - Node version:
-- Result:
+- solc version:
+- Result: pass/fail
+- Report artifact summary:
 - Report usefulness 1-5:
 - False positives:
 - False negatives:
 - Installation blockers:
-- Testimonial, optional:
+- Permission to quote: yes/no
 ```
 
 For testimonial text, include only words you are comfortable being quoted
