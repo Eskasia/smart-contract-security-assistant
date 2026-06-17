@@ -1,7 +1,7 @@
 # Adoption Metrics
 
 Status: current manual tracker
-Updated: 2026-06-01
+Updated: 2026-06-02
 
 This tracker records only source-backed adoption signals for the current Codex
 for OSS application phase. Repository-owned fixtures, local validation runs,
@@ -17,10 +17,21 @@ and planned outreach do not count as external adoption.
 | Public triage cases | 0 | 3 | [`docs/adoption/public-triage-cases.md`](public-triage-cases.md) has no authorized public cases |
 | Feedback issues | 0 | 5 | No completed current adoption-phase feedback issue links are logged; [issue #12](https://github.com/Eskasia/smart-contract-security-assistant/issues/12) is tester outreach, not feedback received |
 | Testimonials | 0 | 10 | No quoted testimonials are logged in [`docs/adoption/codex-for-oss-evidence.md`](codex-for-oss-evidence.md#testimonials) |
-| Monthly downloads | 0 | 1000 | PyPI JSON for `smart-contract-security-assistant` returned 404 on 2026-06-01; GitHub releases have no release assets |
+| Monthly downloads | 0 | 1000 | PyPI package `smart-contract-security-assistant` is published at version `0.2.1`, but no package-hosted download counter is logged; GitHub release asset download counts were `0` on 2026-06-02 |
 | External OSS adoptions | 0 | 2 | No public repo adoption links are logged |
 
 ## Weekly update log
+
+### 2026-06-02
+
+| Checklist item | Status | Evidence |
+|---|---|---|
+| Update package publication | PyPI package published at `0.2.1` | <https://pypi.org/project/smart-contract-security-assistant/> |
+| Update download evidence | No counted downloads yet | PyPI JSON confirms package/version but does not provide a monthly download counter; GitHub `v0.2.1` release assets had `downloadCount=0` on 2026-06-02 |
+| Add new feedback issues | No completed tester feedback issues logged | Public outreach and templates do not count as completed feedback |
+| Add real testimonials | None logged | [`docs/adoption/testimonials.md`](testimonials.md) remains empty |
+| Add public triage cases | None logged | [`docs/adoption/public-triage-cases.md`](public-triage-cases.md) remains empty |
+| Add external adoption links | None logged | [`docs/adoption/external-adoptions.md`](external-adoptions.md) remains empty |
 
 ### 2026-06-01
 
