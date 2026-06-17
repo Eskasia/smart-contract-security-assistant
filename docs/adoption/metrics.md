@@ -1,7 +1,7 @@
 # Adoption Metrics
 
 Status: current manual tracker
-Updated: 2026-06-02
+Updated: 2026-06-17
 
 This tracker records only source-backed adoption signals for the current Codex
 for OSS application phase. Repository-owned fixtures, local validation runs,
@@ -11,13 +11,13 @@ and planned outreach do not count as external adoption.
 
 | Metric | Current | Target | Evidence |
 |---|---:|---:|---|
-| GitHub stars | 0 | 100 | GitHub repo API snapshot on 2026-06-01: `stargazers_count=0` |
-| GitHub forks | 0 | 30 | GitHub repo API snapshot on 2026-06-01: `forks_count=0` |
+| GitHub stars | 1 | 100 | GitHub repo API snapshot on 2026-06-17: `stargazers_count=1` |
+| GitHub forks | 0 | 30 | GitHub repo API snapshot on 2026-06-17: `forks_count=0` |
 | External testers | 0 | 10 | No external tester entries logged in [`docs/adoption/codex-for-oss-evidence.md`](codex-for-oss-evidence.md#external-tester-evidence) |
 | Public triage cases | 0 | 3 | [`docs/adoption/public-triage-cases.md`](public-triage-cases.md) has no authorized public cases |
 | Feedback issues | 0 | 5 | No completed current adoption-phase feedback issue links are logged; [issue #12](https://github.com/Eskasia/smart-contract-security-assistant/issues/12) is tester outreach, not feedback received |
 | Testimonials | 0 | 10 | No quoted testimonials are logged in [`docs/adoption/codex-for-oss-evidence.md`](codex-for-oss-evidence.md#testimonials) |
-| Monthly downloads | 0 | 1000 | PyPI package `smart-contract-security-assistant` is published at version `0.2.1`, but no package-hosted download counter is logged; GitHub release asset download counts were `0` on 2026-06-02 |
+| Monthly downloads | 0 | 1000 | PyPI package `smart-contract-security-assistant` is published at version `0.2.1`, but PyPI JSON does not provide a package-hosted monthly download counter; GitHub `v0.2.1` release asset download total was `0` on 2026-06-17 |
 | External OSS adoptions | 0 | 2 | No public repo adoption links are logged |
 
 ## Weekly update log

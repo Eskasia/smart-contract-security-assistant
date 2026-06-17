@@ -1,0 +1,64 @@
+name: Update Adoption Metrics
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: adoption-metrics-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Update source-backed metrics
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Update metrics document
+        run: uv run python scripts/update_adoption_metrics.py --write
+
+      - name: Validate whitespace
+        run: git diff --check
+
+      - name: Create metrics update pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- docs/adoption/metrics.md; then
+            echo "No adoption metrics changes."
+            exit 0
+          fi
+
+          branch="automation/adoption-metrics-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${branch}"
+          git add docs/adoption/metrics.md
+          git commit -m "docs: update source-backed adoption metrics"
+          git push --set-upstream origin "${branch}"
+          gh pr create \
+            --base main \
+            --head "${branch}" \
+            --title "docs: update adoption metrics" \
+            --body "Updates only source-backed adoption metrics from GitHub repo API, GitHub release API, and PyPI JSON. This automation does not add tester, triage, testimonial, or external adoption claims."
