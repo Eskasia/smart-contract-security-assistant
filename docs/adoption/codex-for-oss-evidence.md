@@ -1,7 +1,7 @@
 # Codex for OSS Evidence
 
 Status: current evidence index; external adoption evidence is not yet complete.
-Updated: 2026-06-01
+Updated: 2026-06-17
 
 This page is the public evidence index for short Codex for OSS application
 answers. It records only repo-verifiable claims and keeps adoption metrics
@@ -141,11 +141,14 @@ CI evidence:
 Canonical adoption metrics tracker:
 [`docs/adoption/metrics.md`](metrics.md)
 
-Latest weekly adoption update: 2026-06-02. The PyPI package is published at
-`0.2.1`, and the GitHub `v0.2.1` release includes source distribution and wheel
-assets. No package-hosted monthly download counter, completed tester feedback
-issue, testimonial, public triage case, release asset download, or external OSS
-adoption link is logged.
+Latest weekly adoption update: 2026-06-17. The PyPI package is published at
+`0.2.1`, GitHub stars are `1`, GitHub forks are `0`, and the GitHub `v0.2.1`
+release asset download total is `0`. No package-hosted monthly download
+counter, completed tester feedback issue, testimonial, public triage case, or
+external OSS adoption link is logged.
+
+Adoption evidence collection plan:
+[`docs/adoption/codex-for-oss-adoption-evidence-plan.md`](codex-for-oss-adoption-evidence-plan.md)
 
 Pre-application consistency audit:
 [`docs/adoption/evidence-consistency-audit.md`](evidence-consistency-audit.md)
@@ -168,6 +171,9 @@ Feedback processing workflow:
 
 Outreach kit:
 [`docs/adoption/outreach-kit.md`](outreach-kit.md)
+
+2-4 week adoption evidence plan:
+[`docs/adoption/codex-for-oss-adoption-evidence-plan.md`](codex-for-oss-adoption-evidence-plan.md)
 
 External adoption log:
 [`docs/adoption/external-adoptions.md`](external-adoptions.md)

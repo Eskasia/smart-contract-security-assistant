@@ -1,7 +1,7 @@
 # Codex for OSS Application Package
 
 Status: draft application package
-Updated: 2026-06-01
+Updated: 2026-06-17
 
 This package gives concise, public-evidence-backed text for a Codex for OSS
 application. It does not submit the application and does not claim adoption
@@ -24,26 +24,27 @@ safe external tester feedback processing.
 
 ## Current evidence snapshot
 
-Snapshot date: 2026-06-02
+Snapshot date: 2026-06-17
 
 | Item | Current evidence |
 |---|---|
-| GitHub stars | 0, verified from GitHub repo API on 2026-06-01 |
-| GitHub forks | 0, verified from GitHub repo API on 2026-06-01 |
+| GitHub stars | 1, verified from GitHub repo API on 2026-06-17 |
+| GitHub forks | 0, verified from GitHub repo API on 2026-06-17 |
 | External testers | 0 logged current-phase external testers |
 | Public triage cases | 0 authorized public triage cases |
 | Testimonials | 0 permissioned testimonials |
-| Monthly downloads | 0 counted; PyPI package `smart-contract-security-assistant` is published at `0.2.1`, but no package-hosted download counter is logged |
+| Monthly downloads | 0 counted; PyPI package `smart-contract-security-assistant` is published at `0.2.1`, but PyPI JSON does not provide a package-hosted monthly download counter |
 | External OSS adoptions | 0 public adoption links |
 | Latest published release | v0.2.1 hardening release |
 | Hardening status | v0.2.1 tag, GitHub Release, release assets, and PyPI package are published |
 | Benchmark evidence | 50 public cases, 100.00% supported-label hit rate, 86.21% precision, 100.00% recall, 92.59% F1 |
+| Adoption evidence plan | 2-4 week source-backed collection plan before application submission |
 
 ## Why this repo qualifies
 
 <!-- app-field: qualification -->
 ```text
-I am the primary maintainer of SCSA, a public MIT Solidity security triage workbench for OSS maintainers. It converts mapped Slither and optional external-tool evidence into JSON/Markdown reports, SQLite traces, PR regression gates, benchmark checks, and reviewer handoff artifacts. Adoption metrics are tracked conservatively; current external adoption remains unclaimed until public evidence exists.
+I am the primary maintainer of SCSA, an early MIT Solidity security triage workbench for OSS maintainers. It converts mapped analyzer evidence into JSON/Markdown reports, SQLite traces, PR regression gates, benchmark checks, and reviewer handoff artifacts. External adoption is being collected conservatively and is not claimed until public evidence exists.
 ```
 
 ## API credits use
@@ -64,7 +65,7 @@ Codex Security would be used to review SCSA itself and explicitly authorized tes
 
 <!-- app-field: additional_information -->
 ```text
-SCSA keeps vulnerability facts grounded in analyzer output. Reports remain human-review required and do not certify contracts as safe. Current public evidence includes fail-closed API defaults, native-build-safe source handling, mapped detector scope, reproducible benchmark gates, package metadata, outreach assets, and empty-but-structured adoption logs.
+SCSA is an early tool for a security-critical OSS workflow. It has reproducible CI, fail-closed API defaults, native-build-safe source handling, human-review boundaries, authorized-use policy, public release/package evidence, and structured adoption logs. External evidence is being collected before application submission.
 ```
 
 ## Evidence links
@@ -87,6 +88,8 @@ SCSA keeps vulnerability facts grounded in analyzer output. Reports remain human
   <https://github.com/Eskasia/smart-contract-security-assistant/blob/main/docs/templates/scsa-pr-triage.yml>
 - External adoption log:
   <https://github.com/Eskasia/smart-contract-security-assistant/blob/main/docs/adoption/external-adoptions.md>
+- Adoption evidence plan:
+  <https://github.com/Eskasia/smart-contract-security-assistant/blob/main/docs/adoption/codex-for-oss-adoption-evidence-plan.md>
 
 ## Do-not-submit items
 
