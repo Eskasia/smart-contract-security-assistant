@@ -486,6 +486,45 @@ def test_http_api_caps_event_buffer_per_job(tmp_path: Path) -> None:
         thread.join(timeout=3)
 
 
+def test_sse_subscriber_reaches_terminal_event_after_buffer_eviction(tmp_path: Path) -> None:
+    contract = tmp_path / "Vault.sol"
+    contract.write_text("pragma solidity ^0.8.19; contract Vault {}", encoding="utf-8")
+    analyzer_started = threading.Event()
+    release_analyzer = threading.Event()
+
+    def fake_analyzer(**kwargs: Any) -> AnalysisReport:
+        analyzer_started.set()
+        release_analyzer.wait(timeout=3)
+        report = _empty_report(kwargs, "contract_api_events")
+        report.overall_status = "finding"
+        report.findings = [_finding()]
+        return report
+
+    manager = http_api_module.AnalysisJobManager(
+        _demo_config(tmp_path / "reports", max_events_per_job=2),
+        fake_analyzer,
+    )
+    job = manager.create_job({"input_path": str(contract)})
+    assert analyzer_started.wait(timeout=3)
+    events = manager.iter_events(job.analysis_id)
+    assert events is not None
+    assert next(events)["status"] == "queued"
+    assert next(events)["status"] == "running"
+
+    release_analyzer.set()
+    deadline = time.time() + 3
+    while manager.get_job(job.analysis_id).status == "running" and time.time() < deadline:
+        time.sleep(0.01)
+
+    received: list[dict[str, Any]] = []
+    reader = threading.Thread(target=lambda: received.extend(events), daemon=True)
+    reader.start()
+    reader.join(timeout=1)
+
+    assert not reader.is_alive()
+    assert received[-1]["type"] == "done"
+
+
 def test_http_api_rejects_oversized_json_body(tmp_path: Path) -> None:
     server = create_api_server(
         host="127.0.0.1",
