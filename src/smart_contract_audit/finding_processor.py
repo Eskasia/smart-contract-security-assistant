@@ -49,6 +49,22 @@ def process_slither_findings(
         elapsed = clock() - started_at
         if elapsed >= 115:
             finding.partial = True
+            trace_store.record_finding(
+                trace_id=trace_id,
+                finding_id=finding.finding_id,
+                detector_name=finding.detector_name,
+                rag_mode=current_rag_mode,
+                retrieval_duration_ms=0,
+                llm_duration_ms=0,
+                chunks_used=0,
+                slither_raw=find_raw_detector(raw_slither, finding.detector_name),
+                normalized_finding=finding.to_dict(),
+                rag_chunk_ids=[],
+                packed_prompt="",
+                llm_raw_output=None,
+                schema_valid=True,
+                partial=True,
+            )
             processed_findings.append(finding)
             continue
         if elapsed >= 100:
