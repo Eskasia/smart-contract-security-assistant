@@ -131,7 +131,9 @@ def stage_zip_archive(
     except zipfile.BadZipFile as exc:
         raise ValueError("archive payload must be a valid ZIP archive.") from exc
 
-    extracted: dict[str, bytes] = {}
+    members: list[tuple[zipfile.ZipInfo, str]] = []
+    member_paths: set[str] = set()
+    total_bytes = 0
     with archive:
         for info in archive.infolist():
             if info.is_dir():
@@ -142,15 +144,19 @@ def stage_zip_archive(
                 raise ValueError("ZIP archive contains a nested archive member.")
             if not _is_useful_archive_member(archive_path):
                 continue
-            content = archive.read(info)
-            if len(content) > resolved_limits.max_single_file_bytes:
-                raise ValueError(
-                    "Import exceeds max_single_file_bytes of "
-                    f"{resolved_limits.max_single_file_bytes}."
-                )
-            if archive_path in extracted:
+            if archive_path in member_paths:
                 raise ValueError("ZIP archive contains duplicate normalized paths.")
-            extracted[archive_path] = content
+            members.append((info, archive_path))
+            member_paths.add(archive_path)
+            if len(members) > resolved_limits.max_files:
+                raise ValueError(f"Import exceeds max_files of {resolved_limits.max_files}.")
+            total_bytes += info.file_size
+            if total_bytes > resolved_limits.max_total_bytes:
+                raise ValueError(
+                    f"Import exceeds max_total_bytes of {resolved_limits.max_total_bytes}."
+                )
+
+        extracted = {archive_path: archive.read(info) for info, archive_path in members}
 
     if not extracted:
         raise ValueError("ZIP archive does not contain supported Solidity source files.")

@@ -86,6 +86,43 @@ def test_stage_zip_archive_rejects_symlink_members(tmp_path: Path) -> None:
         stage_zip_archive(buffer.getvalue(), tmp_path, import_name="fixture")
 
 
+@pytest.mark.parametrize(
+    ("limits", "message"),
+    [
+        (
+            ImportLimits(max_files=1, max_total_bytes=1_000, max_single_file_bytes=1_000),
+            "max_files",
+        ),
+        (
+            ImportLimits(max_files=10, max_total_bytes=5, max_single_file_bytes=1_000),
+            "max_total_bytes",
+        ),
+    ],
+)
+def test_stage_zip_archive_rejects_aggregate_limits_before_reading_members(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    limits: ImportLimits,
+    message: str,
+) -> None:
+    archive = _zip_bytes(
+        {
+            "repo-main/contracts/A.sol": "contract A {}",
+            "repo-main/contracts/B.sol": "contract B {}",
+        }
+    )
+
+    def fail_read(*args: object, **kwargs: object) -> bytes:
+        raise AssertionError("archive content was read before aggregate limits passed")
+
+    monkeypatch.setattr(zipfile.ZipFile, "read", fail_read)
+
+    with pytest.raises(ValueError, match=message):
+        stage_zip_archive(archive, tmp_path, import_name="fixture", limits=limits)
+
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_import_github_source_downloads_repository_archive(tmp_path: Path) -> None:
     calls: list[str] = []
     archive = _zip_bytes(
