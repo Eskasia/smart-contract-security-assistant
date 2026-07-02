@@ -111,6 +111,10 @@ def attach_evidence_graphs(findings, trace_store, trace_id: str) -> None:
     all_findings = list(findings)
     for finding in all_findings:
         finding.native_rule_results = apply_native_rules(finding, all_findings)
+        scoped_source_id = source_node_id(finding, trace_id)
+        for result in finding.native_rule_results:
+            if result.get("evidence_nodes"):
+                result["evidence_nodes"] = [scoped_source_id]
         rag_chunk_ids = trace_store.get_finding_rag_chunk_ids(trace_id, finding.finding_id)
         graph = build_evidence_graph(
             finding=finding,
@@ -134,11 +138,11 @@ def build_evidence_graph(
     rag_chunk_ids: list[str] | tuple[str, ...],
     rule_results: list[dict[str, Any]],
 ) -> EvidenceGraph:
-    root_id = f"finding:{finding.finding_id}"
-    source_id = source_node_id(finding)
-    tool_id = tool_signal_node_id(finding)
+    root_id = f"finding:{trace_id}:{finding.finding_id}"
+    source_id = source_node_id(finding, trace_id)
+    tool_id = tool_signal_node_id(finding, trace_id)
     trace_row_id = f"trace_row:{trace_id}:{finding.finding_id}"
-    review_id = f"review_action:{finding.finding_id}:{finding.review_status}"
+    review_id = f"review_action:{trace_id}:{finding.finding_id}:{finding.review_status}"
     nodes = [
         EvidenceNode(root_id, "normalized_finding", finding.finding_id, finding.to_dict()),
         EvidenceNode(
@@ -192,7 +196,7 @@ def build_evidence_graph(
         if not isinstance(ref, dict):
             continue
         standard_id = (
-            f"standard_ref:{_safe_id(str(ref.get('standard', 'std')))}:"
+            f"standard_ref:{trace_id}:{_safe_id(str(ref.get('standard', 'std')))}:"
             f"{_safe_id(str(ref.get('id', 'unknown')))}"
         )
         standard_nodes.append(standard_id)
@@ -215,7 +219,7 @@ def build_evidence_graph(
 
     rag_nodes: list[str] = []
     for chunk_id in rag_chunk_ids:
-        node_id = f"rag_chunk:{_safe_id(chunk_id)}"
+        node_id = f"rag_chunk:{trace_id}:{_safe_id(chunk_id)}"
         rag_nodes.append(node_id)
         nodes.append(EvidenceNode(node_id, "rag_chunk", chunk_id, {"chunk_id": chunk_id}))
         edges.append(
@@ -230,7 +234,7 @@ def build_evidence_graph(
     rule_nodes: list[str] = []
     for result in rule_results:
         rule_id = str(result.get("rule_id", "unknown"))
-        node_id = f"rule_result:{_safe_id(rule_id)}:{finding.finding_id}"
+        node_id = f"rule_result:{trace_id}:{_safe_id(rule_id)}:{finding.finding_id}"
         rule_nodes.append(node_id)
         nodes.append(EvidenceNode(node_id, "rule_result", rule_id, result))
         edges.append(
@@ -242,7 +246,7 @@ def build_evidence_graph(
             )
         )
 
-    advanced_nodes = _advanced_output_nodes(finding)
+    advanced_nodes = _advanced_output_nodes(finding, trace_id)
     for node in advanced_nodes:
         nodes.append(node)
         edges.append(
@@ -254,7 +258,7 @@ def build_evidence_graph(
             )
         )
 
-    claims = _claims_for_finding(finding, [source_id, tool_id, *rag_nodes])
+    claims = _claims_for_finding(finding, trace_id, [source_id, tool_id, *rag_nodes])
     claim_nodes: list[str] = []
     for claim in claims:
         claim_nodes.append(claim.claim_id)
@@ -306,16 +310,13 @@ def build_evidence_graph(
     return EvidenceGraph(nodes=nodes, edges=edges, claims=claims, summary=summary)
 
 
-def _advanced_output_nodes(finding) -> list[EvidenceNode]:
+def _advanced_output_nodes(finding, trace_id: str) -> list[EvidenceNode]:
     nodes: list[EvidenceNode] = []
     validation = getattr(finding, "exploit_validation", {}) or {}
     if validation:
         nodes.append(
             EvidenceNode(
-                str(
-                    validation.get("validation_id")
-                    or f"exploit_validation:{finding.finding_id}:001"
-                ),
+                f"exploit_validation:{trace_id}:{finding.finding_id}:001",
                 "exploit_validation",
                 str(validation.get("status", "not_attempted")),
                 validation,
@@ -325,7 +326,8 @@ def _advanced_output_nodes(finding) -> list[EvidenceNode]:
         if isinstance(seed, dict):
             nodes.append(
                 EvidenceNode(
-                    str(seed.get("seed_id") or f"seed:{finding.finding_id}:unknown"),
+                    f"seed:{trace_id}:{finding.finding_id}:"
+                    f"{_safe_id(str(seed.get('seed_id', 'unknown')))}",
                     "fuzz_seed",
                     str(seed.get("target_function", "target")),
                     seed,
@@ -335,7 +337,8 @@ def _advanced_output_nodes(finding) -> list[EvidenceNode]:
         if isinstance(prop, dict):
             nodes.append(
                 EvidenceNode(
-                    str(prop.get("property_id") or f"property:{finding.finding_id}:unknown"),
+                    f"property:{trace_id}:{finding.finding_id}:"
+                    f"{_safe_id(str(prop.get('property_id', 'unknown')))}",
                     "formal_property",
                     str(prop.get("format", "property")),
                     prop,
@@ -345,7 +348,7 @@ def _advanced_output_nodes(finding) -> list[EvidenceNode]:
     if profit_signal:
         nodes.append(
             EvidenceNode(
-                f"defi_profit_signal:{finding.finding_id}:001",
+                f"defi_profit_signal:{trace_id}:{finding.finding_id}:001",
                 "defi_profit_signal",
                 str(profit_signal.get("status", "not_observed")),
                 profit_signal,
@@ -354,26 +357,28 @@ def _advanced_output_nodes(finding) -> list[EvidenceNode]:
     return nodes
 
 
-def source_node_id(finding) -> str:
+def source_node_id(finding, trace_id: str) -> str:
     return (
-        f"source:{str(finding.location.file).replace(' ', '_')}:"
+        f"source:{trace_id}:{str(finding.location.file).replace(' ', '_')}:"
         f"{finding.location.line_start}-{finding.location.line_end}"
     )
 
 
-def tool_signal_node_id(finding) -> str:
+def tool_signal_node_id(finding, trace_id: str) -> str:
     return (
-        f"tool_signal:{_safe_id(finding.static_tool_source)}:"
+        f"tool_signal:{trace_id}:{_safe_id(finding.static_tool_source)}:"
         f"{_safe_id(finding.detector_name)}:{finding.finding_id}"
     )
 
 
-def _claims_for_finding(finding, support_node_ids: list[str]) -> list[EvidenceClaim]:
-    support = support_node_ids or [source_node_id(finding)]
+def _claims_for_finding(
+    finding, trace_id: str, support_node_ids: list[str]
+) -> list[EvidenceClaim]:
+    support = support_node_ids or [source_node_id(finding, trace_id)]
     claim_texts = _important_claims(finding)
     return [
         EvidenceClaim(
-            claim_id=f"claim:{finding.finding_id}:{index:03d}",
+            claim_id=f"claim:{trace_id}:{finding.finding_id}:{index:03d}",
             finding_id=finding.finding_id,
             claim_text=claim_text,
             support_node_ids=support,
