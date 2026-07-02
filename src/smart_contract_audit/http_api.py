@@ -119,6 +119,7 @@ class AnalysisJob:
 class _JobRecord:
     job: AnalysisJob
     events: list[AnalysisEvent] = field(default_factory=list)
+    first_event_sequence: int = 0
 
 
 class AnalysisJobManager:
@@ -176,15 +177,18 @@ class AnalysisJobManager:
         return self._event_iterator(analysis_id)
 
     def _event_iterator(self, analysis_id: str) -> Iterator[AnalysisEvent]:
-        cursor = 0
+        cursor: int | None = None
         while True:
             with self._condition:
                 while True:
                     record = self._jobs.get(analysis_id)
                     if record is None:
                         return
-                    if cursor < len(record.events):
-                        event = record.events[cursor]
+                    if cursor is None or cursor < record.first_event_sequence:
+                        cursor = record.first_event_sequence
+                    event_index = cursor - record.first_event_sequence
+                    if event_index < len(record.events):
+                        event = record.events[event_index]
                         cursor += 1
                         break
                     self._condition.wait(timeout=15)
@@ -256,6 +260,7 @@ class AnalysisJobManager:
         overflow = len(events) - self.config.max_events_per_job
         if overflow > 0:
             del events[:overflow]
+            self._jobs[analysis_id].first_event_sequence += overflow
         self._condition.notify_all()
 
 
