@@ -181,7 +181,7 @@ def analyze_contract(
             trace_store,
             trace_id,
         )
-        attach_advanced_evidence(processed_findings, trace_store)
+        attach_advanced_evidence(processed_findings, trace_store, trace_id)
         attach_evidence_graphs(processed_findings, trace_store, trace_id)
         final_status = overall_status_for(processed_findings)
 

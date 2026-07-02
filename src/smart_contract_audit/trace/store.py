@@ -108,13 +108,12 @@ class TraceStore:
 
     def record_exploit_validation(
         self,
+        trace_id: str,
         finding_id: str,
         validation: dict[str, Any],
     ) -> None:
         assert self.conn is not None
-        validation_id = str(
-            validation.get("validation_id") or f"exploit_validation:{finding_id}:001"
-        )
+        validation_id = f"exploit_validation:{trace_id}:{finding_id}:001"
         triggered = validation.get("triggered")
         self.conn.execute(
             """

@@ -55,11 +55,59 @@ def test_attach_evidence_graph_records_nodes_edges_and_claims(tmp_path: Path) ->
     assert {"reports", "supports", "maps_to", "reviewed_as"} <= edge_types
     assert claim_rows
     assert {row[1] for row in claim_rows} == {"supported"}
-    assert finding.evidence_graph["root_finding_node_id"] == "finding:f_001"
+    assert finding.evidence_graph["root_finding_node_id"] == f"finding:{trace_id}:f_001"
     assert finding.evidence_graph["source_nodes"]
     assert finding.evidence_graph["tool_signal_nodes"]
     assert finding.evidence_graph["claim_nodes"]
     assert finding.evidence_graph["unsupported_security_claims"] == 0
+
+
+def test_evidence_graph_ids_are_isolated_by_trace(tmp_path: Path) -> None:
+    with TraceStore(tmp_path / "trace.sqlite") as store:
+        trace_ids = []
+        for contract_id in ("contract_001", "contract_002"):
+            trace_id = store.create_trace(
+                contract_id=contract_id,
+                solc_version="0.8.34",
+                slither_version="0.11.5",
+                model_version="fallback",
+                dataset_version="dataset_v1",
+                initial_rag_mode="fallback",
+                review_status="pending_human_review",
+            )
+            finding = _finding()
+            store.record_finding(
+                trace_id=trace_id,
+                finding_id=finding.finding_id,
+                detector_name=finding.detector_name,
+                rag_mode="fallback",
+                retrieval_duration_ms=0,
+                llm_duration_ms=0,
+                chunks_used=0,
+                slither_raw=None,
+                normalized_finding=finding.to_dict(),
+                rag_chunk_ids=[],
+                packed_prompt="",
+                llm_raw_output=None,
+                schema_valid=True,
+            )
+            attach_evidence_graphs([finding], store, trace_id)
+            trace_ids.append(trace_id)
+
+        root_ids = {
+            row[0]
+            for row in store.conn.execute(
+                "SELECT node_id FROM evidence_nodes WHERE node_type = 'normalized_finding'"
+            ).fetchall()
+        }
+        claim_ids = {row[0] for row in store.conn.execute("SELECT claim_id FROM evidence_claims")}
+
+    assert root_ids == {f"finding:{trace_id}:f_001" for trace_id in trace_ids}
+    assert len(claim_ids) == 4
+    assert all(
+        any(claim_id.startswith(f"claim:{trace_id}:f_001:") for claim_id in claim_ids)
+        for trace_id in trace_ids
+    )
 
 
 def _finding() -> Finding:

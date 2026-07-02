@@ -9,11 +9,13 @@ from smart_contract_audit.trace.store import TraceStore
 def test_attach_advanced_evidence_defaults_and_trace(tmp_path: Path) -> None:
     finding = _finding()
     with TraceStore(tmp_path / "trace.sqlite") as trace_store:
-        attach_advanced_evidence([finding], trace_store)
-        row = trace_store.conn.execute(
-            "SELECT status, mode, triggered FROM exploit_validations WHERE finding_id = ?",
+        attach_advanced_evidence([finding], trace_store, "trace_001")
+        attach_advanced_evidence([_finding()], trace_store, "trace_002")
+        rows = trace_store.conn.execute(
+            "SELECT validation_id, status, mode, triggered "
+            "FROM exploit_validations WHERE finding_id = ? ORDER BY validation_id",
             (finding.finding_id,),
-        ).fetchone()
+        ).fetchall()
 
     assert finding.exploit_validation["status"] == "not_attempted"
     assert finding.exploit_validation["mode"] == "sandbox_only"
@@ -23,7 +25,10 @@ def test_attach_advanced_evidence_defaults_and_trace(tmp_path: Path) -> None:
     assert finding.formal_property_suggestions[0]["status"] == "draft"
     assert finding.formal_property_suggestions[0]["verification_status"] == "not_proven"
     assert finding.defi_profit_signal["status"] == "not_observed"
-    assert row == ("not_attempted", "sandbox_only", None)
+    assert rows == [
+        ("exploit_validation:trace_001:f_001:001", "not_attempted", "sandbox_only", None),
+        ("exploit_validation:trace_002:f_001:001", "not_attempted", "sandbox_only", None),
+    ]
 
 
 def test_evidence_graph_records_advanced_output_nodes() -> None:
@@ -42,7 +47,7 @@ def test_evidence_graph_records_advanced_output_nodes() -> None:
     assert "fuzz_seed" in node_types
     assert "formal_property" in node_types
     assert "defi_profit_signal" in node_types
-    assert f"exploit_validation:{finding.finding_id}:001" in graph.summary["advanced_nodes"]
+    assert "exploit_validation:trace_001:f_001:001" in graph.summary["advanced_nodes"]
 
 
 def _finding() -> Finding:
