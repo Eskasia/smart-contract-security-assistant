@@ -92,6 +92,8 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
         lines.append("No mapped Slither findings were included in the formal report.")
     else:
         for finding in report.findings:
+            finding_data = finding.to_dict()
+            falsification_pack = finding_data.get("falsification_pack", {})
             finding_lines = [
                 f"### {finding.finding_id}: {finding.vulnerability_type}",
                 "",
@@ -101,7 +103,7 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
             ]
             if finding.review_note:
                 finding_lines.append(f"- Finding review note: {finding.review_note}")
-            standard_refs = finding.to_dict().get("standard_refs", [])
+            standard_refs = finding_data.get("standard_refs", [])
             finding_lines.extend(
                 [
                     f"- Location: `{finding.location.file}:{finding.location.line_start}`",
@@ -128,6 +130,11 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     + _format_count(finding.formal_property_suggestions, "property"),
                     "- DeFi profit signal: "
                     + f"`{finding.defi_profit_signal.get('status', 'not_observed')}`",
+                    "- Falsification checks: "
+                    + _format_count(
+                        falsification_pack.get("counterevidence_checks", []),
+                        "check",
+                    ),
                     "",
                     "Evidence:",
                     "",
@@ -162,6 +169,10 @@ def write_markdown_report(report: AnalysisReport, output_path: Path) -> None:
                     "DeFi Profit Signal:",
                     "",
                     _render_defi_profit_signal(finding.defi_profit_signal),
+                    "",
+                    "Falsification Pack:",
+                    "",
+                    _render_falsification_pack(falsification_pack),
                     "",
                     "Fix suggestion:",
                     "",
@@ -290,4 +301,40 @@ def _render_defi_profit_signal(signal: object) -> str:
     asset_flow = signal.get("asset_flow")
     if isinstance(asset_flow, list) and asset_flow:
         lines.append(f"Asset delta: `{asset_flow}`")
+    return "\n".join(lines)
+
+
+def _render_falsification_pack(pack: object) -> str:
+    if not isinstance(pack, dict) or not pack:
+        return "Status: `unavailable`"
+    lines = [
+        f"Status: `{pack.get('status', 'needs_human_review')}`",
+        f"Human review required: `{pack.get('human_review_required', True)}`",
+    ]
+    reviewer_goal = pack.get("reviewer_goal")
+    if reviewer_goal:
+        lines.append(f"Reviewer goal: {reviewer_goal}")
+    checks = pack.get("counterevidence_checks")
+    if isinstance(checks, list) and checks:
+        lines.append("")
+        lines.append("Counterevidence checks:")
+        for check in checks:
+            if not isinstance(check, dict):
+                continue
+            lines.append(
+                "- "
+                f"`{check.get('check_id', 'check')}`: "
+                f"{check.get('question', 'Review the finding evidence.')} "
+                f"Refutes if: {check.get('would_refute_if', 'counterevidence is confirmed')}"
+            )
+    requirements = pack.get("confirmation_requirements")
+    if isinstance(requirements, list) and requirements:
+        lines.append("")
+        lines.append("Confirmation requirements:")
+        lines.extend(f"- {requirement}" for requirement in requirements)
+    missing = pack.get("missing_evidence")
+    if isinstance(missing, list) and missing:
+        lines.append("")
+        lines.append("Missing evidence:")
+        lines.extend(f"- {item}" for item in missing)
     return "\n".join(lines)

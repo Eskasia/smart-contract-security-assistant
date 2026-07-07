@@ -1,5 +1,32 @@
 {
   "$defs": {
+    "counterevidence_check": {
+      "properties": {
+        "check_id": {
+          "type": "string"
+        },
+        "evidence_to_collect": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "would_refute_if": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "question",
+        "would_refute_if",
+        "evidence_to_collect",
+        "status"
+      ],
+      "type": "object"
+    },
     "exploit_validation": {
       "properties": {
         "asset_delta": {
@@ -150,6 +177,60 @@
       ],
       "type": "object"
     },
+    "falsification_pack": {
+      "properties": {
+        "confirmation_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "counterevidence_checks": {
+          "items": {
+            "$ref": "#/$defs/counterevidence_check"
+          },
+          "type": "array"
+        },
+        "human_review_required": {
+          "type": "boolean"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "missing_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "reviewer_goal": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "supported_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "reviewer_goal",
+        "counterevidence_checks",
+        "confirmation_requirements",
+        "missing_evidence",
+        "human_review_required",
+        "supported_by",
+        "limitations"
+      ],
+      "type": "object"
+    },
     "finding": {
       "properties": {
         "attack_path": {
@@ -186,6 +267,9 @@
           "maximum": 5,
           "minimum": 0,
           "type": "number"
+        },
+        "falsification_pack": {
+          "$ref": "#/$defs/falsification_pack"
         },
         "finding_confidence": {
           "maximum": 1,
@@ -313,7 +397,8 @@
         "exploit_validation",
         "fuzz_seed_suggestions",
         "formal_property_suggestions",
-        "defi_profit_signal"
+        "defi_profit_signal",
+        "falsification_pack"
       ],
       "type": "object"
     },

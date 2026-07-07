@@ -65,6 +65,7 @@ export const FindingCard = memo(function FindingCard({
   const fuzzSeeds = finding.fuzz_seed_suggestions ?? [];
   const formalProperties = finding.formal_property_suggestions ?? [];
   const defiProfitSignal = finding.defi_profit_signal;
+  const falsificationPack = finding.falsification_pack;
   const [reviewDraft, setReviewDraft] = useState<FindingReviewStatus>(
     finding.review_status ?? "unreviewed",
   );
@@ -288,6 +289,64 @@ export const FindingCard = memo(function FindingCard({
           />
         </div>
       </section>
+
+      {falsificationPack ? (
+        <section
+          aria-labelledby={`${finding.finding_id}-falsification-pack`}
+          className="mt-4 border-t border-slate-200 pt-3"
+        >
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <div>
+              <h3 id={`${finding.finding_id}-falsification-pack`} className="text-sm font-semibold text-slate-900">
+                {t("falsificationPack")}
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                {falsificationPack.reviewer_goal}
+              </p>
+            </div>
+            <Metric
+              label={t("humanReviewRequired")}
+              value={String(falsificationPack.human_review_required)}
+            />
+          </div>
+          <div className="mt-3 space-y-2">
+            {falsificationPack.counterevidence_checks.map((check) => (
+              <details
+                key={check.check_id}
+                className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+              >
+                <summary className="cursor-pointer text-xs font-semibold text-slate-800">
+                  {check.question}
+                </summary>
+                <dl className="mt-2 grid gap-2 text-xs leading-5 text-slate-700 md:grid-cols-2">
+                  <div>
+                    <dt className="font-semibold text-slate-500">{t("refutesIf")}</dt>
+                    <dd>{check.would_refute_if}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-slate-500">{t("evidenceToCollect")}</dt>
+                    <dd>{check.evidence_to_collect}</dd>
+                  </div>
+                </dl>
+              </details>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-3">
+            <EvidenceList
+              title={t("confirmationRequirements")}
+              items={falsificationPack.confirmation_requirements}
+            />
+            <EvidenceList
+              title={t("missingEvidence")}
+              items={falsificationPack.missing_evidence}
+            />
+            <EvidenceList
+              title={t("limitations")}
+              items={falsificationPack.limitations}
+            />
+          </div>
+        </section>
+      ) : null}
 
       <div className="mt-4 grid gap-3 border-t border-slate-200 pt-3 md:grid-cols-[minmax(170px,220px)_minmax(0,1fr)_auto]">
         <label className="block">

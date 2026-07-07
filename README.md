@@ -7,7 +7,7 @@
 
 Local-first analysis-artifact workbench for Solidity security triage.
 
-SCSA turns deterministic analyzer output into reviewable security evidence: mapped Slither detector findings, optional external-tool signals, Evidence Graph nodes/edges/claims, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
+SCSA turns deterministic analyzer output into reviewable security evidence: mapped Slither detector findings, optional external-tool signals, Evidence Graph nodes/edges/claims, falsification packs for human review, sandbox-only exploit validation records, fuzz seed suggestions, formal property drafts, local RAG context, MLX-ready explanations, SQLite traces, JSON/Markdown reports, benchmark gates, and a React reviewer UI.
 
 本專案協助維護者、審計學習者與小型 Solidity 團隊完成第一輪安全初篩。漏洞事實來自 Slither 與外部安全工具；LLM 只負責把既有 evidence 轉成可讀解釋、攻擊路徑與修復建議。
 
@@ -325,6 +325,7 @@ uv sync --extra audit --extra docs --extra rag --extra mlx --extra web --dev
 | JSON report | Machine-readable findings, standards mapping, evidence graph summary, score, metadata, review state, and external-tool summaries |
 | Markdown report | Human-readable audit triage handoff with standards, native rules, and groundedness per finding |
 | SQLite trace | Raw analyzer output, Evidence Graph nodes/edges/claims, exploit validation rows, normalized finding, RAG chunks, prompt, generation output, and review notes |
+| Falsification pack | Per-finding counterevidence checks, confirmation requirements, missing evidence, and reviewer limitations |
 | Phase 3 artifacts | Sandbox-only PoC validation JSON/logs, fuzz seed notes, formal property drafts, and EVMbench detect/exploit adapter summaries |
 | External-tool artifacts | Tool-specific JSON/text output, execution mode, binary path, command, timeout, duration, status, and SARIF artifact paths |
 | Comparison report | Added, fixed, and persistent findings across two reports |

@@ -343,6 +343,24 @@ describe("App", () => {
     expect(await screen.findByText(/已儲存在本機。|Saved locally./)).toBeInTheDocument();
   });
 
+  it("renders falsification pack reviewer checks", async () => {
+    useAnalysisStore.getState().setReport(demoReport);
+    render(
+      <FindingCard
+        finding={demoReport.findings[0]}
+        selected={true}
+        onSelect={() => undefined}
+      />,
+    );
+
+    expect(await screen.findByText("Falsification pack")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Is an effective nonReentrant guard or equivalent mutex active on the call path?",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("clears transient report state when a new analysis starts", () => {
     useAnalysisStore.getState().setTraceRows(demoReport.findings.map((finding) => ({
       trace_id: "trace_001",

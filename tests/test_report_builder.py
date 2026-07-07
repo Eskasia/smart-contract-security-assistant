@@ -83,6 +83,49 @@ def test_finish_analysis_report_writes_reports_and_updates_trace(tmp_path: Path)
     assert (tmp_path / "reports" / "contract_001.md").exists()
 
 
+def test_finish_analysis_report_writes_falsification_pack(tmp_path: Path) -> None:
+    with TraceStore(tmp_path / "trace.sqlite") as trace_store:
+        trace_id = trace_store.create_trace(
+            contract_id="contract_001",
+            solc_version=None,
+            slither_version=None,
+            model_version="fallback",
+            dataset_version="dataset_v1",
+            initial_rag_mode="fallback",
+            review_status="blocked",
+        )
+        report = build_analysis_report(
+            status="finding",
+            contract_id="contract_001",
+            business_logic_review_required=False,
+            review_reason="Human review required.",
+            findings=[_finding()],
+            trace_id=trace_id,
+            solc_version=None,
+            slither_version=None,
+            rag_mode="fallback",
+            total_duration_ms=7,
+            errors=[],
+            target=None,
+            external_tool_results=[],
+        )
+        finish_analysis_report(
+            trace_store,
+            trace_id=trace_id,
+            report=report,
+            output_dir=tmp_path / "reports",
+            contract_id="contract_001",
+        )
+
+    report_json = (tmp_path / "reports" / "contract_001.json").read_text(
+        encoding="utf-8"
+    )
+    markdown = (tmp_path / "reports" / "contract_001.md").read_text(encoding="utf-8")
+    assert "falsification_pack" in report_json
+    assert "Falsification Pack:" in markdown
+    assert "Counterevidence checks:" in markdown
+
+
 def test_status_helpers_are_stable() -> None:
     partial = _finding()
     partial.partial = True

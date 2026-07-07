@@ -123,6 +123,7 @@ REPORT_SCHEMA: dict = {
                 "fuzz_seed_suggestions",
                 "formal_property_suggestions",
                 "defi_profit_signal",
+                "falsification_pack",
             ],
             "properties": {
                 "finding_id": {"type": "string"},
@@ -178,6 +179,56 @@ REPORT_SCHEMA: dict = {
                     "items": {"$ref": "#/$defs/formal_property"},
                 },
                 "defi_profit_signal": {"type": "object"},
+                "falsification_pack": {"$ref": "#/$defs/falsification_pack"},
+            },
+        },
+        "falsification_pack": {
+            "type": "object",
+            "required": [
+                "status",
+                "reviewer_goal",
+                "counterevidence_checks",
+                "confirmation_requirements",
+                "missing_evidence",
+                "human_review_required",
+                "supported_by",
+                "limitations",
+            ],
+            "properties": {
+                "status": {"type": "string"},
+                "reviewer_goal": {"type": "string"},
+                "counterevidence_checks": {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/counterevidence_check"},
+                },
+                "confirmation_requirements": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "missing_evidence": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "human_review_required": {"type": "boolean"},
+                "supported_by": {"type": "array", "items": {"type": "string"}},
+                "limitations": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "counterevidence_check": {
+            "type": "object",
+            "required": [
+                "check_id",
+                "question",
+                "would_refute_if",
+                "evidence_to_collect",
+                "status",
+            ],
+            "properties": {
+                "check_id": {"type": "string"},
+                "question": {"type": "string"},
+                "would_refute_if": {"type": "string"},
+                "evidence_to_collect": {"type": "string"},
+                "status": {"type": "string"},
             },
         },
         "exploit_validation": {
