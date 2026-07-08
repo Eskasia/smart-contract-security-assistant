@@ -31,19 +31,19 @@
 
 ## File Structure
 
-- Modify: `docs/adoption/metrics.md`  
+- Modify: `docs/adoption/metrics.md`
   Responsibility: canonical adoption metrics, source dates, weekly update log.
-- Modify: `docs/adoption/codex-for-oss-evidence.md`  
+- Modify: `docs/adoption/codex-for-oss-evidence.md`
   Responsibility: evidence index that points to the current metrics and adoption status.
-- Modify: `docs/adoption/codex-for-oss-adoption-evidence-plan.md`  
+- Modify: `docs/adoption/codex-for-oss-adoption-evidence-plan.md`
   Responsibility: 2-4 week conversion plan from outreach to public evidence.
-- Modify: `docs/adoption/tester-onboarding.md`  
+- Modify: `docs/adoption/tester-onboarding.md`
   Responsibility: make tester feedback submission path concrete and measurable.
-- Modify: `docs/adoption/external-adoptions.md`  
+- Modify: `docs/adoption/external-adoptions.md`
   Responsibility: keep external adoption entries source-backed and empty unless public evidence exists.
-- Create: `docs/design/finding-to-repro-harness.md`  
+- Create: `docs/design/finding-to-repro-harness.md`
   Responsibility: design the later industry-leading feature before implementation.
-- Optional future modify: `docs/DOCS_INDEX.md`  
+- Optional future modify: `docs/DOCS_INDEX.md`
   Responsibility: index any changed or newly created docs.
 
 ### Task 1: Refresh Adoption Facts
