@@ -29,6 +29,8 @@ knowledge-graph-out/
 .local/
 .ship/
 .claude/
+.superpowers/
+.worktrees/
 deck-smart-contract-security-assistant/
 huashu-redesign/
 huashu-product-report/

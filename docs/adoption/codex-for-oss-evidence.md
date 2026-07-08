@@ -1,7 +1,7 @@
 # Codex for OSS Evidence
 
 Status: current evidence index; external adoption evidence is not yet complete.
-Updated: 2026-06-17
+Updated: 2026-07-09
 
 This page is the public evidence index for short Codex for OSS application
 answers. It records only repo-verifiable claims and keeps adoption metrics
@@ -141,7 +141,7 @@ CI evidence:
 Canonical adoption metrics tracker:
 [`docs/adoption/metrics.md`](metrics.md)
 
-Latest weekly adoption update: 2026-06-17. The PyPI package is published at
+Latest weekly adoption update: 2026-07-09. The PyPI package is published at
 `0.2.1`, GitHub stars are `1`, GitHub forks are `0`, and the GitHub `v0.2.1`
 release asset download total is `0`. No package-hosted monthly download
 counter, completed tester feedback issue, testimonial, public triage case, or
@@ -189,8 +189,12 @@ Planned Phase 2 evidence fields:
 - Authorization basis
 - Command run
 - Report artifact summary
-- Feedback issue link
-- Permission to quote
+- current feedback issue record
+- External public evidence links (if present)
+- Permission to summarize privately shared feedback
+- Testimonial eligibility
+- Permission to quote for testimonials only
+- Sensitive-material removal confirmation
 
 ## Testimonials
 

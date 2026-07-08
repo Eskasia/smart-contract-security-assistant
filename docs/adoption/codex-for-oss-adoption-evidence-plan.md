@@ -1,7 +1,7 @@
 # Codex for OSS Adoption Evidence Plan
 
 Status: active collection plan
-Updated: 2026-06-17
+Updated: 2026-07-09
 
 This plan defines the 2-4 week evidence collection phase before submitting the
 Codex for OSS application. It is an execution checklist, not an adoption claim:
@@ -28,6 +28,25 @@ not count as adoption evidence.
 | 2 | Convert completed runs into public evidence | Public feedback issues and first authorized public triage case entries |
 | 3 | Seek external repository adoption links | Public PR, workflow, README, issue, or maintainer comment showing SCSA usage |
 | 4 | Prepare final application evidence package | Evidence consistency audit, metrics update, application text review |
+
+## Weekly adoption operating loop
+
+Cadence: every Wednesday while the Codex for OSS application package is active.
+
+1. Refresh source-backed metrics in [`docs/adoption/metrics.md`](metrics.md).
+2. Review open tester/outreach issues for completed feedback links.
+3. Move only authorized public results into [`public-triage-cases.md`](public-triage-cases.md), [`testimonials.md`](testimonials.md), or [`external-adoptions.md`](external-adoptions.md).
+4. Leave counts unchanged when evidence is private, pending, unauthorised, or only repository-owned.
+5. Record the next outreach target list separately from evidence counts.
+
+Success threshold for the next four weeks:
+
+| Signal | Minimum target | Counting rule |
+|---|---:|---|
+| Completed tester feedback issue | 3 | Public GitHub issue or explicit permission to summarize |
+| Authorized public triage case | 1 | Public repo link plus maintainer authorization |
+| Quote-approved testimonial | 1 | Explicit permission to quote |
+| External OSS adoption | 1 | Public repo workflow, issue, PR, or docs link showing SCSA use |
 
 ## Daily maintenance
 

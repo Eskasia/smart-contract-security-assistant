@@ -1,7 +1,7 @@
 # Tester Onboarding
 
 Status: current
-Updated: 2026-06-01
+Updated: 2026-07-09
 
 This guide is for external testers who want to give SCSA feedback without
 creating unsafe or unverifiable adoption evidence.
@@ -113,17 +113,20 @@ content.
 Open a tester feedback issue with:
 
 - Your tester GitHub handle.
-- The repository tested.
-- The exact command you ran.
+- Current GitHub issue as the feedback record plus public external evidence links (if any) or explicit permission to summarize privately shared feedback.
+- The repository tested, authorization basis, command run, and report artifact
+  summary.
 - The install method you used.
-- The authorization basis for the repository or fixture.
 - OS, Python, Node, and solc versions.
 - The result: pass or fail.
-- A report artifact summary that does not include secrets, private code, private
-  paths, customer data, or proprietary audit material.
+- Confirmation that private code, secrets, addresses, and proprietary audit
+  material were removed.
+- A report artifact summary that does not include private code, private paths,
+  customer data, secrets, addresses, or proprietary audit material.
 - Usability feedback, including setup clarity, command clarity, report
   usefulness, false positives, false negatives, docs gaps, or installation
   blockers.
+- Permission field for whether this feedback can count as testimonial evidence.
 - Permission to quote: yes or no.
 
 Use the GitHub issue template:
@@ -153,6 +156,8 @@ Prefer short summaries, redacted snippets, and public fixture output.
 - Tester GitHub:
 - Repo tested:
 - Authorization basis:
+- Current GitHub issue as the feedback record:
+- Public external evidence links (if available) or permission to summarize privately shared feedback:
 - Command run:
 - Install method:
 - OS:
@@ -165,6 +170,8 @@ Prefer short summaries, redacted snippets, and public fixture output.
 - False positives:
 - False negatives:
 - Installation blockers:
+- Can this feedback count as testimonial evidence: yes/no
+- Private code/secrets/addresses/proprietary audit material removed: yes/no
 - Permission to quote: yes/no
 ```
 
