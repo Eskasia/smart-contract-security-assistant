@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the current adoption uncertainty into source-backed metrics, a repeatable external-evidence funnel, and one defensible industry-leading feature plan.
+**Goal:** Turn the current adoption uncertainty into source-backed metrics and a repeatable external-evidence funnel, with feature design deferred.
 
 > **Scope note:** This PR executes only Task 1/2/4. Task 3 (Finding-to-Repro Harness) is deferred to branch `codex/finding-to-repro-harness-design-wip` after Task 1/2 merge.
 
-**Architecture:** Treat adoption evidence and product differentiation as separate tracks. Track 1 updates public evidence from live sources without inflating adoption; Track 2 converts outreach into public, permissioned evidence; Track 3 designs Finding-to-Repro Harness as a later product PR after evidence docs are current.
+**Architecture:** Treat adoption evidence and feature exploration as separate tracks. Track 1 updates public evidence from live sources without inflating adoption; Track 2 converts outreach into public, permissioned evidence. Track 3 (Finding-to-Repro Harness) is deferred to branch `codex/finding-to-repro-harness-design-wip`.
 
 **Tech Stack:** Markdown docs, GitHub REST API snapshots, PyPI JSON, GitHub issues/PRs, existing SCSA CLI/report pipeline, future Foundry test skeleton generation.
 
@@ -29,7 +29,7 @@
 - Live checks on 2026-07-09 showed GitHub stars `1`, forks `0`, release asset downloads `0`, and PyPI package version `0.2.1`.
 - The biggest strategic gap is not documentation volume; it is lack of external, verifiable adoption evidence.
 - The most likely three-month failure mode is internal feature/documentation progress without tester feedback, public triage cases, testimonials, or external OSS adoption links.
-- The strongest product differentiator to plan next is Finding-to-Repro Harness: static finding to executable Foundry PoC or invariant-test skeleton plus reviewer replay instructions.
+- The strongest follow-on direction is Finding-to-Repro Harness, but this PR focuses on adoption evidence execution.
 
 ## File Structure
 
@@ -43,8 +43,6 @@
   Responsibility: make tester feedback submission path concrete and measurable.
 - Modify: `docs/adoption/external-adoptions.md`
   Responsibility: keep external adoption entries source-backed and empty unless public evidence exists.
-- Create: `docs/design/finding-to-repro-harness.md`
-  Responsibility: design the later industry-leading feature before implementation.
 - Optional future modify: `docs/DOCS_INDEX.md`
   Responsibility: index any changed or newly created docs.
 
@@ -225,112 +223,10 @@ git add docs/adoption/codex-for-oss-adoption-evidence-plan.md docs/adoption/test
 git commit -m "docs: add adoption evidence operating loop"
 ```
 
-### Task 3: Design Finding-to-Repro Harness (deferred to separate branch)
+### Task 3: Deferred Task 3
 
-**Files:**
-- Create: `docs/design/finding-to-repro-harness.md`
-- Modify: `docs/DOCS_INDEX.md`
-
-**Interfaces:**
-- Consumes: existing report JSON, finding metadata, formal property suggestions, fuzz seed notes, Foundry project detection.
-- Produces: implementation-ready design for a later feature PR.
-
-- [ ] **Step 1: Write the design document**
-
-Create `docs/design/finding-to-repro-harness.md`:
-
-```markdown
-# Finding-to-Repro Harness
-
-Status: proposed
-Updated: 2026-07-09
-
-## Goal
-
-Generate reviewer-owned reproducibility tasks from SCSA findings without
-claiming proof, exploitability, or audit certification.
-
-## Non-goals
-
-- Do not execute untrusted project build tooling by default.
-- Do not claim that generated tests prove a vulnerability.
-- Do not overwrite maintainer test suites.
-- Do not generate private exploit payloads for unauthorized targets.
-
-## User workflow
-
-1. Run `scsa analyze` and produce a JSON report.
-2. Run a future `scsa repro plan <report.json> --format foundry`.
-3. Review generated Foundry test skeletons and invariant drafts.
-4. Maintainer fills project-specific setup and assertions.
-5. CI runs the harness only in explicitly trusted project mode.
-
-## Artifact shape
-
-Each generated repro task should include:
-
-- finding id
-- vulnerability type
-- target contract and source span when available
-- suspected preconditions
-- counterevidence checks
-- Foundry test skeleton path
-- replay command
-- reviewer warnings
-
-## Safety boundary
-
-Generated harnesses are reviewer work items. They are not confirmed exploits,
-formal proofs, or deployment safety claims until a human reviewer adapts and
-executes them in an authorized environment.
-
-## First implementation slice
-
-Support only deterministic skeleton generation from existing report JSON:
-
-- no network access
-- no project dependency installation
-- no native build execution
-- no automatic exploit calldata synthesis
-- output to a new directory chosen by the reviewer
-
-## Verification
-
-- Unit tests cover report-to-task mapping.
-- Snapshot tests cover generated Foundry skeleton text.
-- CLI tests verify output path safety.
-- Docs verify that generated harnesses remain reviewer-only drafts.
-```
-
-- [ ] **Step 2: Index the design**
-
-Add one row to `docs/DOCS_INDEX.md`:
-
-```markdown
-| design | 007 | proposed | Finding-to-Repro Harness | 設計 finding 轉成 reviewer-owned Foundry repro skeleton / invariant draft 的後續功能，保留 human-review 與 authorized-use 邊界。 | 2026-07-09 | `docs/design/finding-to-repro-harness.md` |
-```
-
-- [ ] **Step 3: Verify**
-
-Run:
-
-```bash
-test -f docs/design/finding-to-repro-harness.md
-rg -n "reviewer-owned|Do not claim|trusted project mode|First implementation slice" docs/design/finding-to-repro-harness.md
-rg -n "Finding-to-Repro Harness" docs/DOCS_INDEX.md
-git diff --check
-```
-
-Expected: all commands exit `0`.
-
-- [ ] **Step 4: Commit**
-
-Run:
-
-```bash
-git add docs/design/finding-to-repro-harness.md docs/DOCS_INDEX.md
-git commit -m "docs: design finding-to-repro harness"
-```
+- This task is deferred to branch `codex/finding-to-repro-harness-design-wip`.
+- This PR does not implement or include design work for Finding-to-Repro Harness.
 
 ### Task 4: Conversation Efficiency Protocol
 
@@ -377,7 +273,7 @@ Do not edit `AGENTS.md` for this protocol unless it proves useful across at leas
 
 1. Task 1 in one PR: refresh adoption facts.
 2. Task 2 in one PR: add evidence operating loop.
-3. Task 3 is deferred to branch `codex/finding-to-repro-harness-design-wip` after Task 1/2 merge.
+3. Task 3 is deferred to branch `codex/finding-to-repro-harness-design-wip`.
 4. Task 4 remains an operating habit unless the user asks to codify it.
 
 ## Acceptance Criteria
@@ -392,5 +288,4 @@ Do not edit `AGENTS.md` for this protocol unless it proves useful across at leas
 ## Remaining Risks
 
 - External adoption remains `0` until real testers or maintainers produce public, permissioned evidence.
-- The Finding-to-Repro Harness may be less compelling if it stays a design doc and does not ship as a working CLI artifact.
 - Live metrics can become stale again unless Task 2's weekly loop is followed.

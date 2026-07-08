@@ -12,11 +12,11 @@ body:
   - type: input
     id: feedback_issue_or_permission
     attributes:
-      label: External public evidence links (optional) or permission to summarize privately shared feedback
-      description: The current GitHub issue is the public feedback record. Add public evidence links outside this issue, or confirm explicit permission to summarize privately shared feedback.
+      label: External public evidence links (optional)
+      description: The current GitHub issue is the current feedback record. Add public evidence links outside this issue, or confirm permission to summarize privately shared feedback.
       placeholder: "https://.../issue/123 or permission confirmed"
     validations:
-      required: true
+      required: false
   - type: checkboxes
     id: authorization
     attributes:

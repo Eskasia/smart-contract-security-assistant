@@ -189,8 +189,12 @@ Planned Phase 2 evidence fields:
 - Authorization basis
 - Command run
 - Report artifact summary
-- Feedback issue link
-- Permission to quote
+- current feedback issue record
+- External public evidence links (if present)
+- Permission to summarize privately shared feedback
+- Testimonial eligibility
+- Permission to quote for testimonials only
+- Sensitive-material removal confirmation
 
 ## Testimonials
 
