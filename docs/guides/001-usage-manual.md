@@ -6,14 +6,14 @@ number: "001"
 status: current
 services: ["src/smart_contract_audit", "data/dataset_v1.0", "eval"]
 related: ["design/001", "reference/001"]
-last_modified: "2026-06-01"
+last_modified: "2026-07-08"
 ---
 
 # 001 — 使用說明書
 
 ## Status
 
-current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`src/smart_contract_audit/http_api.py`、`eval/run_public_benchmark.py`、`README.md` 與 2026-05-24 report export 更新核對。
+current；內容已依 `src/smart_contract_audit/cli.py`、`src/smart_contract_audit/analyzer.py`、`src/smart_contract_audit/http_api.py`、`eval/run_public_benchmark.py`、`README.md`、2026-05-24 report export 與 2026-07-08 falsification pack 更新核對。
 
 ## Summary
 
@@ -37,7 +37,7 @@ uv run pytest
 ```
 
 預期輸出：`reports/<contract_id>.json`、`reports/<contract_id>.md`、`reports/analysis_trace.sqlite`。
-報告會直接包含 security score、漏洞原始碼片段、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total token usage；security score 是 0–100 合約風險量化分數，judge score 評估報告完整度。
+報告會直接包含 security score、漏洞原始碼片段、falsification pack、AI remediation code、local/external 報告品質 judge score 與 prompt/completion/total token usage；security score 是 0–100 合約風險量化分數，judge score 評估報告完整度。
 
 ## 分析合約
 
@@ -101,6 +101,8 @@ uv run scsa trace-dashboard reports/analysis_trace.sqlite
 Trace 會保存 Slither raw output、normalized finding、RAG chunk ids、packed prompt、LLM raw output、schema_valid、partial 狀態、報告品質 judge score、token usage 與 review status。
 
 ## Finding 審核回饋
+
+每個 JSON/Markdown finding 會包含 `falsification_pack`，列出 counterevidence checks、confirmation requirements、missing evidence 與 limitations。前端 finding card 會用可收合區塊顯示這些 reviewer checks；它們只協助人工判斷，不代表漏洞已被證明或排除。
 
 前端 finding card 可保存 `unreviewed`、`true_positive`、`false_positive`、`accepted_risk`、`fixed` 與備註；API endpoint 是 `PATCH /api/reports/{contract_id}/findings/{finding_id}/review`。`false_positive` 會把該 finding 的安全分數懲罰係數設為 `0.0`，`fixed` 係數為 `0.2`，並同步更新 JSON report、Markdown report 與 SQLite `trace_findings.review_status/review_note`。
 

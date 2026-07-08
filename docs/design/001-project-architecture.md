@@ -6,18 +6,18 @@ number: "001"
 status: current
 services: ["src/smart_contract_audit", "schema", "eval", ".github/workflows"]
 related: ["guides/001", "reference/001"]
-last_modified: "2026-06-01"
+last_modified: "2026-07-08"
 ---
 
 # 001 — 專案架構書
 
 ## Status
 
-current；架構描述已核對 `src/smart_contract_audit/`、`schema/report.schema.json`、`eval/`、`.github/workflows/ci.yml` 與 2026-06-01 安全預設收斂。
+current；架構描述已核對 `src/smart_contract_audit/`、`schema/report.schema.json`、`eval/`、`.github/workflows/ci.yml`、2026-06-01 安全預設收斂與 2026-07-08 falsification pack report contract。
 
 ## Summary
 
-決策：本專案採用本地優先的 CLI-first pipeline，讓 Slither 產生漏洞事實，RAG 與 MLX 只負責補上下文與生成可讀說明。資料輸出固定為 JSON、Markdown 與 SQLite trace，確保每個 finding 可回放。
+決策：本專案採用本地優先的 CLI-first pipeline，讓 Slither 產生漏洞事實，RAG 與 MLX 只負責補上下文與生成可讀說明。資料輸出固定為 JSON、Markdown 與 SQLite trace，並為每個 finding 產生 reviewer-facing falsification pack，確保 finding 可回放、可確認，也可被反證推翻。
 
 ## Requirements
 
@@ -27,8 +27,9 @@ current；架構描述已核對 `src/smart_contract_audit/`、`schema/report.sch
 2. 執行 Slither 靜態分析並標準化 findings。
 3. 透過 JSON schema 驗證報告結構。
 4. 從本地 RAG chunks 檢索相關修復語境。
-5. 產生 JSON、Markdown 與 SQLite trace。
-6. 支援 deterministic fallback 與可選 MLX 本地模型。
+5. 為 finding 產生 counterevidence checks、confirmation requirements 與 missing evidence。
+6. 產生 JSON、Markdown 與 SQLite trace。
+7. 支援 deterministic fallback 與可選 MLX 本地模型。
 
 非功能需求：
 
@@ -48,10 +49,12 @@ flowchart TD
   Analyzer --> Slither["slither_runner.py"]
   Slither --> Adapter["finding_adapter.py"]
   Adapter --> Schema["validation/validator.py"]
+  Adapter --> Falsification["falsification.py"]
   Schema --> RAG["rag/indexer.py + rag/retriever.py"]
   RAG --> Prompt["llm/prompt_template.py"]
   Prompt --> Generator["llm/generator.py"]
   Generator --> MLX["llm/mlx_runtime.py"]
+  Falsification --> Report["report.py"]
   Generator --> Report["report.py"]
   Analyzer --> Trace["trace/store.py"]
   Report --> JSON["<contract_id>.json"]
@@ -66,9 +69,10 @@ flowchart TD
 3. `_validate_input` 檢查 `.sol` 副檔名與 500 行上限。
 4. `run_slither` 執行 Slither，回傳 raw JSON、solc version、Slither version 與 warnings。
 5. `normalize_slither_json` 把 detector 映射到 `Finding`；未映射 detector 以 `unmapped_###` 寫入 trace。
-6. `retrieve_chunks` 依 `rag_mode` 回傳 RAG chunks，`generate_finding_details` 產生 explanation、attack path、fix suggestion。
-7. `TraceStore.record_finding` 寫入 raw detector、normalized finding、chunk ids、prompt、LLM output。
-8. `write_json_report` 與 `write_markdown_report` 寫入報告。
+6. `build_falsification_pack` 依 finding 類型與既有 evidence 產生 reviewer counterevidence checks。
+7. `retrieve_chunks` 依 `rag_mode` 回傳 RAG chunks，`generate_finding_details` 產生 explanation、attack path、fix suggestion。
+8. `TraceStore.record_finding` 寫入 raw detector、normalized finding、chunk ids、prompt、LLM output。
+9. `write_json_report` 與 `write_markdown_report` 寫入報告。
 
 ## Module Boundaries
 
@@ -77,6 +81,7 @@ flowchart TD
 | `cli.py` | 參數解析與命令分派 | 安全判斷 |
 | `slither_runner.py` | solc/Slither 呼叫與 raw JSON 取得 | finding schema 設計 |
 | `finding_adapter.py` | detector 到內部 vulnerability type 映射 | 執行 Slither |
+| `falsification.py` | reviewer 反證檢查、確認需求與缺失證據 | 證明漏洞存在或不存在 |
 | `validation/` | JSON schema 驗證 | 修改報告內容 |
 | `rag/` | chunk 載入、BM25/dense 檢索、rerank | 判定漏洞是否存在 |
 | `llm/` | prompt 包裝、MLX 或 fallback 生成 | 新增 Slither 沒有的 finding |
@@ -95,7 +100,7 @@ flowchart TD
 
 ## Boundaries
 
-本架構不覆蓋外部高階 judge API、正式審計簽核流程與合約經濟模型判定。2026-05-04 已完成 10 個公開專案 `10/10` analyzer 與 `10/10` native build 驗證；任何把 LLM 改成漏洞事實來源的變更，都必須先更新本文件與 schema 驗證策略。
+本架構不覆蓋外部高階 judge API、正式審計簽核流程與合約經濟模型判定。Falsification pack 只列出 reviewer 應收集的反證與確認條件，不把 finding 升級為 confirmed exploit，也不證明漏洞不存在。2026-05-04 已完成 10 個公開專案 `10/10` analyzer 與 `10/10` native build 驗證；任何把 LLM 改成漏洞事實來源的變更，都必須先更新本文件與 schema 驗證策略。
 
 ## Assumptions
 
