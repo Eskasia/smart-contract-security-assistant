@@ -1,7 +1,7 @@
 # External OSS Adoptions
 
 Status: current empty log
-Updated: 2026-06-01
+Updated: 2026-07-09
 
 This log records public, verifiable external OSS adoption of SCSA. It starts
 empty because no external repository adoption has been publicly confirmed and

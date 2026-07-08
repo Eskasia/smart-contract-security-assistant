@@ -9,6 +9,14 @@ body:
     attributes:
       value: |
         Use this form only for repository fixtures or code you own, maintain, or are explicitly authorized to review and discuss. Do not include secrets, private keys, proprietary contracts, customer code, private audit reports, customer data, or unauthorized third-party code.
+  - type: input
+    id: feedback_issue_or_permission
+    attributes:
+      label: Public feedback issue link or permission to summarize privately shared feedback
+      description: Paste a public issue URL or confirm explicit permission to summarize privately shared feedback.
+      placeholder: "https://github.com/org/repo/issues/123 or permission confirmed"
+    validations:
+      required: true
   - type: checkboxes
     id: authorization
     attributes:
@@ -16,7 +24,7 @@ body:
       options:
         - label: I own, maintain, or am explicitly authorized to test and discuss the repository or fixture described in this issue.
           required: true
-        - label: I removed secrets, private keys, proprietary code, private audit material, and customer data from this issue.
+        - label: I removed private code, private keys, secrets, addresses, and proprietary audit material from this issue.
           required: true
         - label: I did not run SCSA against unauthorized third-party code or deployed contracts.
           required: true
@@ -100,6 +108,16 @@ body:
         High-level result summary:
     validations:
       required: true
+  - type: dropdown
+    id: testimonial_evidence
+    attributes:
+      label: Can this feedback count as testimonial evidence?
+      description: Select whether this feedback should be eligible as testimonial evidence.
+      options:
+        - "no"
+        - "yes"
+    validations:
+      required: true
   - type: textarea
     id: usability_feedback
     attributes:
@@ -113,6 +131,15 @@ body:
         False negatives:
         Documentation gaps:
         Other notes:
+    validations:
+      required: true
+  - type: checkboxes
+    id: sensitive_material_confirmation
+    attributes:
+      label: Sensitive material confirmation
+      options:
+        - label: I removed private code, secrets, addresses, and proprietary audit material from this issue and shared artifacts.
+          required: true
     validations:
       required: true
   - type: dropdown

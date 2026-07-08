@@ -1,7 +1,7 @@
 # Tester Onboarding
 
 Status: current
-Updated: 2026-06-01
+Updated: 2026-07-09
 
 This guide is for external testers who want to give SCSA feedback without
 creating unsafe or unverifiable adoption evidence.

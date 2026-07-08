@@ -1,7 +1,7 @@
 # Codex for OSS Adoption Evidence Plan
 
 Status: active collection plan
-Updated: 2026-06-17
+Updated: 2026-07-09
 
 This plan defines the 2-4 week evidence collection phase before submitting the
 Codex for OSS application. It is an execution checklist, not an adoption claim:
