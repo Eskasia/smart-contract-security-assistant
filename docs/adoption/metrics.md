@@ -1,7 +1,7 @@
 # Adoption Metrics
 
 Status: current manual tracker
-Updated: 2026-06-17
+Updated: 2026-07-09
 
 This tracker records only source-backed adoption signals for the current Codex
 for OSS application phase. Repository-owned fixtures, local validation runs,
@@ -11,16 +11,28 @@ and planned outreach do not count as external adoption.
 
 | Metric | Current | Target | Evidence |
 |---|---:|---:|---|
-| GitHub stars | 1 | 100 | GitHub repo API snapshot on 2026-06-17: `stargazers_count=1` |
-| GitHub forks | 0 | 30 | GitHub repo API snapshot on 2026-06-17: `forks_count=0` |
+| GitHub stars | 1 | 100 | GitHub repo API snapshot on 2026-07-09: `stargazers_count=1` |
+| GitHub forks | 0 | 30 | GitHub repo API snapshot on 2026-07-09: `forks_count=0` |
 | External testers | 0 | 10 | No external tester entries logged in [`docs/adoption/codex-for-oss-evidence.md`](codex-for-oss-evidence.md#external-tester-evidence) |
 | Public triage cases | 0 | 3 | [`docs/adoption/public-triage-cases.md`](public-triage-cases.md) has no authorized public cases |
 | Feedback issues | 0 | 5 | No completed current adoption-phase feedback issue links are logged; [issue #12](https://github.com/Eskasia/smart-contract-security-assistant/issues/12) is tester outreach, not feedback received |
 | Testimonials | 0 | 10 | No quoted testimonials are logged in [`docs/adoption/codex-for-oss-evidence.md`](codex-for-oss-evidence.md#testimonials) |
-| Monthly downloads | 0 | 1000 | PyPI package `smart-contract-security-assistant` is published at version `0.2.1`, but PyPI JSON does not provide a package-hosted monthly download counter; GitHub `v0.2.1` release asset download total was `0` on 2026-06-17 |
+| Monthly downloads | 0 | 1000 | PyPI package `smart-contract-security-assistant` is published at version `0.2.1`, but PyPI JSON does not provide a package-hosted monthly download counter; GitHub `v0.2.1` release asset download total was `0` on 2026-07-09 |
 | External OSS adoptions | 0 | 2 | No public repo adoption links are logged |
 
 ## Weekly update log
+
+### 2026-07-09
+
+| Checklist item | Status | Evidence |
+|---|---|---|
+| Update stars/forks | No change: stars `1`, forks `0` | GitHub repo API on 2026-07-09 |
+| Update package publication | PyPI package remains published at `0.2.1` | <https://pypi.org/project/smart-contract-security-assistant/> |
+| Update download evidence | No counted downloads yet | PyPI JSON confirms package/version but does not provide a monthly download counter; GitHub `v0.2.1` release assets had `download_count=0` on 2026-07-09 |
+| Add new feedback issues | No completed tester feedback issues logged | Public outreach and templates do not count as completed feedback |
+| Add real testimonials | None logged | [`docs/adoption/testimonials.md`](testimonials.md) remains empty |
+| Add public triage cases | None logged | [`docs/adoption/public-triage-cases.md`](public-triage-cases.md) remains empty |
+| Add external adoption links | None logged | [`docs/adoption/external-adoptions.md`](external-adoptions.md) remains empty |
 
 ### 2026-06-02
 
