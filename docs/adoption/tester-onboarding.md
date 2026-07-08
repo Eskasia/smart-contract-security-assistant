@@ -113,7 +113,7 @@ content.
 Open a tester feedback issue with:
 
 - Your tester GitHub handle.
-- Public feedback issue link or explicit permission to summarize privately shared feedback.
+- Current GitHub issue as the feedback record plus public external evidence links (if any) or explicit permission to summarize privately shared feedback.
 - The repository tested, authorization basis, command run, and report artifact
   summary.
 - The install method you used.
@@ -156,7 +156,8 @@ Prefer short summaries, redacted snippets, and public fixture output.
 - Tester GitHub:
 - Repo tested:
 - Authorization basis:
-- Public feedback issue link or permission to summarize privately shared feedback:
+- Current GitHub issue as the feedback record:
+- Public external evidence links (if available) or permission to summarize privately shared feedback:
 - Command run:
 - Install method:
 - OS:

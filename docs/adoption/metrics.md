@@ -62,9 +62,9 @@ and planned outreach do not count as external adoption.
 2. GitHub stars and forks may be updated from the GitHub repo API.
 3. Download counts must come from PyPI, GitHub release assets, or another
    explicit package/download counter; source archive URLs are not counted.
-4. External testers, public triage cases, testimonials, feedback issues, and OSS
-   adoptions require public links or explicit permission to quote.
-5. Repository fixtures under `docs/case-studies/` do not count as external
+4. Feedback issues require public links or explicit permission to summarize.
+5. Testimonials require explicit permission to quote.
+6. Repository fixtures under `docs/case-studies/` do not count as external
    adoption, public triage cases, or testimonials.
 
 ## Evidence sources

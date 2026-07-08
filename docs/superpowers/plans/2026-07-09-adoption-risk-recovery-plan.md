@@ -4,6 +4,8 @@
 
 **Goal:** Turn the current adoption uncertainty into source-backed metrics, a repeatable external-evidence funnel, and one defensible industry-leading feature plan.
 
+> **Scope note:** This PR executes only Task 1/2/4. Task 3 (Finding-to-Repro Harness) is deferred to branch `codex/finding-to-repro-harness-design-wip` after Task 1/2 merge.
+
 **Architecture:** Treat adoption evidence and product differentiation as separate tracks. Track 1 updates public evidence from live sources without inflating adoption; Track 2 converts outreach into public, permissioned evidence; Track 3 designs Finding-to-Repro Harness as a later product PR after evidence docs are current.
 
 **Tech Stack:** Markdown docs, GitHub REST API snapshots, PyPI JSON, GitHub issues/PRs, existing SCSA CLI/report pipeline, future Foundry test skeleton generation.
@@ -223,7 +225,7 @@ git add docs/adoption/codex-for-oss-adoption-evidence-plan.md docs/adoption/test
 git commit -m "docs: add adoption evidence operating loop"
 ```
 
-### Task 3: Design Finding-to-Repro Harness
+### Task 3: Design Finding-to-Repro Harness (deferred to separate branch)
 
 **Files:**
 - Create: `docs/design/finding-to-repro-harness.md`
@@ -375,7 +377,7 @@ Do not edit `AGENTS.md` for this protocol unless it proves useful across at leas
 
 1. Task 1 in one PR: refresh adoption facts.
 2. Task 2 in one PR: add evidence operating loop.
-3. Task 3 in one PR: design the industry-leading product feature.
+3. Task 3 is deferred to branch `codex/finding-to-repro-harness-design-wip` after Task 1/2 merge.
 4. Task 4 remains an operating habit unless the user asks to codify it.
 
 ## Acceptance Criteria
@@ -383,7 +385,7 @@ Do not edit `AGENTS.md` for this protocol unless it proves useful across at leas
 - Metrics are updated to 2026-07-09 without increasing unverified counts.
 - Evidence index and metrics page agree.
 - Weekly adoption loop defines concrete conversion targets and counting rules.
-- Finding-to-Repro Harness is designed, not implemented.
+- Task 3 (Finding-to-Repro Harness) is deferred and not included in this PR.
 - No branch work is based on stale PR #32, PR #33, or old G2.3 branches.
 - `git diff --check` passes for each PR.
 

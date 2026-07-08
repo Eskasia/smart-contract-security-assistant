@@ -12,9 +12,9 @@ body:
   - type: input
     id: feedback_issue_or_permission
     attributes:
-      label: Public feedback issue link or permission to summarize privately shared feedback
-      description: Paste a public issue URL or confirm explicit permission to summarize privately shared feedback.
-      placeholder: "https://github.com/org/repo/issues/123 or permission confirmed"
+      label: External public evidence links (optional) or permission to summarize privately shared feedback
+      description: The current GitHub issue is the public feedback record. Add public evidence links outside this issue, or confirm explicit permission to summarize privately shared feedback.
+      placeholder: "https://.../issue/123 or permission confirmed"
     validations:
       required: true
   - type: checkboxes
