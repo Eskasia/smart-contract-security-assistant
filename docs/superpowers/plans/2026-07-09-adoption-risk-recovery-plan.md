@@ -25,7 +25,7 @@
 
 - `main` is synced with `origin/main` as of 2026-07-09.
 - Open PRs remain separate: PR #32 frontend dependency refresh and PR #33 finding falsification packs.
-- `docs/adoption/metrics.md` exists, but its latest recorded update is 2026-06-17.
+- `docs/adoption/metrics.md` exists, and this branch refreshes it to 2026-07-09.
 - Live checks on 2026-07-09 showed GitHub stars `1`, forks `0`, release asset downloads `0`, and PyPI package version `0.2.1`.
 - The biggest strategic gap is not documentation volume; it is lack of external, verifiable adoption evidence.
 - The most likely three-month failure mode is internal feature/documentation progress without tester feedback, public triage cases, testimonials, or external OSS adoption links.
