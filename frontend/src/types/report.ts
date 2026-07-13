@@ -137,6 +137,25 @@ export interface DefiProfitSignal {
   supported_by?: string[];
 }
 
+export interface CounterevidenceCheck {
+  check_id: string;
+  question: string;
+  would_refute_if: string;
+  evidence_to_collect: string;
+  status: string;
+}
+
+export interface FalsificationPack {
+  status: string;
+  reviewer_goal: string;
+  counterevidence_checks: CounterevidenceCheck[];
+  confirmation_requirements: string[];
+  missing_evidence: string[];
+  human_review_required: boolean;
+  supported_by: string[];
+  limitations: string[];
+}
+
 export interface Finding {
   finding_id: string;
   vulnerability_type: string;
@@ -168,6 +187,7 @@ export interface Finding {
   fuzz_seed_suggestions?: FuzzSeedSuggestion[];
   formal_property_suggestions?: FormalPropertySuggestion[];
   defi_profit_signal?: DefiProfitSignal;
+  falsification_pack?: FalsificationPack;
 }
 
 export interface AnalysisMetadata {

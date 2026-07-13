@@ -1,6 +1,6 @@
 # Related Work
 
-Updated: 2026-06-01
+Updated: 2026-07-08
 
 ## Static Analysis
 
@@ -41,10 +41,17 @@ SCSA's original focus is a local-first evidence layer: SQLite traces,
 JSON/Markdown reports, reviewer workflow, CI gates, benchmark gates, and report
 comparison.
 
+SCSA also emits per-finding falsification packs. These packs list
+counterevidence checks, confirmation requirements, missing evidence, and
+limitations so a reviewer can decide what would confirm or refute a finding
+before changing its review status.
+
 ## Explicit Non-Goals
 
 - SCSA does not detect all Solidity vulnerabilities.
 - SCSA does not replace Slither, Aderyn, Echidna, Medusa, Mythril, or Halmos.
 - SCSA does not automatically complete a human audit.
+- SCSA falsification packs do not prove exploitability or prove that a finding
+  is impossible.
 - SCSA does not guarantee contract safety.
 - SCSA does not use AI to create unsupported vulnerability facts.

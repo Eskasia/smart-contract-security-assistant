@@ -40,6 +40,7 @@
 - 2026-06-01 Phase 1 合規入口已開始落地：新增 `THIRD_PARTY_NOTICES.md`、`NOTICE`、`tool_matrix.yml`、`standards_mapping.yml`、`docs/reference/tool-attribution.md`、`docs/reference/license-boundary.md`、`docs/reference/related-work.md`、`docs/reference/standards-mapping.md`，並讓 report finding 輸出 `standard_refs`。
 - 2026-06-01 Phase 2 evidence layer 已開始落地：新增 Evidence Graph SQLite tables、finding `evidence_graph`、5 個 SCSA-native post-analysis rules、paired-variant benchmark、RAG groundedness eval、UI evidence provenance 顯示與 CI gate。
 - 2026-06-01 Phase 3 advanced evidence 已開始落地：新增 `exploit_validation`、sandbox-only Foundry reentrancy PoC fixture、fuzz seed suggestions、formal property drafts、DeFi profit signal、EVMbench adapter、SQLite `exploit_validations` 與 UI advanced evidence 顯示。
+- 2026-07-07 已新增 per-finding falsification pack：每個 finding 會輸出 counterevidence checks、confirmation requirements、missing evidence 與 reviewer limitations，JSON/Markdown report 與前端 finding card 都會顯示。
 - 2026-06-01 PR #15 與 PR #16 已 merge 到 `main`；`main` smoke 通過 `uv run pytest` 116 passed、frontend 35 passed、frontend build completed。v0.2.0 已發布為 evidence platform release；不是正式 audit certification release。
 
 ## 技術核心
@@ -69,6 +70,8 @@ SCSA-native rules——Phase 2 已新增 reentrancy evidence confirmer、auth-se
 Paired variants——`eval/paired_variants/` 目前涵蓋 `reentrancy`、`unchecked_external_call`、`access_control`、`upgrade_risk`、`dangerous_delegatecall` 五類，每類 3 組 positive/negative pair；`uv run python eval/run_paired_variants.py --min-paired-pass-rate 0.70` 會輸出 `reports/eval/paired_variant_results.json`、`benchmark_summary.md` 與 `benchmark_matrix.json`。
 
 Phase 3 advanced evidence——`exploit_validation` 預設為 `not_attempted` 且 `mode=sandbox_only`；正常分析不自動執行 PoC。`uv run python eval/run_exploit_validation.py` 只跑 `tests/poc/reentrancy/` 本地 Foundry fixture，輸出 `reports/poc/f_001/validation.json` 與 `execution.log`。`fuzz_seed_suggestions` 與 `formal_property_suggestions` 都是 reviewer starting point；property 未 compile/verify 前固定 `status=draft`、`verification_status=not_proven`。`defi_profit_signal` 只能承接 local execution 或 trusted external-tool output。
+
+Falsification pack——每個 finding 會 deterministic 產生 `falsification_pack`，列出能推翻該 finding 的 counterevidence checks、確認需求、缺失證據與限制。它只輔助 reviewer 決策，不把 finding 升級為 confirmed exploit，也不證明漏洞不存在。
 
 UI design system——2026-05-31 已新增 `docs/design/005-ui-design-system.md`；前端定位為 evidence-first security console，使用 CSS variables/Tailwind tokens、shared `Button`/`Field`/`PanelSection`/`MetricGroup`、四工具 `ToolSelector` 與 `min-h-dvh` layout。Legacy `echidnaEnabled` persisted setting 會 migration 成 `externalTools=["echidna"]`，API token 仍不持久化。
 

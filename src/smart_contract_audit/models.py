@@ -77,9 +77,11 @@ class Finding:
     fuzz_seed_suggestions: list[dict[str, Any]] = field(default_factory=list)
     formal_property_suggestions: list[dict[str, Any]] = field(default_factory=list)
     defi_profit_signal: dict[str, Any] = field(default_factory=dict)
+    falsification_pack: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from .exploit_validation import default_exploit_validation
+        from .falsification import build_falsification_pack
         from .fuzz import suggest_fuzz_seeds
         from .properties import suggest_formal_properties
         from .standards import standard_refs_for
@@ -106,6 +108,9 @@ class Finding:
             "profitability_status": "not_assessed",
             "supported_by": [],
         }
+        data["falsification_pack"] = self.falsification_pack or build_falsification_pack(
+            self
+        )
         return data
 
 

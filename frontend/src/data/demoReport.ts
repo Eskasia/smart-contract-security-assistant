@@ -194,6 +194,48 @@ export const demoReport: AnalysisReport = {
         profitability_status: "not_assessed",
         supported_by: [],
       },
+      falsification_pack: {
+        status: "needs_human_review",
+        reviewer_goal:
+          "Confirm the detector evidence or document counterevidence before changing review status.",
+        counterevidence_checks: [
+          {
+            check_id: "reentrancy_state_update_before_call",
+            question:
+              "Is every affected balance or accounting state updated before the external call?",
+            would_refute_if:
+              "All affected state is updated before the external call on every reachable path.",
+            evidence_to_collect:
+              "Trace the function order around the external call and state writes.",
+            status: "not_checked",
+          },
+          {
+            check_id: "reentrancy_guard_effective",
+            question:
+              "Is an effective nonReentrant guard or equivalent mutex active on the call path?",
+            would_refute_if:
+              "A reachable guard prevents nested entry into the affected function.",
+            evidence_to_collect:
+              "Inspect modifiers, inherited guards, and internal function call paths.",
+            status: "not_checked",
+          },
+        ],
+        confirmation_requirements: [
+          "Show a reachable external call before the relevant state update.",
+          "Show that attacker-controlled code can re-enter the affected path.",
+        ],
+        missing_evidence: ["No positive or negative reentrancy guard evidence is recorded."],
+        human_review_required: true,
+        supported_by: [
+          "detector:reentrancy-eth",
+          "static_tool:slither",
+          "location:tests/contracts/VulnerableVault.sol:11",
+        ],
+        limitations: [
+          "Generated from detector evidence and local report context.",
+          "This pack is not proof that the finding is exploitable or impossible.",
+        ],
+      },
     },
     {
       finding_id: "f_002",
@@ -342,6 +384,47 @@ export const demoReport: AnalysisReport = {
         flash_loan_dependency: false,
         profitability_status: "not_assessed",
         supported_by: [],
+      },
+      falsification_pack: {
+        status: "needs_human_review",
+        reviewer_goal:
+          "Confirm the detector evidence or document counterevidence before changing review status.",
+        counterevidence_checks: [
+          {
+            check_id: "access_control_authorization_boundary",
+            question:
+              "Is the affected operation protected by owner, role, or capability checks?",
+            would_refute_if:
+              "All reachable callers must pass an intended authorization boundary.",
+            evidence_to_collect:
+              "Review modifiers, internal guards, and inherited access-control logic.",
+            status: "not_checked",
+          },
+          {
+            check_id: "access_control_public_intent",
+            question: "Is the operation intentionally public and safe for any caller?",
+            would_refute_if:
+              "The operation is designed to be permissionless and cannot move privileged state.",
+            evidence_to_collect:
+              "Compare code behavior with the protocol's documented permission model.",
+            status: "not_checked",
+          },
+        ],
+        confirmation_requirements: [
+          "Show the intended authorization boundary for the affected operation.",
+          "Show an unauthorized caller can reach the operation.",
+        ],
+        missing_evidence: ["No obvious missing evidence was detected by deterministic checks."],
+        human_review_required: true,
+        supported_by: [
+          "detector:owner-drain",
+          "static_tool:slither",
+          "location:tests/contracts/detectors/PrivilegeOwnerDrain.sol:18",
+        ],
+        limitations: [
+          "Generated from detector evidence and local report context.",
+          "This pack is not proof that the finding is exploitable or impossible.",
+        ],
       },
     },
   ],

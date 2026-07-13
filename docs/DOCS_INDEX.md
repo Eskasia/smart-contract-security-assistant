@@ -1,15 +1,17 @@
 # Docs Index
 
-Generated at: 2026-06-01
+Generated at: 2026-07-08
 
 | Category | # | Status | Name | Description | Last Modified | Path |
 |---|---|---|---|---|---|---|
-| design | 001 | current | 專案架構書 | 描述 Solidity 安全初篩 MVP 的模組邊界、資料流、儲存與取捨。 | 2026-06-01 | `docs/design/001-project-architecture.md` |
+| design | 001 | current | 專案架構書 | 描述 Solidity 安全初篩 MVP 的模組邊界、資料流、falsification pack、儲存與取捨。 | 2026-07-08 | `docs/design/001-project-architecture.md` |
 | design | 005 | current | UI Design System | 定義 evidence-first security console 的產品氣質、視覺規範、design tokens、ToolSelector 與 UI migration notes。 | 2026-05-31 | `docs/design/005-ui-design-system.md` |
 | design | 006 | current | Distribution Metrics Automation | 定義 source-backed adoption metrics updater、GitHub Actions PR workflow、official public sources 與 no-client-telemetry boundary。 | 2026-06-17 | `docs/design/006-telemetry-and-metrics-automation.md` |
-| guides | 001 | current | 使用說明書 | 說明安裝、分析、API 加固、External tools、GitHub Actions、trace 查詢、MLX probe、Web UI 與輸出檔案。 | 2026-06-01 | `docs/guides/001-usage-manual.md` |
+| guides | 001 | current | 使用說明書 | 說明安裝、分析、API 加固、External tools、GitHub Actions、trace 查詢、falsification pack、MLX probe、Web UI 與輸出檔案。 | 2026-07-08 | `docs/guides/001-usage-manual.md` |
 | templates | 001 | current | SCSA PR Triage GitHub Action | 提供外部 Solidity maintainer 可 copy-paste 的 manual GitHub Actions workflow，預設 `--native-build-policy disabled` 並要求 owned/maintained/authorized target。 | 2026-06-01 | `docs/templates/scsa-pr-triage.yml` |
-| readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、安裝、Quick Start、Web Workbench、CLI、輸出契約、安全邊界與驗證。 | 2026-06-01 | `README.md` |
+| readme | 001 | current | Main README | 面向 GitHub 使用者的 SCSA 專屬產品入口，說明 evidence workbench 定位、安裝、Quick Start、Web Workbench、CLI、falsification pack、輸出契約、安全邊界與驗證。 | 2026-07-07 | `README.md` |
+| handoff | 001 | current | Project Handoff | 記錄 SCSA 現有能力、核心術語、驗證命令、falsification pack 與交接狀態。 | 2026-07-07 | `docs/handoff.md` |
+| workflow | 001 | current | Maintainer Workflow | 說明 maintainer 如何用 SCSA 做 PR triage、issue triage、release regression、falsification pack reviewer handoff 與 public-safe summaries。 | 2026-07-08 | `docs/maintainer-workflow.md` |
 | adoption | 001 | current | Codex for OSS Evidence | 記錄 Codex for OSS application evidence、maintainer workflow、case studies、security boundary、benchmark/CI evidence 與 adoption metrics placeholder。 | 2026-06-01 | `docs/adoption/codex-for-oss-evidence.md` |
 | adoption | 002 | current | Tester Onboarding | 說明外部 tester 的授權規則、fixture 測試、authorized repo 測試、回饋欄位與禁止提交的敏感資料。 | 2026-06-01 | `docs/adoption/tester-onboarding.md` |
 | adoption | 003 | current | Public Triage Protocol | 說明 public triage case 的 authorization link、allowed/disallowed targets、sensitive material handling、sanitization 與 publication checklist。 | 2026-06-01 | `docs/adoption/public-triage-protocol.md` |
@@ -24,10 +26,10 @@ Generated at: 2026-06-01
 | adoption | 012 | current | Codex for OSS Adoption Evidence Plan | 定義 2-4 週 adoption evidence 補強節奏、weekly PR 規則、public tester/triage/adoption/testimonial counting rules 與 application narrative。 | 2026-06-17 | `docs/adoption/codex-for-oss-adoption-evidence-plan.md` |
 | reference | 003 | current | Tool Attribution | 記錄 Slither、Aderyn、Echidna、Medusa、Mythril、Halmos、Foundry 與 Hardhat 的角色、license、bundled 狀態與 SCSA 消費邊界。 | 2026-06-01 | `docs/reference/tool-attribution.md` |
 | reference | 004 | current | License Boundary | 說明 SCSA MIT license 與外部工具 license、bundling、native build、artifact 消費邊界。 | 2026-06-01 | `docs/reference/license-boundary.md` |
-| reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance 的定位差異與 non-goals。 | 2026-06-01 | `docs/reference/related-work.md` |
+| reference | 005 | current | Related Work | 說明 SCSA 與外部 analyzer、fuzzer、symbolic tool、RAG/LLM assistance、falsification pack 的定位差異與 non-goals。 | 2026-07-08 | `docs/reference/related-work.md` |
 | reference | 006 | current | Standards Mapping | 記錄 internal finding type 到 OWASP Smart Contract Top 10、SCWE、SCSVS 與 SWC 的 deterministic mapping policy。 | 2026-06-01 | `docs/reference/standards-mapping.md` |
 | reference | 008 | current | Phase 3 Advanced Evidence | 記錄 sandbox-only exploit validation、fuzz seed suggestions、formal property drafts、DeFi profit signal 與 EVMbench adapter 邊界。 | 2026-06-01 | `docs/reference/phase3-advanced-evidence.md` |
-| reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-05-31 | `docs/knowledge-graph.md` |
+| reference | 000 | current | Knowledge Graph | 描述 source import、Slither、external tools、falsification pack、RAG、report、trace、review 與 CI 之間的能力與證據關係。 | 2026-07-08 | `docs/knowledge-graph.md` |
 | reference | 001 | current | 驗證程序日誌 | 記錄 2026-05-24 剩餘補強與 2026-05-17 release cleanup 驗證命令、結果、產物與剩餘限制。 | 2026-05-24 | `docs/reference/001-validation-procedure-log.md` |
 | reference | 002 | current | Public Benchmark Leaderboard | 記錄 HF Slither50、paired variants、public project build preflight 的 gate、summary、confusion matrix、precision、recall、F1 與逐案結果。 | 2026-06-01 | `docs/reference/002-public-benchmark-leaderboard.md` |
 | reference | 007 | current | Benchmark Reproducibility | 說明 HF Slither50 v2、paired variants、RAG groundedness 的 dataset、mapped detector scope、commands、metrics、gates、limitations 與 last verified run。 | 2026-06-01 | `docs/reference/benchmark-reproducibility.md` |

@@ -109,6 +109,8 @@ Handoff package:
 - JSON report validated against `schema/report.schema.json`.
 - Markdown report for reviewer reading.
 - SQLite trace database for raw analyzer output and evidence graph lookup.
+- Per-finding falsification pack with counterevidence checks, confirmation
+  requirements, missing evidence, and reviewer limitations.
 - Any external-tool artifacts listed in `external_tool_results`.
 - Review notes explaining accepted risk, false positive, fixed, or blocked
   statuses.
@@ -117,6 +119,7 @@ Human reviewer must check:
 
 - Source authorization.
 - Raw analyzer evidence.
+- Falsification pack counterevidence checks before changing finding status.
 - Standards mapping context.
 - Business-logic, governance, oracle, economic, and cross-contract risks that
   automated triage cannot certify.

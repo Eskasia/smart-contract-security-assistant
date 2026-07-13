@@ -1,6 +1,6 @@
 # Smart Contract Security Assistant Knowledge Graph
 
-更新日期：2026-05-31。
+更新日期：2026-07-08。
 
 本文件把專案能力、證據、輸出 artifact 與驗證命令整理成 knowledge graph，方便 reviewer 快速理解系統邊界與可信證據。
 
@@ -20,9 +20,11 @@ graph TD
   Policy --> External["External tool results"]
   Slither --> Normalize["Finding normalization"]
   External --> Normalize
+  Normalize --> Falsification["Falsification pack"]
   Normalize --> Schema["Schema validation"]
   Schema --> RAG["Local RAG retrieval"]
   RAG --> Generation["MLX-ready explanation fallback"]
+  Falsification --> Report["JSON + Markdown report"]
   Generation --> Report["JSON + Markdown report"]
   Normalize --> Trace["SQLite trace"]
   Report --> Review["Reviewer feedback"]
@@ -40,6 +42,7 @@ graph TD
 | Slither integration | Capability | `src/smart_contract_audit/slither_runner.py` |
 | External tool registry | Capability | `src/smart_contract_audit/external_tools.py` |
 | Finding normalization | Capability | `src/smart_contract_audit/finding_adapter.py`, `src/smart_contract_audit/external_finding_adapter.py` |
+| Falsification pack | Review aid | `src/smart_contract_audit/falsification.py`, `tests/test_falsification.py` |
 | RAG retrieval | Capability | `src/smart_contract_audit/rag/retriever.py`, `eval/run_eval.py` |
 | MLX-ready generation | Capability | `src/smart_contract_audit/llm/mlx_runtime.py` |
 | Report builder | Capability | `src/smart_contract_audit/report_builder.py`, `src/smart_contract_audit/report.py` |
@@ -54,6 +57,7 @@ graph TD
 | Source import -> trust policy | Remote input is staged as untrusted source | `uv run pytest tests/test_source_import.py tests/test_http_api.py` |
 | Slither -> normalized finding | Detector output becomes stable report finding | `uv run pytest tests/test_slither.py tests/test_adapter.py` |
 | External tools -> normalized finding | Mythril/Echidna/Aderyn/Medusa/Halmos output becomes report finding | `uv run pytest tests/test_external_tools.py tests/test_external_finding_adapter.py` |
+| Normalized finding -> falsification pack | Reviewer gets counterevidence checks and confirmation requirements | `uv run pytest tests/test_falsification.py` |
 | Normalized finding -> schema | Report payload obeys JSON contract | `uv run pytest tests/test_validation_and_mlx.py` |
 | RAG -> generation | Retrieved evidence feeds deterministic or MLX-ready explanation | `uv run python eval/run_eval.py` |
 | Report -> trace | Finding, prompt and review state stay auditable | `uv run pytest tests/test_report_builder.py tests/test_e2e.py` |
